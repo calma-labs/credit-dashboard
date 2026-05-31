@@ -3,6 +3,7 @@ import { BorshAccountsCoder, type Idl } from "@coral-xyz/anchor";
 import bs58 from 'bs58';
 
 import rawIdl from './klend.json';
+import ReserveCharts from './ReserveCharts';
 
 export const idl: Idl = rawIdl as Idl;
 const KLEND_KEY = new PublicKey('KLend2g3cP87fffoy8q1mQqGKjrxjC8boSyAYavgmjD');
@@ -173,22 +174,37 @@ async function fetchReserves(): Promise<ReserveMetrics[]> {
 
 async function App() {
   const accs = await fetchReserves();
+  const chartReserves = accs.map((reserve) => ({
+    pubkey: reserve.pubkey,
+    lendingMarket: reserve.lendingMarket,
+    utilizationPct: reserve.utilizationPct,
+    borrowApyPct: reserve.borrowApyPct,
+    supplyApyPct: reserve.supplyApyPct,
+    tvlTokens: reserve.tvlTokens,
+  }));
 
   return (
-    <div>
-      <h1><i>Kamino Lending Scrap</i></h1>
-      <div>
-        <button>7 D</button>
-        <button>1 M</button>
-        <button>1 Y</button>
+    <div style={{ padding: 24, fontFamily: 'Inter, system-ui, sans-serif' }}>
+      <div style={{ marginBottom: 24 }}>
+        <h1 style={{
+          margin: 0,
+          fontSize: '2.6rem',
+          lineHeight: 1.05,
+          fontWeight: 800,
+          letterSpacing: '-0.04em',
+          color: 'white',
+        }}>
+          Kamino Lending <span style={{ color: '#2563eb' }}>Dashboard</span>
+        </h1>
       </div>
+      <ReserveCharts reserves={chartReserves} />
       {accs.length === 0 ? (
         <p>No reserves found.</p>
       ) : (
         <div>
           {accs.map((reserve) => (
             <div key={reserve.pubkey} style={{ marginTop: 20, padding: 12, border: '1px solid #ccc', borderRadius: 8 }}>
-              <h2>Reserve {reserve.pubkey.slice(0, 10)}...</h2>
+              <h2>Reserve {reserve.pubkey}</h2>
               <p>Version: {reserve.version}</p>
               <p>Market: {reserve.lendingMarket}</p>
               <p>Utilization: {reserve.utilizationPct.toFixed(2)}%</p>
