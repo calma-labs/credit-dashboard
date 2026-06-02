@@ -58,12 +58,18 @@ function safeBigInt(value: unknown): bigint {
   return BigInt(0);
 }
 
+function safeScaledFractionBigInt(value: unknown, scaleBits = 64): bigint {
+  const raw = safeBigInt(value);
+  if (raw === BigInt(0)) return BigInt(0);
+  return raw >> BigInt(scaleBits);
+}
+
 function safeBase58(value: any): string {
   return value && typeof value.toBase58 === 'function' ? value.toBase58() : '';
 }
 
 function getUtilizationPct(liquidity: any): number {
-  const borrowed = safeBigInt(liquidity.borrowedAmountSf);
+  const borrowed = safeScaledFractionBigInt(liquidity.borrowedAmountSf);
   const available = safeBigInt(liquidity.availableAmount);
   const total = borrowed + available;
   if (total === BigInt(0)) return 0;
@@ -92,8 +98,10 @@ function getBorrowRateBps(utilizationPct: number, curve: any): number {
   }
 
   for (let i = 0; i < sorted.length - 1; i += 1) {
+    
     const current = sorted[i];
     const next = sorted[i + 1];
+
     if (utilBps <= next.utilBps) {
       const slope = (next.rateBps - current.rateBps) / (next.utilBps - current.utilBps);
       return current.rateBps + slope * (utilBps - current.utilBps);
@@ -117,7 +125,7 @@ function getSupplyRatePct(reserve: any): number {
 }
 
 function getTvlTokens(reserve: any): number {
-  const borrowed = safeBigInt(reserve.liquidity.borrowedAmountSf);
+  const borrowed = safeScaledFractionBigInt(reserve.liquidity.borrowedAmountSf);
   const available = safeBigInt(reserve.liquidity.availableAmount);
   const total = borrowed + available;
   const decimals = Number(reserve.liquidity.mintDecimals ?? 0);
@@ -143,6 +151,10 @@ async function fetchReserves(): Promise<ReserveMetrics[]> {
       const borrowApyPct = getBorrowApyPct(decoded_reserve);
       const supplyApyPct = getSupplyRatePct(decoded_reserve);
       const tvlTokens = getTvlTokens(decoded_reserve);
+
+      if(utilizationPct === 0 && borrowApyPct === 0 && supplyApyPct === 0){
+        return [];
+      }
 
       return [{
         pubkey: safeBase58(pubkey),
