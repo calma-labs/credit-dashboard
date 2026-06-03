@@ -1,236 +1,123 @@
 import { Connection, PublicKey } from "@solana/web3.js";
 import { BorshAccountsCoder, type Idl } from "@coral-xyz/anchor";
+import { KaminoMarket } from "@kamino-finance/klend-sdk";
 import bs58 from 'bs58';
 
 import rawIdl from './klend.json';
 import ReserveCharts from './ReserveCharts';
 
-export const idl: Idl = rawIdl as Idl;
+
+const IDL = rawIdl as Idl;
 const KLEND_KEY = new PublicKey('KLend2g3cP87fffoy8q1mQqGKjrxjC8boSyAYavgmjD');
 const RPC = 'https://api.mainnet-beta.solana.com';
-const new_connection = new Connection(RPC, 'confirmed');
-const coder = new BorshAccountsCoder(idl);
-const acc_discriminator = BorshAccountsCoder.accountDiscriminator('Reserve');
+const CONNECTION = new Connection(RPC, 'confirmed');
+const CODER = new BorshAccountsCoder(IDL);
+const ACC_DISCRIMINATOR = BorshAccountsCoder.accountDiscriminator('Reserve');
 
-type ReserveMetrics = {
+type mask = {
   pubkey: string;
-  version: number;
-  lastUpdate: any;
-  lendingMarket: string;
-  utilizationPct: number;
-  borrowApyPct: number;
-  supplyApyPct: number;
-  tvlTokens: number;
   liquidity: {
     mintPubkey: string;
-    mintDecimals: number;
-    availableAmount: string;
-    borrowedAmountSf: string;
-  };
-  collateral: {
-    mintPubkey: string;
-    mintDecimals: number;
-    totalSupply: string;
-  };
+    mintDecimals: BigInt;
+    availableAmount: BigInt;
+    borrowedAmountSf: BigInt;
+  },
+  metrics: {
+    total: number;
+    borrowed: number;
+    available: number;
+    utilization: number;
+    tvl: number;
+  },
 };
 
-function safeString(value: unknown, fallback = '0'): string {
-  if (value == null) return fallback;
-  if (typeof value === 'string') return value;
-  if (typeof value === 'number' || typeof value === 'bigint' || typeof value === 'boolean') {
-    return String(value);
-  }
-  if (typeof (value as any).toString === 'function') {
-    const stringValue = (value as any).toString();
-    return stringValue === '' ? fallback : stringValue;
-  }
-  return fallback;
+//CALCULATION FUNCTIONS 
+
+function borrowed(borrowed: BigInt): number{
+  return Number(borrowed) / (2**60);
 }
 
-function safeBigInt(value: unknown): bigint {
-  if (value == null) return BigInt(0);
-  if (typeof value === 'bigint') return value;
-  if (typeof value === 'number') return BigInt(value);
-  if (typeof (value as any).toString === 'function') {
-    const stringValue = (value as any).toString();
-    return stringValue === '' ? BigInt(0) : BigInt(stringValue);
-  }
-  return BigInt(0);
+function available(raw: BigInt, decimals: BigInt): number{
+  console.log(Number(raw))
+  return Number(raw) / (10 ** Number(decimals));
 }
 
-function safeScaledFractionBigInt(value: unknown, scaleBits = 64): bigint {
-  const raw = safeBigInt(value);
-  if (raw === BigInt(0)) return BigInt(0);
-  return raw >> BigInt(scaleBits);
+function utilization(borrowed: number, available: number): number{
+  return borrowed / (borrowed + available);
 }
 
-function safeBase58(value: any): string {
-  return value && typeof value.toBase58 === 'function' ? value.toBase58() : '';
+function tvl(borrowed: number, available: number, price: number): number{
+  return (borrowed + available) * price;
 }
 
-function getUtilizationPct(liquidity: any): number {
-  const borrowed = safeScaledFractionBigInt(liquidity.borrowedAmountSf);
-  const available = safeBigInt(liquidity.availableAmount);
-  const total = borrowed + available;
-  if (total === BigInt(0)) return 0;
-  return Number((borrowed * BigInt(10000)) / total) / 100;
-}
 
-function getBorrowRateBps(utilizationPct: number, curve: any): number {
-  type BorrowCurvePoint = {
-    utilBps: number;
-    rateBps: number;
-  };
-
-  const points: BorrowCurvePoint[] = Array.isArray(curve?.points)
-    ? curve.points.map((point: any) => ({
-        utilBps: Number(point.utilizationRateBps),
-        rateBps: Number(point.borrowRateBps),
-      }))
-    : [];
-
-  if (points.length === 0) return 0;
-  const sorted = points.slice().sort((a, b) => a.utilBps - b.utilBps);
-  const utilBps = Math.round(utilizationPct * 100);
-
-  if (utilBps <= sorted[0].utilBps) {
-    return sorted[0].rateBps;
-  }
-
-  for (let i = 0; i < sorted.length - 1; i += 1) {
-    
-    const current = sorted[i];
-    const next = sorted[i + 1];
-
-    if (utilBps <= next.utilBps) {
-      const slope = (next.rateBps - current.rateBps) / (next.utilBps - current.utilBps);
-      return current.rateBps + slope * (utilBps - current.utilBps);
-    }
-  }
-
-  return sorted[sorted.length - 1].rateBps;
-}
-
-function getBorrowApyPct(reserve: any): number {
-  const utilPct = getUtilizationPct(reserve.liquidity);
-  return getBorrowRateBps(utilPct, reserve.config.borrowRateCurve) / 100;
-}
-
-function getSupplyRatePct(reserve: any): number {
-  const utilPct = getUtilizationPct(reserve.liquidity);
-  const borrowRateBps = getBorrowRateBps(utilPct, reserve.config.borrowRateCurve);
-  const protocolTakePct = Number(reserve.config.protocolTakeRatePct ?? 0);
-  const supplyRateBps = borrowRateBps * utilPct / 100 * (1 - protocolTakePct / 100);
-  return supplyRateBps / 100;
-}
-
-function getTvlTokens(reserve: any): number {
-  const borrowed = safeScaledFractionBigInt(reserve.liquidity.borrowedAmountSf);
-  const available = safeBigInt(reserve.liquidity.availableAmount);
-  const total = borrowed + available;
-  const decimals = Number(reserve.liquidity.mintDecimals ?? 0);
-  return Number(total) / 10 ** decimals;
-}
-
-async function fetchReserves(): Promise<ReserveMetrics[]> {
-  const fetched_reserve = await new_connection.getProgramAccounts(KLEND_KEY, {
+const fetchReserves = async (): Promise<mask[]> =>{
+  const FETCHED_RESERVES = await CONNECTION.getProgramAccounts(KLEND_KEY, {
     filters: [
       {
         memcmp: {
           offset: 0,
-          bytes: bs58.encode(acc_discriminator),
+          bytes: bs58.encode(ACC_DISCRIMINATOR),
         },
       },
     ],
   });
 
-  return fetched_reserve.flatMap(({ pubkey, account }) => {
-    try {
-      const decoded_reserve = coder.decode('Reserve', account.data);
-      const utilizationPct = getUtilizationPct(decoded_reserve.liquidity);
-      const borrowApyPct = getBorrowApyPct(decoded_reserve);
-      const supplyApyPct = getSupplyRatePct(decoded_reserve);
-      const tvlTokens = getTvlTokens(decoded_reserve);
 
-      if(utilizationPct === 0 && borrowApyPct === 0 && supplyApyPct === 0){
+  return FETCHED_RESERVES.flatMap(({ pubkey, account }) => {
+    try{
+      const DECODED_RESERVE = CODER.decode('Reserve', account.data);
+
+      if (DECODED_RESERVE.liquidity.borrowedAmountSf?.toString() === '0') {
         return [];
       }
 
-      return [{
-        pubkey: safeBase58(pubkey),
-        version: Number(decoded_reserve.version ?? 0),
-        lastUpdate: decoded_reserve.lastUpdate,
-        lendingMarket: safeBase58(decoded_reserve.lendingMarket),
-        utilizationPct,
-        borrowApyPct,
-        supplyApyPct,
-        tvlTokens,
-        liquidity: {
-          mintPubkey: safeBase58(decoded_reserve.liquidity.mintPubkey),
-          mintDecimals: Number(decoded_reserve.liquidity.mintDecimals ?? 0),
-          availableAmount: safeString(decoded_reserve.liquidity.availableAmount, '0'),
-          borrowedAmountSf: safeString(decoded_reserve.liquidity.borrowedAmountSf, '0'),
-        },
-        collateral: {
-          mintPubkey: safeBase58(decoded_reserve.collateral.mintPubkey),
-          mintDecimals: Number(decoded_reserve.collateral.mintDecimals ?? 0),
-          totalSupply: safeString(decoded_reserve.collateral.totalSupply, '0'),
-        },
-      }];
-    } catch (error) {
+      const RESERVE_AVAILABLE = available(DECODED_RESERVE.liquidity.availableAmount ?? 0, DECODED_RESERVE.liquidity.mintDecimals ?? 0);
+      const RESERVE_BORROWED = borrowed(DECODED_RESERVE.liquidity.borrowedAmountSf ?? 0);
+      const RESERVE_DECIMALS = DECODED_RESERVE.liquidity.mintDecimals ?? 0;
+
+      console.log(DECODED_RESERVE);
+
+      return [
+        {
+          pubkey: pubkey.toBase58(),
+          liquidity: {
+            mintPubkey: DECODED_RESERVE.liquidity.mintPubkey.toBase58(),
+            mintDecimals: BigInt(String(DECODED_RESERVE.liquidity.mintDecimals ?? 0)),
+            availableAmount: BigInt(String(DECODED_RESERVE.liquidity.availableAmount ?? 0)),
+            borrowedAmountSf: BigInt(String(DECODED_RESERVE.liquidity.borrowedAmountSf ?? 0)),
+          },
+          metrics: {
+            total: RESERVE_AVAILABLE + RESERVE_BORROWED,
+            borrowed: RESERVE_BORROWED,
+            available: RESERVE_AVAILABLE,
+            utilization: utilization(RESERVE_BORROWED, RESERVE_AVAILABLE),
+            tvl: tvl(RESERVE_BORROWED, RESERVE_AVAILABLE, RESERVE_DECIMALS ), //<<< docelowo zamiast decimals ma być price
+          },
+    }];
+    }catch(error){
       console.error('Decode reserve error', error);
       return [];
     }
   });
-}
+  }
 
-async function App() {
-  const accs = await fetchReserves();
-  const chartReserves = accs.map((reserve) => ({
-    pubkey: reserve.pubkey,
-    lendingMarket: reserve.lendingMarket,
-    utilizationPct: reserve.utilizationPct,
-    borrowApyPct: reserve.borrowApyPct,
-    supplyApyPct: reserve.supplyApyPct,
-    tvlTokens: reserve.tvlTokens,
-  }));
-
+export default async function App(){
+  const FETCHED_RESERVES = await fetchReserves();
+  console.log(FETCHED_RESERVES);
   return (
-    <div style={{ padding: 24, fontFamily: 'Inter, system-ui, sans-serif' }}>
-      <div style={{ marginBottom: 24 }}>
-        <h1 style={{
-          margin: 0,
-          fontSize: '2.6rem',
-          lineHeight: 1.05,
-          fontWeight: 800,
-          letterSpacing: '-0.04em',
-          color: 'white',
-        }}>
-          Kamino Lending <span style={{ color: '#2563eb' }}>Dashboard</span>
-        </h1>
-      </div>
-      <ReserveCharts reserves={chartReserves} />
-      {accs.length === 0 ? (
-        <p>No reserves found.</p>
-      ) : (
-        <div>
-          {accs.map((reserve) => (
-            <div key={reserve.pubkey} style={{ marginTop: 20, padding: 12, border: '1px solid #ccc', borderRadius: 8 }}>
-              <h2>Reserve {reserve.pubkey}</h2>
-              <p>Version: {reserve.version}</p>
-              <p>Market: {reserve.lendingMarket}</p>
-              <p>Utilization: {reserve.utilizationPct.toFixed(2)}%</p>
-              <p>Borrow APY: {reserve.borrowApyPct.toFixed(2)}%</p>
-              <p>Supply APY: {reserve.supplyApyPct.toFixed(2)}%</p>
-              <p>TVL: {reserve.tvlTokens.toFixed(4)} tokens</p>
-              <p>Liquidity mint: {reserve.liquidity.mintPubkey}</p>
-              <p>Available: {reserve.liquidity.availableAmount}</p>
-            </div>
-          ))}
+    <div>
+      {FETCHED_RESERVES.map((reserve) => (
+
+        <div key={reserve.pubkey}>
+          <h2>Reserve {reserve.pubkey}</h2>
+          <p>Available Amount: {Number(reserve.liquidity.availableAmount)}</p>
+          <p>Available Amount: {reserve.metrics.available}</p>
+          <p>Borrowed Amount: {reserve.metrics.borrowed}</p>
+          <p>Utilization: {reserve.metrics.utilization}</p>
         </div>
-      )}
+
+      ))}
     </div>
   );
 }
-
-export default App;
