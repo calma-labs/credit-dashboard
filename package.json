@@ -13,6 +13,8 @@
     "@coral-xyz/borsh": "^0.28.0",
     "@kamino-finance/farms-sdk": "^3.2.26",
     "@kamino-finance/klend-sdk": "^8.0.2",
+    "@solana-program/compute-budget": "^0.9.0",
+    "@solana-program/memo": "^0.8.0",
     "@solana/kit": "^3.0.3",
     "@solana/web3.js": "^1.98.4",
     "bs58": "^6.0.0",
