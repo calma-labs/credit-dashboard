@@ -9,14 +9,14 @@ type MatchedTokens = {
     mintAddress: string,
     tvl: number,
     supplyAPY: number;
-    borrowAPY: number;
+    // borrowAPY: number;
   }
 
   juplendRightSide: {
     mintAddress: string,
     tvl: number,
     supplyAPY: number,
-    borrowAPY: number,
+    // borrowAPY: number,
   }
 
 }
@@ -43,6 +43,8 @@ export default async function App() {
     )
   );
 
+  console.log(JUPLEND_DATA, KAMINO_DATA);
+
   for (const KAMINO_TOKEN of FILTERED_BY_SYMBOL) {
     for (const JUP_TOKEN of JUPLEND_DATA.tokens) {
       if (KAMINO_TOKEN.symbol === JUP_TOKEN.symbol && KAMINO_TOKEN.stats.mintAddress === JUP_TOKEN.mint) {
@@ -50,23 +52,22 @@ export default async function App() {
         console.log(`Match found for symbol: ${KAMINO_TOKEN.symbol}`);
 
         comparisonResults.push({
-
           symbol: KAMINO_TOKEN.symbol,
           
           kaminoLeftSide: {
+
             mintAddress: KAMINO_TOKEN.tokenOraclePrice.mintAddress,
             tvl: Number(KAMINO_TOKEN.getDepositTvl().toFixed(2)),
             supplyAPY: Number((KAMINO_TOKEN.totalSupplyAPY(BigInt(GET_KAMINO_SLOT)) * 100).toFixed(2)),
-            borrowAPY: Number((KAMINO_TOKEN.totalBorrowAPY(BigInt(GET_KAMINO_SLOT)) * 100).toFixed(2)),
           },
 
           juplendRightSide: {
+
             mintAddress: JUP_TOKEN.mint,
             tvl: JUP_TOKEN.tvlUsd,
-            supplyAPY: JUP_TOKEN.supplyRate,
-            borrowAPY: JUP_TOKEN.borrowRate,
+            supplyAPY: Number(JUP_TOKEN.apy.toFixed(2)),
+
           }
-        
         });
       }
     }
@@ -109,11 +110,9 @@ export default async function App() {
             {/* Kamino Headers */}
             <th style={{ padding: '12px 16px', fontSize: '13px', color: '#6b7280', fontWeight: '500' }}>TVL</th>
             <th style={{ padding: '12px 16px', fontSize: '13px', color: '#6b7280', fontWeight: '500' }}>Supply APY</th>
-            <th style={{ padding: '12px 16px', fontSize: '13px', color: '#6b7280', fontWeight: '500' }}>Borrow APY</th>
             {/* Jupiter Headers */}
             <th style={{ padding: '12px 16px', fontSize: '13px', color: '#6b7280', fontWeight: '500' }}>TVL</th>
             <th style={{ padding: '12px 16px', fontSize: '13px', color: '#6b7280', fontWeight: '500' }}>Supply APY</th>
-            <th style={{ padding: '12px 16px', fontSize: '13px', color: '#6b7280', fontWeight: '500' }}>Borrow APY</th>
           </tr>
         </thead>
         <tbody>
@@ -125,12 +124,10 @@ export default async function App() {
               {/* Kamino data */}
               <td style={{ padding: '16px', color: '#e2e8f0' }}>${token.kaminoLeftSide.tvl.toLocaleString()}</td>
               <td style={{ padding: '16px', color: '#34d399', fontWeight: '500' }}>{token.kaminoLeftSide.supplyAPY}%</td>
-              <td style={{ padding: '16px', color: '#f87171', fontWeight: '500' }}>{token.kaminoLeftSide.borrowAPY}%</td>
               
               {/* Jupiter data */}
               <td style={{ padding: '16px', color: '#e2e8f0' }}>${token.juplendRightSide.tvl.toLocaleString()}</td>
               <td style={{ padding: '16px', color: '#34d399', fontWeight: '500' }}>{token.juplendRightSide.supplyAPY}%</td>
-              <td style={{ padding: '16px', color: '#f87171', fontWeight: '500' }}>{token.juplendRightSide.borrowAPY}%</td>
             </tr>
           ))}
         </tbody>
