@@ -1,5 +1,6 @@
 import { createSolanaRpc, address } from '@solana/kit';
 import { KaminoMarket, KaminoReserve, getMarketsFromApi } from '@kamino-finance/klend-sdk';
+import { Connection } from '@solana/web3.js';
 
 const RPC = 'https://api.mainnet-beta.solana.com';
 const SLOT_DURATION_MS = 400;
@@ -23,4 +24,11 @@ export async function fetchReserves(): Promise<KaminoReserve[]> {
   return results
     .flatMap((market) => market?.getReserves() ?? [])
     .filter((reserve) => reserve.getBorrowedAmount().gt(0));
+}
+
+export async function getSlotForAPY(){
+  const CONNECTION = new Connection('https://api.mainnet-beta.solana.com');
+  const SLOT = await CONNECTION.getSlot();
+
+  return SLOT;
 }

@@ -1,4 +1,4 @@
-import { fetchReserves } from './kaminolend/kamino_lend';
+import { fetchReserves, getSlotForAPY } from './kaminolend/kamino_lend';
 import { useJupLendData } from './juplend/hooks/useJupLendData';
 
 type MatchedTokens = {
@@ -6,11 +6,17 @@ type MatchedTokens = {
   symbol: string;
 
   kaminoLeftSide: {
-    mintAddress: string;
+    mintAddress: string,
+    tvl: number,
+    supplyAPY: number;
+    borrowAPY: number;
   }
 
   juplendRightSide: {
-    mint: string;
+    mintAddress: string,
+    tvl: number,
+    supplyAPY: number,
+    borrowAPY: number,
   }
 
 }
@@ -18,10 +24,12 @@ type MatchedTokens = {
 const KAMINO_DATA = await fetchReserves();
 const JUPLEND_DATA = await useJupLendData();
 
+const GET_KAMINO_SLOT = await getSlotForAPY();
+
 export default async function App() {
 
   if(KAMINO_DATA.length === 0 || JUPLEND_DATA.tokens.length === 0) {
-    return (<div>Loading...</div>)
+    return (<div>Loading...</div>);
   }
 
   let comparisonResults: MatchedTokens[] = [];
@@ -41,20 +49,28 @@ export default async function App() {
       if (KAMINO_TOKEN.symbol === JUP_TOKEN.symbol && KAMINO_TOKEN.stats.mintAddress === JUP_TOKEN.mint) {
       
         console.log(`Match found for symbol: ${KAMINO_TOKEN.symbol}`);
-      
+
         comparisonResults.push({
 
           symbol: KAMINO_TOKEN.symbol,
           
           kaminoLeftSide: {
-            mintAddress: KAMINO_TOKEN.stats.mintAddress
+            mintAddress: KAMINO_TOKEN.tokenOraclePrice.mintAddress,
+            tvl: Number(KAMINO_TOKEN.getDepositTvl().toFixed(2)),
+            supplyAPY: Number((KAMINO_TOKEN.totalSupplyAPY(BigInt(GET_KAMINO_SLOT)) * 100).toFixed(2)),
+            borrowAPY: Number((KAMINO_TOKEN.totalBorrowAPY(BigInt(GET_KAMINO_SLOT)) * 100).toFixed(2)),
           },
 
           juplendRightSide: {
-            mint: JUP_TOKEN.mint
+            mintAddress: JUP_TOKEN.mint,
+            tvl: JUP_TOKEN.tvlUsd,
+            supplyAPY: JUP_TOKEN.supplyRate,
+            borrowAPY: JUP_TOKEN.borrowRate,
           }
         
         });
+
+        console.log(comparisonResults)
 
       }
     }
