@@ -1,13 +1,26 @@
 import { fetchReserves } from './kaminolend/kamino_lend';
 import { useJupLendData } from './juplend/hooks/useJupLendData';
 
+type MatchedTokens = {
+  
+  symbol: string;
+
+  kaminoLeftSide: {
+    mintAddress: string;
+  }
+
+  juplendRightSide: {
+    mint: string;
+  }
+
+}
+
 const KAMINO_DATA = await fetchReserves();
 const JUPLEND_DATA = await useJupLendData();
 
 export default async function App() {
   
-  console.log('Kamino Tokens:', KAMINO_DATA);
-  console.log('JupLend Tokens:', JUPLEND_DATA.tokens);
+  let comparisonResults: MatchedTokens[] = [];
 
   const FILTERED_BY_SYMBOL = KAMINO_DATA.filter(
 
@@ -19,7 +32,29 @@ export default async function App() {
     )
   );
 
-  console.log('Filtered Tokens (by symbol):', FILTERED_BY_SYMBOL);
+  for (const KAMINO_TOKEN of FILTERED_BY_SYMBOL) {
+    for (const JUP_TOKEN of JUPLEND_DATA.tokens) {
+      if (KAMINO_TOKEN.symbol === JUP_TOKEN.symbol && KAMINO_TOKEN.stats.mintAddress === JUP_TOKEN.mint) {
+      
+        console.log(`Match found for symbol: ${KAMINO_TOKEN.symbol}`);
+      
+        comparisonResults.push({
+
+          symbol: KAMINO_TOKEN.symbol,
+          
+          kaminoLeftSide: {
+            mintAddress: KAMINO_TOKEN.stats.mintAddress
+          },
+
+          juplendRightSide: {
+            mint: JUP_TOKEN.mint
+          }
+        
+        });
+
+      }
+    }
+  }
 
   return (
     <div>
