@@ -19,7 +19,11 @@ const KAMINO_DATA = await fetchReserves();
 const JUPLEND_DATA = await useJupLendData();
 
 export default async function App() {
-  
+
+  if(KAMINO_DATA.length === 0 || JUPLEND_DATA.tokens.length === 0) {
+    return (<div>Loading...</div>)
+  }
+
   let comparisonResults: MatchedTokens[] = [];
 
   const FILTERED_BY_SYMBOL = KAMINO_DATA.filter(
