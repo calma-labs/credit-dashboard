@@ -9,14 +9,16 @@ type MatchedTokens = {
     mintAddress: string,
     tvl: number,
     supplyAPY: number;
-    // borrowAPY: number;
+    utilization: number,
+    borrowRate: number,
   }
 
   juplendRightSide: {
     mintAddress: string,
     tvl: number,
     supplyAPY: number,
-    // borrowAPY: number,
+    utilization: number,
+    borrowRate: number,
   }
 
 }
@@ -59,13 +61,18 @@ export default async function App() {
             mintAddress: KAMINO_TOKEN.tokenOraclePrice.mintAddress,
             tvl: Number(KAMINO_TOKEN.getDepositTvl().toFixed(2)),
             supplyAPY: Number((KAMINO_TOKEN.totalSupplyAPY(BigInt(GET_KAMINO_SLOT)) * 100).toFixed(2)),
+            utilization: Number((KAMINO_TOKEN.calculateUtilizationRatio() * 100).toFixed(2)),
+            borrowRate: Number((KAMINO_TOKEN.calculateBorrowAPR(BigInt(GET_KAMINO_SLOT), Math.floor(KAMINO_TOKEN.calculateUtilizationRatio() * 10000)) * 100).toFixed(2)),
+          
           },
 
           juplendRightSide: {
 
             mintAddress: JUP_TOKEN.mint,
-            tvl: JUP_TOKEN.tvlUsd,
+            tvl: Number(JUP_TOKEN.tvlUsd),
             supplyAPY: Number(JUP_TOKEN.apy.toFixed(2)),
+            utilization: Number(JUP_TOKEN.utilization.toFixed(2)),
+            borrowRate: Number(JUP_TOKEN.borrowRate.toFixed(2)),
 
           }
         });
@@ -74,7 +81,7 @@ export default async function App() {
 
   }
   
-  return (
+ return (
   <div style={{ 
     padding: '30px', 
     fontFamily: '"Segoe UI", Roboto, Helvetica, Arial, sans-serif', 
@@ -102,17 +109,23 @@ export default async function App() {
         <thead>
           <tr style={{ backgroundColor: '#1f2937', borderBottom: '2px solid #374151' }}>
             <th style={{ padding: '16px', fontWeight: '600', color: '#9ca3af' }}>Token</th>
-            <th style={{ padding: '16px', fontWeight: '600', color: '#38bdf8', textAlign: 'center' }} colSpan={3}>Kamino Lend</th>
-            <th style={{ padding: '16px', fontWeight: '600', color: '#a78bfa', textAlign: 'center' }} colSpan={3}>Jupiter Lend</th>
+            {/* colSpan zmieniony na 4, bo mamy teraz 4 kolumny w sekcji */}
+            <th style={{ padding: '16px', fontWeight: '600', color: '#38bdf8', textAlign: 'center' }} colSpan={4}>Kamino Lend</th>
+            <th style={{ padding: '16px', fontWeight: '600', color: '#a78bfa', textAlign: 'center' }} colSpan={4}>Jupiter Lend</th>
           </tr>
           <tr style={{ backgroundColor: '#111827', borderBottom: '1px solid #374151' }}>
             <th></th>
             {/* Kamino Headers */}
             <th style={{ padding: '12px 16px', fontSize: '13px', color: '#6b7280', fontWeight: '500' }}>TVL</th>
             <th style={{ padding: '12px 16px', fontSize: '13px', color: '#6b7280', fontWeight: '500' }}>Supply APY</th>
+            <th style={{ padding: '12px 16px', fontSize: '13px', color: '#6b7280', fontWeight: '500' }}>Borrow Rate</th>
+            <th style={{ padding: '12px 16px', fontSize: '13px', color: '#6b7280', fontWeight: '500' }}>Utylizacja</th>
+            
             {/* Jupiter Headers */}
             <th style={{ padding: '12px 16px', fontSize: '13px', color: '#6b7280', fontWeight: '500' }}>TVL</th>
             <th style={{ padding: '12px 16px', fontSize: '13px', color: '#6b7280', fontWeight: '500' }}>Supply APY</th>
+            <th style={{ padding: '12px 16px', fontSize: '13px', color: '#6b7280', fontWeight: '500' }}>Borrow Rate</th>
+            <th style={{ padding: '12px 16px', fontSize: '13px', color: '#6b7280', fontWeight: '500' }}>Utylizacja</th>
           </tr>
         </thead>
         <tbody>
@@ -124,10 +137,14 @@ export default async function App() {
               {/* Kamino data */}
               <td style={{ padding: '16px', color: '#e2e8f0' }}>${token.kaminoLeftSide.tvl.toLocaleString()}</td>
               <td style={{ padding: '16px', color: '#34d399', fontWeight: '500' }}>{token.kaminoLeftSide.supplyAPY}%</td>
+              <td style={{ padding: '16px', color: '#f87171', fontWeight: '500' }}>{token.kaminoLeftSide.borrowRate}%</td>
+              <td style={{ padding: '16px', color: '#60a5fa' }}>{token.kaminoLeftSide.utilization}%</td>
               
               {/* Jupiter data */}
               <td style={{ padding: '16px', color: '#e2e8f0' }}>${token.juplendRightSide.tvl.toLocaleString()}</td>
               <td style={{ padding: '16px', color: '#34d399', fontWeight: '500' }}>{token.juplendRightSide.supplyAPY}%</td>
+              <td style={{ padding: '16px', color: '#f87171', fontWeight: '500' }}>{token.juplendRightSide.borrowRate}%</td>
+              <td style={{ padding: '16px', color: '#60a5fa' }}>{token.juplendRightSide.utilization}%</td>
             </tr>
           ))}
         </tbody>
