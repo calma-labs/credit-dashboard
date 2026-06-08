@@ -1,5 +1,3 @@
-This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app).
-
 ## Getting Started
 
 First, run the development server:
@@ -16,21 +14,58 @@ bun dev
 
 Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
 
-You can start editing the page by modifying `app/page.tsx`. The page auto-updates as you edit the file.
 
-This project uses [`next/font`](https://nextjs.org/docs/app/building-your-application/optimizing/fonts) to automatically optimize and load [Geist](https://vercel.com/font), a new font family for Vercel.
+## To launch properly the code you need to:
 
-## Learn More
+change 
+``` env.local
+NEXT_PUBLIC_HELIUS_API_KEY = [Your Unique API Key]
+```
 
-To learn more about Next.js, take a look at the following resources:
+## Simple documentation:
 
-- [Next.js Documentation](https://nextjs.org/docs) - learn about Next.js features and API.
-- [Learn Next.js](https://nextjs.org/learn) - an interactive Next.js tutorial.
+```TypeScript
 
-You can check out [the Next.js GitHub repository](https://github.com/vercel/next.js) - your feedback and contributions are welcome!
+const KAMINO_DATA = await fetchReserves();
+const JUPLEND_DATA = await useJupLendData();
+const GET_KAMINO_SLOT = await getSlotForAPY();
 
-## Deploy on Vercel
+```
+allows you to acces fetched reserves form Kamino and JupLend, and slot which allows you to calculate the Utilization and borrow Rate with Kamino's Market method
 
-The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
+```TypeScript
+calculateUtilizationRatio() * 100
+calculateBorrowAPR(KAMINO_SLOT, Math.floor(KAMINO_TOKEN.calculateUtilizationRatio() * 10000)) * 100
+```
 
-Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/building-your-application/deploying) for more details.
+
+```TypeScript
+type MatchedTokens = {
+  
+  symbol: string;
+
+  kaminoLeftSide: {
+    mintAddress: string,
+    tvl: number,
+    supplyAPY: number;
+    utilization: number,
+    borrowRate: number,
+  }
+
+  juplendRightSide: {
+    mintAddress: string,
+    tvl: number,
+    supplyAPY: number,
+    utilization: number,
+    borrowRate: number,
+  }
+
+}
+```
+allows you to access those tokens, which has the same mint address and Token's symbol
+
+```TypeScript
+let comparisonResults: MatchedTokens[] = [];
+```
+
+all matched Tokens are stored in MatchedTokens arrays
