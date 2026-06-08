@@ -1,83 +1,131 @@
-
+//imports 
 import { fetchReserves, getSlotForAPY } from './kaminolend/kamino_lend';
 import { useJupLendData, new_error } from './juplend/hooks/useJupLendData';
+import { KaminoReserve } from '@kamino-finance/klend-sdk';
 
+//metric's type
 type MatchedTokens = {
   
   symbol: string;
 
   kaminoLeftSide: {
-    mintAddress: string,
-    tvl: number,
-    supplyAPY: number;
-    utilization: number,
-    borrowRate: number,
+    mintAddress:  string,
+    tvl:          number,
+    supplyAPY:    number;
+    utilization:  number,
+    borrowRate:   number,
   }
 
   juplendRightSide: {
-    mintAddress: string,
-    tvl: number,
-    supplyAPY: number,
-    utilization: number,
-    borrowRate: number,
+    mintAddress:  string,
+    tvl:          number,
+    supplyAPY:    number,
+    utilization:  number,
+    borrowRate:   number,
   }
 
 }
 
-const KAMINO_DATA = await fetchReserves();
-const JUPLEND_DATA = await useJupLendData();
+//result of comparision
+let comparisonResults: MatchedTokens[] = [];
+
+//kamino's metrics calculations
+function kaminoTVL(token: KaminoReserve):                     number{
+
+  return Number(token.getDepositTvl().toFixed(2));
+
+}
+function kaminoUtilization(token: KaminoReserve):             number{
+
+  return Number((token.calculateUtilizationRatio() * 100).toFixed(2));
+
+}
+function kaminoBorrowRate(token: KaminoReserve, slot: number):number{
+  
+  return Number((token.calculateBorrowAPR(BigInt(slot), Math.floor(token.calculateUtilizationRatio() * 10000)) * 100).toFixed(2));
+
+}
+function kaminoSupplyAPY(token: KaminoReserve, slot: number): number{
+ 
+  return Number((token.totalSupplyAPY(BigInt(slot)) * 100).toFixed(2))
+
+}
+
+//data fetch from each lending
+const KAMINO_DATA =     await fetchReserves();
+const JUPLEND_DATA =    await useJupLendData();
 const GET_KAMINO_SLOT = await getSlotForAPY();
 
-export default async function App() {
-  
-  console.log(new_error);
+//main function 
+export default async function App() 
+{
 
-  if(KAMINO_DATA.length === 0 || JUPLEND_DATA.tokens.length === 0) {
+  //error hanlder 
+  if(
+    KAMINO_DATA.length          === 0   ||  //0 is equal to non existing list
+    JUPLEND_DATA.tokens.length  === 0   ||  //0 is equal to non existing list
+    new_error                               //false is default
+  ) 
+  {
     return (<div>Loading...</div>);
   }
 
-  let comparisonResults: MatchedTokens[] = [];
+  //filtering by symbol
+  const FILTERED_BY_SYMBOL = KAMINO_DATA.filter
+  (
 
-  const FILTERED_BY_SYMBOL = KAMINO_DATA.filter(
+    kaminoTokens => 
+      JUPLEND_DATA.tokens.some(
 
-    kaminoTokens => JUPLEND_DATA.tokens.some(
-    
-      jupTokens => jupTokens.symbol === kaminoTokens.symbol &&
-      jupTokens.mint === kaminoTokens.stats.mintAddress
-    
+      jupTokens => 
+      jupTokens.symbol  === kaminoTokens.symbol &&          //filtering by same symbol
+      jupTokens.mint    === kaminoTokens.stats.mintAddress  //filtering by same mint 
     )
+
   );
 
-  for (const KAMINO_TOKEN of FILTERED_BY_SYMBOL) {
+  //matching the tokens
+  for (const KAMINO_TOKEN of FILTERED_BY_SYMBOL)  //kamino tokens
+    {
 
-    for (const JUP_TOKEN of JUPLEND_DATA.tokens) {
-      if (KAMINO_TOKEN.symbol === JUP_TOKEN.symbol && KAMINO_TOKEN.stats.mintAddress === JUP_TOKEN.mint) 
+    for (const JUP_TOKEN of JUPLEND_DATA.tokens)  //jup tokens 
+      {
+
+      if (
+        KAMINO_TOKEN.symbol === JUP_TOKEN.symbol &&       //symbol for each lending should be euqal
+        KAMINO_TOKEN.stats.mintAddress === JUP_TOKEN.mint //...same as mint 
+      ) 
         {
 
-        comparisonResults.push({
-          symbol: KAMINO_TOKEN.symbol,
+          //pushing matching tokens to two sides of component
+          comparisonResults.push({
+
+          //symbol which associates symbols
+          symbol:         KAMINO_TOKEN.symbol,
           
+          //kamino - left side
           kaminoLeftSide: {
 
-            mintAddress: KAMINO_TOKEN.tokenOraclePrice.mintAddress,
-            tvl: Number(KAMINO_TOKEN.getDepositTvl().toFixed(2)),
-            supplyAPY: Number((KAMINO_TOKEN.totalSupplyAPY(BigInt(GET_KAMINO_SLOT)) * 100).toFixed(2)),
-            utilization: Number((KAMINO_TOKEN.calculateUtilizationRatio() * 100).toFixed(2)),
-            borrowRate: Number((KAMINO_TOKEN.calculateBorrowAPR(BigInt(GET_KAMINO_SLOT), Math.floor(KAMINO_TOKEN.calculateUtilizationRatio() * 10000)) * 100).toFixed(2)),
+              mintAddress:  KAMINO_TOKEN.tokenOraclePrice.mintAddress,
+              tvl:          kaminoTVL(KAMINO_TOKEN),
+              supplyAPY:    kaminoSupplyAPY(KAMINO_TOKEN, GET_KAMINO_SLOT),
+              utilization:  kaminoUtilization(KAMINO_TOKEN),
+              borrowRate:   kaminoBorrowRate(KAMINO_TOKEN, GET_KAMINO_SLOT),
           
-          },
+           },
 
+          //juplend - right side 
           juplendRightSide: {
 
-            mintAddress: JUP_TOKEN.mint,
-            tvl: Number(JUP_TOKEN.tvlUsd),
-            supplyAPY: Number(JUP_TOKEN.apy.toFixed(2)),
-            utilization: Number(JUP_TOKEN.utilization.toFixed(2)),
-            borrowRate: Number(JUP_TOKEN.borrowRate.toFixed(2)),
+              mintAddress:  JUP_TOKEN.mint,
+              tvl:          Number(JUP_TOKEN.tvlUsd),
+              supplyAPY:    Number(JUP_TOKEN.apy.toFixed(2)),
+              utilization:  Number(JUP_TOKEN.utilization.toFixed(2)),
+              borrowRate:   Number(JUP_TOKEN.borrowRate.toFixed(2)),
 
-          }
-        });
-      }
+            } 
+          });
+        }
     
     }
 

@@ -9,7 +9,7 @@ async function getErr(error: any): Promise<any> {
   return error;
 }
 
-export let new_error = 0;
+export let new_error = false;
 
 
 interface ApiToken {
@@ -110,20 +110,20 @@ async function fetchTokenReserve(
     });
 
     if (!res.ok){
-      new_error = 1;
+      new_error = true;
       return null;
     }
     
     const json = await res.json();
     const b64 = json?.result?.value?.data?.[0];
     if (!b64){
-      new_error = 2;
+      new_error = true;
       return null;
     }
 
     const bytes = Uint8Array.from(atob(b64), (c) => c.charCodeAt(0));
     if (bytes.length < 78){
-      new_error = 3;
+      new_error = true;
       return null;
     }
 
@@ -134,7 +134,7 @@ async function fetchTokenReserve(
 
     return { borrowRate, utilization };
   } catch (e){
-    new_error = 4;
+    new_error = true;
     return null;
   }
 }
