@@ -5,6 +5,13 @@ const RPC_PROXY = `https://mainnet.helius-rpc.com/?api-key=${process.env.NEXT_PU
 const API_BASE = 'https://lite-api.jup.ag/lend/v1';
 const LIQUIDITY_PROGRAM = new PublicKey('jupeiUmn818Jg1ekPURTpr4mFo29p46vygyykFJ3wZC');
 
+async function getErr(error: any): Promise<any> {
+  return error;
+}
+
+export let new_error = 0;
+
+
 interface ApiToken {
   id: number;
   address: string;
@@ -102,31 +109,46 @@ async function fetchTokenReserve(
       body,
     });
 
-    if (!res.ok) return null;
+    if (!res.ok){
+      new_error = 1;
+      return null;
+    }
+    
     const json = await res.json();
     const b64 = json?.result?.value?.data?.[0];
-    if (!b64) return null;
+    if (!b64){
+      new_error = 2;
+      return null;
+    }
 
     const bytes = Uint8Array.from(atob(b64), (c) => c.charCodeAt(0));
-    if (bytes.length < 78) return null;
+    if (bytes.length < 78){
+      new_error = 3;
+      return null;
+    }
 
     const view = new DataView(bytes.buffer);
+    
     const borrowRate = view.getUint16(72, true) / 100;
     const utilization = view.getUint16(76, true) / 100;
+
     return { borrowRate, utilization };
-  } catch {
+  } catch (e){
+    new_error = 4;
     return null;
   }
 }
 
 // Funkcja asynchroniczna zwracająca dokładnie strukturę JupLendData
 export async function useJupLendData(): Promise<JupLendData> {
+  
   try {
     const res = await fetch(`${API_BASE}/earn/tokens`, {
       cache: 'no-store', // Wymuszenie świeżych danych przy każdym zapytaniu serwera
     });
     if (!res.ok) throw new Error(`API error: ${res.status}`);
     const apiTokens: ApiToken[] = await res.json();
+
 
     const tokens: TokenData[] = await Promise.all(
       apiTokens.map(async (t) => {

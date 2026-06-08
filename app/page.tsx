@@ -1,5 +1,6 @@
+
 import { fetchReserves, getSlotForAPY } from './kaminolend/kamino_lend';
-import { useJupLendData } from './juplend/hooks/useJupLendData';
+import { useJupLendData, new_error } from './juplend/hooks/useJupLendData';
 
 type MatchedTokens = {
   
@@ -28,6 +29,8 @@ const JUPLEND_DATA = await useJupLendData();
 const GET_KAMINO_SLOT = await getSlotForAPY();
 
 export default async function App() {
+  
+  console.log(new_error);
 
   if(KAMINO_DATA.length === 0 || JUPLEND_DATA.tokens.length === 0) {
     return (<div>Loading...</div>);
@@ -45,13 +48,11 @@ export default async function App() {
     )
   );
 
-  console.log(JUPLEND_DATA, KAMINO_DATA);
-
   for (const KAMINO_TOKEN of FILTERED_BY_SYMBOL) {
+
     for (const JUP_TOKEN of JUPLEND_DATA.tokens) {
-      if (KAMINO_TOKEN.symbol === JUP_TOKEN.symbol && KAMINO_TOKEN.stats.mintAddress === JUP_TOKEN.mint) {
-      
-        console.log(`Match found for symbol: ${KAMINO_TOKEN.symbol}`);
+      if (KAMINO_TOKEN.symbol === JUP_TOKEN.symbol && KAMINO_TOKEN.stats.mintAddress === JUP_TOKEN.mint) 
+        {
 
         comparisonResults.push({
           symbol: KAMINO_TOKEN.symbol,
@@ -77,6 +78,7 @@ export default async function App() {
           }
         });
       }
+    
     }
 
   }
@@ -119,13 +121,13 @@ export default async function App() {
             <th style={{ padding: '12px 16px', fontSize: '13px', color: '#6b7280', fontWeight: '500' }}>TVL</th>
             <th style={{ padding: '12px 16px', fontSize: '13px', color: '#6b7280', fontWeight: '500' }}>Supply APY</th>
             <th style={{ padding: '12px 16px', fontSize: '13px', color: '#6b7280', fontWeight: '500' }}>Borrow Rate</th>
-            <th style={{ padding: '12px 16px', fontSize: '13px', color: '#6b7280', fontWeight: '500' }}>Utylizacja</th>
+            <th style={{ padding: '12px 16px', fontSize: '13px', color: '#6b7280', fontWeight: '500' }}>Kamino utilization</th>
             
             {/* Jupiter Headers */}
             <th style={{ padding: '12px 16px', fontSize: '13px', color: '#6b7280', fontWeight: '500' }}>TVL</th>
             <th style={{ padding: '12px 16px', fontSize: '13px', color: '#6b7280', fontWeight: '500' }}>Supply APY</th>
             <th style={{ padding: '12px 16px', fontSize: '13px', color: '#6b7280', fontWeight: '500' }}>Borrow Rate</th>
-            <th style={{ padding: '12px 16px', fontSize: '13px', color: '#6b7280', fontWeight: '500' }}>Utylizacja</th>
+            <th style={{ padding: '12px 16px', fontSize: '13px', color: '#6b7280', fontWeight: '500' }}>JupLend utilization</th>
           </tr>
         </thead>
         <tbody>
