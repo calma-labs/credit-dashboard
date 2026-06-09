@@ -1,7 +1,7 @@
 //imports 
-import { fetchReserves, getSlotForAPY, kaminoStandarizedTokens } from './kaminolend/kamino_lend';
-import { useJupLendData, new_error } from './juplend/hooks/useJupLendData';
-import { KaminoReserve } from '@kamino-finance/klend-sdk';
+import { kaminoStandarizedTokens } from './kaminolend/kamino_lend';
+import { standarizedJupLendToken } from './juplend/hooks/useJupLendData';
+
 
 //metric's type
 type MatchedTokens = {
@@ -9,8 +9,8 @@ type MatchedTokens = {
   //symbol of matching tokens
   symbol: string;
 
-  //kamino's side object
-  kaminoLeftSide: {
+  //left side
+  leftSide: {
     mintAddress:  string,
     tvl:          number,
     supplyAPY:    number;
@@ -18,8 +18,8 @@ type MatchedTokens = {
     borrowRate:   number,
   }
 
-  //juplend's side object
-  juplendRightSide: {
+  //right side
+  rightSide: {
     mintAddress:  string,
     tvl:          number,
     supplyAPY:    number,
@@ -29,21 +29,21 @@ type MatchedTokens = {
 
 }
 
-//result of comparision
-let comparisonResults: MatchedTokens[] = [];
-
 //data fetch from each lending
-const LEFT_SIDE_LENDING =     await fetchReserves();
-const RIGHT_SIDE_LENDING =    await useJupLendData();
+const LEFT_SIDE_LENDING =     await kaminoStandarizedTokens();
+const RIGHT_SIDE_LENDING =    await standarizedJupLendToken();
 
 //main function 
-export default async function App() 
+export default async function matchedTokens() 
 {
+
+  //result of comparision
+  let comparisonResults: MatchedTokens[] = [];
 
   //error hanlder 
   if(
-    LEFT_SIDE_LENDING.length          === 0   ||  //0 is equal to non existing list
-    RIGHT_SIDE_LENDING.tokens.length  === 0       //0 is equal to non existing list
+    LEFT_SIDE_LENDING.length   === 0   ||  //0 is equal to non existing list
+    RIGHT_SIDE_LENDING.length  === 0       //0 is equal to non existing list
   ) 
   {
     return (<div>Loading...</div>);
@@ -53,18 +53,64 @@ export default async function App()
   const FILTERED_BY_SYMBOL = LEFT_SIDE_LENDING.filter
   (
 
+    //filtering by
     leftSideToken => 
-      RIGHT_SIDE_LENDING.tokens.some(
+      RIGHT_SIDE_LENDING.some(
 
       rightSideToken => 
       rightSideToken.symbol  === leftSideToken.symbol           &&  //filtering by same symbol
-      rightSideToken.mint    === leftSideToken.stats.mintAddress    //filtering by same mint 
+      rightSideToken.mintAddress    === leftSideToken.mintAddress          //filtering by same mint 
 
     )
 
   );
 
-  
-  return FILTERED_BY_SYMBOL;
 
+  //matching the tokens
+  for (const LEFT_SIDE of FILTERED_BY_SYMBOL)  //left tokens
+    {
+
+    for (const RIGHT_SIDE of RIGHT_SIDE_LENDING)  //right tokens
+      {
+
+      if (
+        LEFT_SIDE.symbol ===      RIGHT_SIDE.symbol      &&  //symbol for each lending should be euqal
+        LEFT_SIDE.mintAddress === RIGHT_SIDE.mintAddress            //...same as mint 
+      ) 
+        {
+
+            //filling list with matched tokens
+            comparisonResults.push({
+
+            //symbol of Matched Token
+            symbol:         RIGHT_SIDE.symbol,
+
+            //right side of comparision
+            leftSide: {
+              
+              mintAddress:  LEFT_SIDE.mintAddress,
+              tvl:          LEFT_SIDE.tvl,
+              supplyAPY:    LEFT_SIDE.supplyAPY,
+              utilization:  LEFT_SIDE.utilization,
+              borrowRate:   LEFT_SIDE.borrowRate,
+
+            },
+
+            //right side of comparision
+            rightSide: {
+              
+              mintAddress:  RIGHT_SIDE.mintAddress,
+              tvl:          RIGHT_SIDE.tvl,
+              supplyAPY:    RIGHT_SIDE.supplyAPY,
+              utilization:  RIGHT_SIDE.utilization,
+              borrowRate:   RIGHT_SIDE.borrowRate,
+
+            },
+          })
+        }
+    
+    }
+  
+  return comparisonResults;
   }
+}

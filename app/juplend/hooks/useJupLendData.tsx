@@ -11,6 +11,15 @@ async function getErr(error: any): Promise<any> {
 
 export let new_error = false;
 
+//standarized metric's type 
+type StandarizedMetric = {
+  symbol:       string,
+  mintAddress:   string,
+  tvl:          number,
+  utilization:  number,
+  supplyAPY:    number,
+  borrowRate:   number,   
+}
 
 interface ApiToken {
   id: number;
@@ -187,4 +196,34 @@ export async function useJupLendData(): Promise<JupLendData> {
       error: e.message ?? 'Błąd pobierania danych',
     };
   }
+}
+
+//standarizing the jupLend data
+export async function standarizedJupLendToken(): Promise<StandarizedMetric[]>{
+  
+  //using the juplend data
+  const JUPLEND_DATA  =   await useJupLendData();
+
+  //standarized metrics list
+  let standarizedJupLend: StandarizedMetric[] = [];
+
+  //mapping juplend's token to make comparision easier
+  JUPLEND_DATA.tokens.map((t =>{
+
+    standarizedJupLend.push
+    ({
+
+      symbol: 	    t.symbol,
+	    mintAddress:  t.mint,
+      tvl:          Number(t.tvlUsd),
+      supplyAPY:    Number(t.apy.toFixed(2)),
+      utilization:  Number(t.utilization.toFixed(2)),
+      borrowRate:   Number(t.borrowRate.toFixed(2)),
+
+    })
+
+  }))
+  
+  //result list
+  return standarizedJupLend;
 }

@@ -8,7 +8,7 @@ const SLOT_DURATION_MS = 400;
 //standarized metric's type 
 type standarizedMetric = {
   symbol:       string,
-  mintAdress:   string,
+  mintAddress:   string,
   tvl:          number,
   utilization:  number,
   supplyAPY:    number,
@@ -91,7 +91,7 @@ export async function kaminoStandarizedTokens(): Promise<standarizedMetric[]>{
 
         //... with following type [standarizedMetric]
         symbol:       t.symbol,
-        mintAdress:   t.stats.mintAddress,
+        mintAddress:   t.stats.mintAddress,
         tvl:          kaminoTVL(t),
         utilization:  kaminoUtilization(t),
         supplyAPY:    kaminoSupplyAPY(t, GET_KAMINO_SLOT),

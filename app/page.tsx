@@ -30,7 +30,6 @@ type MatchedTokens = {
 }
 
 //result of comparision
-let comparisonResults: MatchedTokens[] = [];
 
 //kamino's metrics calculations
 function kaminoTVL(token: KaminoReserve):                     number{
@@ -63,6 +62,8 @@ const TOKENS =          await kaminoStandarizedTokens();
 //main function 
 export default async function App() 
 {
+  //matching tokens
+  let comparisonResults: MatchedTokens[] = [];
   
   //tokens
   console.log(TOKENS);
@@ -84,9 +85,9 @@ export default async function App()
     kaminoTokens => 
       JUPLEND_DATA.tokens.some(
 
-      jupTokens => 
-      jupTokens.symbol  === kaminoTokens.symbol             &&          //filtering by same symbol
+      jupTokens =>  jupTokens.symbol  === kaminoTokens.symbol &&        //filtering by same Token's name 
       jupTokens.mint    === kaminoTokens.stats.mintAddress              //filtering by same mint 
+    
     )
 
   );
