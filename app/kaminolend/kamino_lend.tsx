@@ -5,7 +5,41 @@ import { Connection } from '@solana/web3.js';
 const RPC = 'https://api.mainnet-beta.solana.com';
 const SLOT_DURATION_MS = 400;
 
+//standarized metric's type 
+type standarizedMetric = {
+  symbol:       string,
+  mintAdress:   string,
+  tvl:          number,
+  utilization:  number,
+  supplyAPY:    number,
+  borrowRate:   number,   
+}
+
+//kamino's metrics calculations
+function kaminoTVL(token: KaminoReserve):                     number{
+
+  return Number(token.getDepositTvl().toFixed(2));
+
+}
+function kaminoUtilization(token: KaminoReserve):             number{
+
+  return Number((token.calculateUtilizationRatio() * 100).toFixed(2));
+
+}
+function kaminoBorrowRate(token: KaminoReserve, slot: number):number{
+  
+  return Number((token.calculateBorrowAPR(BigInt(slot), Math.floor(token.calculateUtilizationRatio() * 10000)) * 100).toFixed(2));
+
+}
+function kaminoSupplyAPY(token: KaminoReserve, slot: number): number{
+ 
+  return Number((token.totalSupplyAPY(BigInt(slot)) * 100).toFixed(2))
+
+}
+
+//fetching every token 
 export async function fetchReserves(): Promise<KaminoReserve[]> {
+
   const rpc = createSolanaRpc(RPC);
   const markets = await getMarketsFromApi();
 
@@ -26,9 +60,46 @@ export async function fetchReserves(): Promise<KaminoReserve[]> {
     .filter((reserve) => reserve.getBorrowedAmount().gt(0));
 }
 
+//getting the slot for APYs
 export async function getSlotForAPY(){
+
   const CONNECTION = new Connection('https://api.mainnet-beta.solana.com');
   const SLOT = await CONNECTION.getSlot();
 
   return SLOT;
+
+}
+
+//standarizing tokens 
+export async function kaminoStandarizedTokens(): Promise<standarizedMetric[]>{
+
+  //fetching tokens
+  const KAMINO_TOKENS:KaminoReserve[] = await fetchReserves(); 
+
+  //getting the slot
+  const GET_KAMINO_SLOT = await getSlotForAPY();
+
+  //array with results
+  let result:standarizedMetric[] = [];
+
+  //mapping each token's metrics
+  KAMINO_TOKENS.map((t =>{
+
+    //pushing results to array
+    result.push
+      ({
+
+        //... with following type [standarizedMetric]
+        symbol:       t.symbol,
+        mintAdress:   t.stats.mintAddress,
+        tvl:          kaminoTVL(t),
+        utilization:  kaminoUtilization(t),
+        supplyAPY:    kaminoSupplyAPY(t, GET_KAMINO_SLOT),
+        borrowRate:   kaminoBorrowRate(t, GET_KAMINO_SLOT),
+      
+      });
+  
+  }))
+
+  return result;
 }

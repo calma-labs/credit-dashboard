@@ -1,13 +1,15 @@
 //imports 
-import { fetchReserves, getSlotForAPY } from './kaminolend/kamino_lend';
+import { fetchReserves, getSlotForAPY, kaminoStandarizedTokens } from './kaminolend/kamino_lend';
 import { useJupLendData, new_error } from './juplend/hooks/useJupLendData';
 import { KaminoReserve } from '@kamino-finance/klend-sdk';
 
 //metric's type
 type MatchedTokens = {
   
+  //symbol of matching tokens
   symbol: string;
 
+  //kamino's side object
   kaminoLeftSide: {
     mintAddress:  string,
     tvl:          number,
@@ -16,6 +18,7 @@ type MatchedTokens = {
     borrowRate:   number,
   }
 
+  //juplend's side object
   juplendRightSide: {
     mintAddress:  string,
     tvl:          number,
@@ -55,16 +58,20 @@ function kaminoSupplyAPY(token: KaminoReserve, slot: number): number{
 const KAMINO_DATA =     await fetchReserves();
 const JUPLEND_DATA =    await useJupLendData();
 const GET_KAMINO_SLOT = await getSlotForAPY();
+const TOKENS =          await kaminoStandarizedTokens();
 
 //main function 
 export default async function App() 
 {
-
+  
+  //tokens
+  console.log(TOKENS);
+  
   //error hanlder 
   if(
     KAMINO_DATA.length          === 0   ||  //0 is equal to non existing list
-    JUPLEND_DATA.tokens.length  === 0   ||  //0 is equal to non existing list
-    new_error                               //false is default
+    JUPLEND_DATA.tokens.length  === 0   //||  //0 is equal to non existing list
+    //new_error                               //false is default, true === error 
   ) 
   {
     return (<div>Loading...</div>);
@@ -78,8 +85,8 @@ export default async function App()
       JUPLEND_DATA.tokens.some(
 
       jupTokens => 
-      jupTokens.symbol  === kaminoTokens.symbol &&          //filtering by same symbol
-      jupTokens.mint    === kaminoTokens.stats.mintAddress  //filtering by same mint 
+      jupTokens.symbol  === kaminoTokens.symbol             &&          //filtering by same symbol
+      jupTokens.mint    === kaminoTokens.stats.mintAddress              //filtering by same mint 
     )
 
   );
