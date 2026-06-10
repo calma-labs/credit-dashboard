@@ -1,49 +1,31 @@
 //imports 
 import { kaminoStandarizedTokens } from './kaminolend/kamino_lend';
-import { standarizedJupLendToken } from './juplend/hooks/useJupLendData';
+import { new_error, standarizedJupLendToken } from './juplend/hooks/useJupLendData';
+import { type MatchedTokens } from './globalComponents/globalTypes';
 
 
-//metric's type
-type MatchedTokens = {
-  
-  //symbol of matching tokens
-  symbol: string;
 
-  //left side
-  leftSide: {
-    mintAddress:  string,
-    tvl:          number,
-    supplyAPY:    number;
-    utilization:  number,
-    borrowRate:   number,
-  }
-
-  //right side
-  rightSide: {
-    mintAddress:  string,
-    tvl:          number,
-    supplyAPY:    number,
-    utilization:  number,
-    borrowRate:   number,
-  }
-
-}
-
-//data fetch from each lending
-const LEFT_SIDE_LENDING =     await kaminoStandarizedTokens();
-const RIGHT_SIDE_LENDING =    await standarizedJupLendToken();
 
 //main function 
 export default async function matchedTokens() 
 {
 
-  //result of comparision
+  
+  //data fetch from each lending
+  const LEFT_SIDE_LENDING =     await kaminoStandarizedTokens();
+  const RIGHT_SIDE_LENDING =    await standarizedJupLendToken();
+
+
+  //result of comparison
   let comparisonResults: MatchedTokens[] = [];
+
+  console.log(LEFT_SIDE_LENDING, RIGHT_SIDE_LENDING);
 
   //error hanlder 
   if(
     LEFT_SIDE_LENDING.length   === 0   ||  //0 is equal to non existing list
-    RIGHT_SIDE_LENDING.length  === 0       //0 is equal to non existing list
+    RIGHT_SIDE_LENDING.length  === 0   //||  //0 is equal to non existing list
+    //new_error
   ) 
   {
     return (<div>Loading...</div>);
@@ -65,6 +47,7 @@ export default async function matchedTokens()
 
   );
 
+  console.log(FILTERED_BY_SYMBOL)
 
   //matching the tokens
   for (const LEFT_SIDE of FILTERED_BY_SYMBOL)  //left tokens
@@ -85,7 +68,7 @@ export default async function matchedTokens()
             //symbol of Matched Token
             symbol:         RIGHT_SIDE.symbol,
 
-            //right side of comparision
+            //right side of comparison
             leftSide: {
               
               mintAddress:  LEFT_SIDE.mintAddress,
@@ -96,7 +79,7 @@ export default async function matchedTokens()
 
             },
 
-            //right side of comparision
+            //right side of comparison
             rightSide: {
               
               mintAddress:  RIGHT_SIDE.mintAddress,
@@ -111,6 +94,9 @@ export default async function matchedTokens()
     
     }
   
-  return comparisonResults;
   }
+
+  
+  return comparisonResults;
 }
+
