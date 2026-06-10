@@ -1,7 +1,7 @@
 import { PublicKey } from '@solana/web3.js';
 
 // Zmiana z import.meta.env na process.env
-const RPC_PROXY = `https://mainnet.helius-rpc.com/?api-key=${process.env.NEXT_PUBLIC_HELIUS_API_KEY}`;
+export const RPC_URL = `https://mainnet.helius-rpc.com/?api-key=${process.env.NEXT_PUBLIC_HELIUS_API_KEY}`;
 const API_BASE = 'https://lite-api.jup.ag/lend/v1';
 const LIQUIDITY_PROGRAM = new PublicKey('jupeiUmn818Jg1ekPURTpr4mFo29p46vygyykFJ3wZC');
 

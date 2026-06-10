@@ -1,8 +1,8 @@
 import { createSolanaRpc, address } from '@solana/kit';
 import { KaminoMarket, KaminoReserve, getMarketsFromApi } from '@kamino-finance/klend-sdk';
 import { Connection } from '@solana/web3.js';
+import { RPC_URL } from '../juplend/hooks/useJupLendData';
 
-const RPC = 'https://api.mainnet-beta.solana.com';
 const SLOT_DURATION_MS = 400;
 
 //standarized metric's type 
@@ -40,7 +40,7 @@ function kaminoSupplyAPY(token: KaminoReserve, slot: number): number{
 //fetching every token 
 export async function fetchReserves(): Promise<KaminoReserve[]> {
 
-  const rpc = createSolanaRpc(RPC);
+  const rpc = createSolanaRpc(RPC_URL);
   const markets = await getMarketsFromApi();
 
   const results = await Promise.all(
@@ -63,7 +63,7 @@ export async function fetchReserves(): Promise<KaminoReserve[]> {
 //getting the slot for APYs
 export async function getSlotForAPY(){
 
-  const CONNECTION = new Connection('https://api.mainnet-beta.solana.com');
+  const CONNECTION = new Connection(`https://mainnet.helius-rpc.com/?api-key=${process.env.NEXT_PUBLIC_HELIUS_API_KEY}`);
   const SLOT = await CONNECTION.getSlot();
 
   return SLOT;
