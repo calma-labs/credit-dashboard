@@ -4,6 +4,7 @@ import { useJupLendData, new_error } from './juplend/hooks/useJupLendData';
 import { fetchSaveData } from  './save/useSaveData';
 import { KaminoReserve } from '@kamino-finance/klend-sdk';
 
+export const dynamic = 'force-dynamic';
 
 type MatchedTokens = {
   symbol: string;
@@ -48,7 +49,9 @@ function kaminoSupplyAPY(token: KaminoReserve, slot: number): number {
 }
 
 
-
+export const metadata = {
+  title: 'Credit dashboard',
+};
 export default async function App() {
   const KAMINO_DATA =     await fetchReserves();
   const JUPLEND_DATA =    await useJupLendData();

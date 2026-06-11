@@ -61,8 +61,8 @@ export async function fetchSaveData(mintAddress: string) {
   const rates = entry.rates ?? {};
   const liq   = entry.reserve?.liquidity ?? {};
 
-  const supplyAPY  = parseFloat(rates.supplyInterest ?? '0').toFixed(2);
-  const borrowRate = parseFloat(rates.borrowInterest ?? '0').toFixed(2);
+  const supplyAPY  = Number(parseFloat(rates.supplyInterest ?? '0').toFixed(2));
+  const borrowRate = Number(parseFloat(rates.borrowInterest ?? '0').toFixed(2));
 
   const WADS      = 1e18;
   const DECIMALS  = Math.pow(10, liq.mintDecimals ?? 6);
