@@ -11,10 +11,10 @@ export type StandarizedMetric = {
 //compared metrics
 export type ComparedMetric = {
   mintAddress:  string,
-  tvl:          number,
-  utilization:  number,
-  supplyAPY:    number,
-  borrowRate:   number,   
+  tvl:          number | string,
+  utilization:  number | string,
+  supplyAPY:    number | string,
+  borrowRate:   number | string,   
 }
 
 

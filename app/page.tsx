@@ -8,7 +8,6 @@ export default async function App()
 
   //matched tokens
   const MATCHED_TOKENS = await matchedTokens();
-  console.log(MATCHED_TOKENS, '!');
 
   return (
     <div>
