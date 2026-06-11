@@ -2,6 +2,8 @@ import matchedTokens from "./lendingFetchApp";
 import ComparedTokens from "./globalComponents/comparedTokens";
 import './globalStyles/cardStyle.css'
 
+export const dynamic = 'force-dynamic';
+
 //main function 
 export default async function App() 
 {
