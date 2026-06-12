@@ -30,4 +30,7 @@ export type MatchedTokens = {
   //right side
   rightSide: ComparedMetric,
 
+  //save Side
+  saveSide: ComparedMetric,
+
 }

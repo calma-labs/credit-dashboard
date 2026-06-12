@@ -82,12 +82,12 @@ export async function kaminoStandarizedTokens(): Promise<StandarizedMetric[]>{
       ({
 
         //... with following type [StandarizedMetric]
-        symbol:       t.symbol,
-        mintAddress:   t.stats.mintAddress,
-        tvl:          kaminoTVL(t),
-        utilization:  kaminoUtilization(t),
-        supplyAPY:    kaminoSupplyAPY(t, GET_KAMINO_SLOT),
-        borrowRate:   kaminoBorrowRate(t, GET_KAMINO_SLOT),
+        symbol:       t.symbol ?? "Unavailable",
+        mintAddress:   t.stats.mintAddress ?? "Unavailable",
+        tvl:          kaminoTVL(t) ?? 0,
+        utilization:  kaminoUtilization(t) ?? 0,
+        supplyAPY:    kaminoSupplyAPY(t, GET_KAMINO_SLOT) ?? 0,
+        borrowRate:   kaminoBorrowRate(t, GET_KAMINO_SLOT) ?? 0,
       
       });
   

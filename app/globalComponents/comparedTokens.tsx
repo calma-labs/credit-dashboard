@@ -5,14 +5,13 @@ import "../globalStyles/cardStyle.css";
 import {
   Table,
   TableBody,
-  TableCell,
   TableHead,
   TableHeader,
   TableRow,
 } from "@/components/ui/table";
+import TableRows from "./tableRows";
 
-// main function 
-export default function ComparedTokens({ tokens }: any) {
+export default function ComparedTokens({ tokens }: { tokens: MatchedTokens[] }) {
     if (!tokens || tokens.length === 0) {
         return (<div>Loading...</div>);
     }
@@ -24,7 +23,6 @@ export default function ComparedTokens({ tokens }: any) {
                     <Table>
                         <TableHeader>
                             <TableRow>
-                                
                                 <TableHead className="w-[150px] font-bold text-lg">
                                     {t.symbol}
                                 </TableHead>
@@ -37,49 +35,7 @@ export default function ComparedTokens({ tokens }: any) {
                         </TableHeader>
                         
                         <TableBody>
-                            
-                            <TableRow>
-                                <TableCell className="font-medium">juplend</TableCell>
-                                <TableCell>
-                                    <span className="mint-address" title={t.leftSide.mintAddress}>
-                                        {t.leftSide.mintAddress}
-                                    </span>
-                                </TableCell>
-                                <TableCell className="data-value">
-                                    ${Number(t.leftSide.tvl).toLocaleString()}
-                                </TableCell>
-                                <TableCell className="apy-green">
-                                    {t.leftSide.supplyAPY}%
-                                </TableCell>
-                                <TableCell className="data-value">
-                                    {t.leftSide.utilization}%
-                                </TableCell>
-                                <TableCell className="rate-red">
-                                    {t.leftSide.borrowRate}%
-                                </TableCell>
-                            </TableRow>
-
-                            
-                            <TableRow>
-                                <TableCell className="font-medium">kamino</TableCell>
-                                <TableCell>
-                                    <span className="mint-address" title={t.rightSide.mintAddress}>
-                                        {t.rightSide.mintAddress}
-                                    </span>
-                                </TableCell>
-                                <TableCell className="data-value">
-                                    ${Number(t.rightSide.tvl).toLocaleString()}
-                                </TableCell>
-                                <TableCell className="apy-green">
-                                    {t.rightSide.supplyAPY}%
-                                </TableCell>
-                                <TableCell className="data-value">
-                                    {t.rightSide.utilization}%
-                                </TableCell>
-                                <TableCell className="rate-red">
-                                    {t.rightSide.borrowRate}%
-                                </TableCell>
-                            </TableRow>
+                            <TableRows token={t} />
                         </TableBody>
                     </Table>
                 </div>
