@@ -1,4 +1,5 @@
 import { PublicKey } from '@solana/web3.js';
+import { type StandarizedMetric } from '@/app/globalComponents/globalTypes';
 
 // Zmiana z import.meta.env na process.env
 export const RPC_URL = `https://mainnet.helius-rpc.com/?api-key=${process.env.NEXT_PUBLIC_HELIUS_API_KEY}`;
@@ -10,16 +11,6 @@ async function getErr(error: any): Promise<any> {
 }
 
 export let new_error = false;
-
-//standarized metric's type 
-type StandarizedMetric = {
-  symbol:       string,
-  mintAddress:   string,
-  tvl:          number,
-  utilization:  number,
-  supplyAPY:    number,
-  borrowRate:   number,   
-}
 
 interface ApiToken {
   id: number;
@@ -207,7 +198,7 @@ export async function standarizedJupLendToken(): Promise<StandarizedMetric[]>{
   //standarized metrics list
   let standarizedJupLend: StandarizedMetric[] = [];
 
-  //mapping juplend's token to make comparision easier
+  //mapping juplend's token to make comparison easier
   JUPLEND_DATA.tokens.map((t =>{
 
     standarizedJupLend.push
