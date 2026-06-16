@@ -1,4 +1,5 @@
 
+//imports
 import { fetchReserves, getSlotForAPY, kaminoStandarizedTokens } from './kaminolend/kamino_lend';
 import { useJupLendData, new_error } from './juplend/hooks/useJupLendData';
 import { fetchSaveData } from  './save/useSaveData';
@@ -6,6 +7,7 @@ import { KaminoReserve } from '@kamino-finance/klend-sdk';
 
 export const dynamic = 'force-dynamic';
 
+//metric's type
 type MatchedTokens = {
   symbol: string;
   kaminoLeftSide: {
