@@ -53,16 +53,16 @@ export const metadata = {
   title: 'Credit dashboard',
 };
 export default async function App() {
-  const KAMINO_DATA =     await fetchReserves();
-  const JUPLEND_DATA =    await useJupLendData();
-  const GET_KAMINO_SLOT = await getSlotForAPY();
+  const kaminoData =     await fetchReserves();
+  const juplendData =    await useJupLendData();
+  const getKaminoSlot = await getSlotForAPY();
 
-  if (KAMINO_DATA.length === 0 || JUPLEND_DATA.tokens.length === 0) {
+  if (kaminoData.length === 0 || juplendData.tokens.length === 0) {
     return (<div>Loading...</div>);
   }
 
-  const FILTERED_BY_SYMBOL = KAMINO_DATA.filter(kaminoTokens => 
-    JUPLEND_DATA.tokens.some(
+  const filteredBySymbol = kaminoData.filter(kaminoTokens => 
+    juplendData.tokens.some(
       jupTokens => jupTokens.symbol === kaminoTokens.symbol && 
                    jupTokens.mint === kaminoTokens.stats.mintAddress 
     )
@@ -70,27 +70,27 @@ export default async function App() {
 
   let initialMatches: Omit<MatchedTokens, 'saveSide'>[] = [];
 
-  for (const KAMINO_TOKEN of FILTERED_BY_SYMBOL) {
-    for (const JUP_TOKEN of JUPLEND_DATA.tokens) {
+  for (const kaminoToken of filteredBySymbol) {
+    for (const jupToken of juplendData.tokens) {
       if (
-        KAMINO_TOKEN.symbol === JUP_TOKEN.symbol &&
-        KAMINO_TOKEN.stats.mintAddress === JUP_TOKEN.mint 
+        kaminoToken.symbol === jupToken.symbol &&
+        kaminoToken.stats.mintAddress === jupToken.mint 
       ) {
         initialMatches.push({
-          symbol: KAMINO_TOKEN.symbol,
+          symbol: kaminoToken.symbol,
           kaminoLeftSide: {
-            mintAddress:  KAMINO_TOKEN.tokenOraclePrice.mintAddress,
-            tvl:          kaminoTVL(KAMINO_TOKEN),
-            supplyAPY:    kaminoSupplyAPY(KAMINO_TOKEN, GET_KAMINO_SLOT),
-            utilization:  kaminoUtilization(KAMINO_TOKEN),
-            borrowRate:   kaminoBorrowRate(KAMINO_TOKEN, GET_KAMINO_SLOT),
+            mintAddress:  kaminoToken.tokenOraclePrice.mintAddress,
+            tvl:          kaminoTVL(kaminoToken),
+            supplyAPY:    kaminoSupplyAPY(kaminoToken, getKaminoSlot),
+            utilization:  kaminoUtilization(kaminoToken),
+            borrowRate:   kaminoBorrowRate(kaminoToken, getKaminoSlot),
           },
           juplendRightSide: {
-            mintAddress:  JUP_TOKEN.mint,
-            tvl:          Number(JUP_TOKEN.tvlUsd),
-            supplyAPY:    Number(JUP_TOKEN.apy.toFixed(2)),
-            utilization:  Number(JUP_TOKEN.utilization.toFixed(2)),
-            borrowRate:   Number(JUP_TOKEN.borrowRate.toFixed(2)),
+            mintAddress:  jupToken.mint,
+            tvl:          Number(jupToken.tvlUsd),
+            supplyAPY:    Number(jupToken.apy.toFixed(2)),
+            utilization:  Number(jupToken.utilization.toFixed(2)),
+            borrowRate:   Number(jupToken.borrowRate.toFixed(2)),
           },
         });
       }
