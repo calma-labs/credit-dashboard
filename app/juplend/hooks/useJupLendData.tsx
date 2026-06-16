@@ -112,7 +112,7 @@ async function fetchTokenReserve(
       params: [pda.toString(), { encoding: 'base64' }],
     });
 
-    const res = await fetch(RPC_PROXY, {
+    const res = await fetch(RPC_URL, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body,
