@@ -2,18 +2,10 @@ import { createSolanaRpc, address } from '@solana/kit';
 import { KaminoMarket, KaminoReserve, getMarketsFromApi } from '@kamino-finance/klend-sdk';
 import { Connection } from '@solana/web3.js';
 import { RPC_URL } from '../juplend/hooks/useJupLendData';
+import { type StandarizedMetric } from '../globalComponents/globalTypes';
 
 const SLOT_DURATION_MS = 400;
 
-//standarized metric's type 
-type standarizedMetric = {
-  symbol:       string,
-  mintAddress:   string,
-  tvl:          number,
-  utilization:  number,
-  supplyAPY:    number,
-  borrowRate:   number,   
-}
 
 //kamino's metrics calculations
 function kaminoTVL(token: KaminoReserve):                     number{
@@ -71,7 +63,7 @@ export async function getSlotForAPY(){
 }
 
 //standarizing tokens 
-export async function kaminoStandarizedTokens(): Promise<standarizedMetric[]>{
+export async function kaminoStandarizedTokens(): Promise<StandarizedMetric[]>{
 
   //fetching tokens
   const KAMINO_TOKENS:KaminoReserve[] = await fetchReserves(); 
@@ -80,7 +72,7 @@ export async function kaminoStandarizedTokens(): Promise<standarizedMetric[]>{
   const GET_KAMINO_SLOT = await getSlotForAPY();
 
   //array with results
-  let result:standarizedMetric[] = [];
+  let result:StandarizedMetric[] = [];
 
   //mapping each token's metrics
   KAMINO_TOKENS.map((t =>{
@@ -89,13 +81,13 @@ export async function kaminoStandarizedTokens(): Promise<standarizedMetric[]>{
     result.push
       ({
 
-        //... with following type [standarizedMetric]
-        symbol:       t.symbol,
-        mintAddress:   t.stats.mintAddress,
-        tvl:          kaminoTVL(t),
-        utilization:  kaminoUtilization(t),
-        supplyAPY:    kaminoSupplyAPY(t, GET_KAMINO_SLOT),
-        borrowRate:   kaminoBorrowRate(t, GET_KAMINO_SLOT),
+        //... with following type [StandarizedMetric]
+        symbol:       t.symbol ?? "Unavailable",
+        mintAddress:   t.stats.mintAddress ?? "Unavailable",
+        tvl:          kaminoTVL(t) ?? 0,
+        utilization:  kaminoUtilization(t) ?? 0,
+        supplyAPY:    kaminoSupplyAPY(t, GET_KAMINO_SLOT) ?? 0,
+        borrowRate:   kaminoBorrowRate(t, GET_KAMINO_SLOT) ?? 0,
       
       });
   

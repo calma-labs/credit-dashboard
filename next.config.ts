@@ -1,7 +1,7 @@
 import type { NextConfig } from "next";
 
 const nextConfig: NextConfig = {
-  serverExternalPackages: ['@orca-so/whirlpools-core', '@kamino-finance/klend-sdk', '@kamino-finance/kliquidity-sdk'],
+  serverExternalPackages: ['@orca-so/whirlpools-core'],
 };
 
 export default nextConfig;
