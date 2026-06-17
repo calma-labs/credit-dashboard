@@ -3,6 +3,17 @@
 import { useState, useEffect } from "react";
 import { useRouter, useSearchParams, usePathname } from "next/navigation";
 import { ApyChart } from "./ApyChart";
+import { Button } from "@/components/ui/button";
+import { Badge } from "@/components/ui/badge";
+import { Skeleton } from "@/components/ui/skeleton";
+import {
+    Table,
+    TableBody,
+    TableCell,
+    TableHead,
+    TableHeader,
+    TableRow,
+} from "@/components/ui/table";
 
 interface PlatformSnapshot {
     protocol: string;
@@ -19,12 +30,8 @@ interface TokenDetailProps {
 
 const PROTOCOLS = ["kamino", "save", "jupiter"];
 
-const PROTOCOL_COLORS: Record<string, string> = {
-    kamino:  '#38bdf8',
-    jupiter: '#c084fc',
-    save:    '#4ade80',
-    default: '#94a3b8',
-};
+const getProtocolColor = (protocol: string) =>
+    `var(--protocol-${protocol}, var(--protocol-default))`;
 
 export function TokenDetailView({ symbol, snapshots }: TokenDetailProps) {
     const router = useRouter();
@@ -44,7 +51,9 @@ export function TokenDetailView({ symbol, snapshots }: TokenDetailProps) {
     };
 
     useEffect(() => {
+        let cancelled = false;
         setLoading(true);
+
         Promise.all(
             PROTOCOLS.map(async protocol => {
                 try {
@@ -56,45 +65,43 @@ export function TokenDetailView({ symbol, snapshots }: TokenDetailProps) {
                 }
             })
         ).then(results => {
+            if (cancelled) return;
             setDatasets(results.filter(r => r.history.length > 0));
             setLoading(false);
         });
+
+        return () => {
+            cancelled = true;
+        };
     }, [symbol]);
 
     return (
-        <div style={{ backgroundColor: '#060b14', minHeight: '100vh', fontFamily: '"Segoe UI", Roboto, Helvetica, Arial, sans-serif' }} className="w-full text-white">
-            <div style={{ borderBottom: '1px solid #0f1f35', padding: '18px 32px', display: 'flex', alignItems: 'center', gap: 16, backgroundColor: '#060b14' }}>
-                <button 
+        <div className="w-full min-h-screen bg-dash-bg text-white font-sans">
+            <div className="flex items-center gap-4 border-b border-dash-border bg-dash-bg px-8 py-[18px]">
+                <Button
                     onClick={() => router.back()}
-                    style={{
-                        background: 'transparent',
-                        border: '1px solid #1a3a5c',
-                        borderRadius: '6px',
-                        padding: '6px 12px',
-                        color: '#94a3b8',
-                        cursor: 'pointer',
-                        fontSize: '12px',
-                        fontWeight: 600,
-                        textTransform: 'uppercase',
-                        letterSpacing: '0.05em',
-                        display: 'flex',
-                        alignItems: 'center',
-                    }}
+                    variant="outline"
+                    size="sm"
+                    className="border-dash-border bg-dash-accent px-4 text-slate-400 uppercase tracking-[0.05em] hover:bg-dash-accent/80 hover:text-slate-200 transition-colors"
                 >
                     ← Back
-                </button>
-                <h1 style={{ fontSize: '22px', fontWeight: 800, letterSpacing: '0.12em', textTransform: 'uppercase', color: '#fff', margin: 0 }}>
-                    <span style={{ color: '#38bdf8' }}>{symbol}</span> LENDING METRICS
+                </Button>
+                <h1 className="m-0 text-[22px] font-extrabold uppercase tracking-[0.12em] text-white">
+                    <span className="text-sky-400">{symbol}</span> LENDING METRICS
                 </h1>
-                <span style={{ background: '#0a1628', border: '1px solid #1a3a5c', borderRadius: '4px', padding: '3px 12px', fontSize: '11px', letterSpacing: '0.1em', color: '#38bdf8', textTransform: 'uppercase' }}>
+                <Badge
+                    variant="outline"
+                    className="rounded-[4px] border-dash-border bg-dash-accent px-3 py-[3px] text-[11px] uppercase tracking-[0.1em] text-sky-400"
+                >
                     Lending Comparison
-                </span>
+                </Badge>
             </div>
 
-            <div style={{ padding: '28px 32px' }}>
+            <div className="px-8 py-7">
                 {loading ? (
-                    <div style={{ height: 400, display: 'flex', alignItems: 'center', justifyContent: 'center', color: '#1e4976', letterSpacing: '0.08em', fontSize: '13px', textTransform: 'uppercase' }}>
-                        Loading metrics...
+                    <div className="flex flex-col gap-8">
+                        <Skeleton className="h-[432px] w-full rounded-xl bg-dash-card border border-dash-border" />
+                        <Skeleton className="h-[250px] w-full rounded-xl bg-dash-card border border-dash-border" />
                     </div>
                 ) : (
                     <div className="flex flex-col gap-8">
@@ -106,47 +113,53 @@ export function TokenDetailView({ symbol, snapshots }: TokenDetailProps) {
                             onRangeChange={handleRangeChange}
                         />
 
-                        <div style={{ overflowX: 'auto', borderRadius: '12px', border: '1px solid #0f1f35', backgroundColor: '#080f1a' }}>
-                            <table style={{ width: '100%', borderCollapse: 'collapse', textAlign: 'left' }}>
-                                <thead>
-                                    <tr style={{ backgroundColor: '#0a1628', borderBottom: '2px solid #0f1f35' }}>
+                        <div className="overflow-x-auto rounded-xl border border-dash-border bg-dash-card">
+                            <Table>
+                                <TableHeader>
+                                    <TableRow className="border-b-2 border-dash-border bg-dash-accent hover:bg-dash-accent">
                                         {['Platform', 'TVL', 'Supply APY', 'Borrow Rate', 'Utilization'].map(h => (
-                                            <th key={h} style={{ padding: '14px 20px', fontSize: '12px', fontWeight: 700, color: '#1e4976', textTransform: 'uppercase', letterSpacing: '0.1em' }}>
+                                            <TableHead
+                                                key={h}
+                                                className="px-5 py-3.5 text-[12px] font-bold uppercase tracking-[0.1em] text-dash-header"
+                                            >
                                                 {h}
-                                            </th>
+                                            </TableHead>
                                         ))}
-                                    </tr>
-                                </thead>
-                                <tbody>
+                                    </TableRow>
+                                </TableHeader>
+                                <TableBody>
                                     {snapshots.length === 0 ? (
-                                        <tr>
-                                            <td colSpan={5} style={{ padding: '20px', color: '#1e4976', fontSize: '13px', fontStyle: 'italic' }}>
+                                        <TableRow className="hover:bg-transparent">
+                                            <TableCell colSpan={5} className="px-5 py-5 text-[13px] italic text-dash-muted">
                                                 No current data available
-                                            </td>
-                                        </tr>
+                                            </TableCell>
+                                        </TableRow>
                                     ) : snapshots.map(s => (
-                                        <tr key={s.protocol} style={{ borderBottom: '1px solid #0a1628' }}>
-                                            <td style={{ padding: '16px 20px' }}>
-                                                <span style={{ color: PROTOCOL_COLORS[s.protocol] || PROTOCOL_COLORS.default, fontWeight: 700, fontSize: '14px', textTransform: 'capitalize', letterSpacing: '0.04em' }}>
+                                        <TableRow key={s.protocol} className="border-b border-dash-border hover:bg-dash-accent/50 transition-colors">
+                                            <TableCell className="px-5 py-4">
+                                                <span
+                                                    style={{ color: getProtocolColor(s.protocol) }}
+                                                    className="text-[14px] font-bold capitalize tracking-[0.04em]"
+                                                >
                                                     {s.protocol}
                                                 </span>
-                                            </td>
-                                            <td style={{ padding: '16px 20px', color: '#e2e8f0', fontSize: '13px' }}>
-                                                ${s.tvl.toLocaleString()}
-                                            </td>
-                                            <td style={{ padding: '16px 20px', color: '#4ade80', fontWeight: 600, fontSize: '14px' }}>
+                                            </TableCell>
+                                            <TableCell className="px-5 py-4 text-[13px] text-dash-text">
+                                                ${s.tvl.toLocaleString('en-US')}
+                                            </TableCell>
+                                            <TableCell className="px-5 py-4 text-[14px] font-semibold text-green-400">
                                                 {s.supplyAPY}%
-                                            </td>
-                                            <td style={{ padding: '16px 20px', color: '#f87171', fontWeight: 600, fontSize: '14px' }}>
+                                            </TableCell>
+                                            <TableCell className="px-5 py-4 text-[14px] font-semibold text-red-400">
                                                 {s.borrowRate}%
-                                            </td>
-                                            <td style={{ padding: '16px 20px', color: '#60a5fa', fontSize: '13px' }}>
+                                            </TableCell>
+                                            <TableCell className="px-5 py-4 text-[13px] text-blue-400">
                                                 {s.utilization}%
-                                            </td>
-                                        </tr>
+                                            </TableCell>
+                                        </TableRow>
                                     ))}
-                                </tbody>
-                            </table>
+                                </TableBody>
+                            </Table>
                         </div>
                     </div>
                 )}

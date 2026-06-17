@@ -103,17 +103,17 @@ export async function GET(request: NextRequest) {
             }));
 
         return NextResponse.json({
-    history,
-    poolId: tokenPool.pool,
-    source: tokenPool.project,
-    matchedSymbol: tokenPool.symbol,
-    snapshot: {
-    tvl:         Math.round(tokenPool.tvlUsd ?? 0),
-    supplyAPY:   parseFloat(((tokenPool.apyBase ?? 0) + (tokenPool.apyReward ?? 0)).toFixed(2)),
-    borrowRate:  parseFloat((tokenPool.apyBaseBorrow ?? 0).toFixed(2)),
-    utilization: parseFloat((tokenPool.utilization ?? 0).toFixed(2)),
-},
-});
+            history,
+            poolId: tokenPool.pool,
+            source: tokenPool.project,
+            matchedSymbol: tokenPool.symbol,
+            snapshot: {
+                tvl: Math.round(tokenPool.tvlUsd ?? 0),
+                supplyAPY: parseFloat(((tokenPool.apyBase ?? 0) + (tokenPool.apyReward ?? 0)).toFixed(2)),
+                borrowRate: parseFloat((tokenPool.apyBaseBorrow ?? 0).toFixed(2)),
+                utilization: parseFloat((tokenPool.utilization ?? 0).toFixed(2)),
+            },
+        });
     } catch (err) {
         console.error('[chart route]', err);
         return NextResponse.json({ error: String(err) }, { status: 500 });

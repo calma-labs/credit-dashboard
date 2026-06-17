@@ -1,7 +1,18 @@
 "use client";
 
 import { useMemo } from 'react';
-import { LineChart, Line, XAxis, YAxis, Tooltip, ResponsiveContainer, Legend } from 'recharts';
+import { LineChart, Line, XAxis, YAxis, CartesianGrid } from 'recharts';
+import { Card, CardHeader, CardTitle, CardContent } from "@/components/ui/card";
+import { Button } from "@/components/ui/button";
+import { cn } from "@/lib/utils";
+import {
+    ChartConfig,
+    ChartContainer,
+    ChartTooltip,
+    ChartTooltipContent,
+    ChartLegend,
+    ChartLegendContent,
+} from "@/components/ui/chart";
 
 interface HistoryPoint {
     date: string;
@@ -22,13 +33,14 @@ interface Props {
     onRangeChange: (range: '7d' | '1m' | '1y' | 'all') => void;
 }
 
-const PLATFORM_COLORS: Record<string, string> = {
-    kamino:  '#38bdf8',
-    jupiter: '#c084fc',
-    save:    '#4ade80',
-    marginfi:'#fb923c',
-    default: '#94a3b8',
-};
+const RANGE_OPTIONS = ['7d', '1m', '1y', 'all'] as const;
+
+const chartConfig = {
+    kamino: { label: "Kamino", color: "var(--protocol-kamino)" },
+    jupiter: { label: "Jupiter", color: "var(--protocol-jupiter)" },
+    save: { label: "Save", color: "var(--protocol-save)" },
+    marginfi: { label: "MarginFi", color: "var(--protocol-marginfi)" },
+} satisfies ChartConfig;
 
 export const ApyChart = ({ title, dataKey, datasets, range, onRangeChange }: Props) => {
     const chartData = useMemo(() => {
@@ -96,109 +108,92 @@ export const ApyChart = ({ title, dataKey, datasets, range, onRangeChange }: Pro
     }, [chartData, range, hasData]);
 
     return (
-        <div style={{ backgroundColor: '#080f1a', borderRadius: '12px', border: '1px solid #0f1f35', padding: '24px', fontFamily: '"Segoe UI", Roboto, Helvetica, Arial, sans-serif' }}>
-            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '24px' }}>
-                <h2 style={{ fontSize: '13px', fontWeight: 700, color: '#1e4976', textTransform: 'uppercase', letterSpacing: '0.1em', margin: 0 }}>
+        <Card className="bg-dash-card border-dash-border p-6 gap-0 font-sans">
+            <CardHeader className="grid-cols-[1fr_auto] items-center gap-4 p-0 mb-6">
+                <CardTitle className="text-[13px] font-bold text-dash-muted uppercase tracking-[0.1em]">
                     {title}
-                </h2>
-                <div style={{ display: 'flex', gap: 6 }}>
-                    {(['7d', '1m', '1y', 'all'] as const).map((r) => (
-                        <button
+                </CardTitle>
+                <div className="flex gap-1.5">
+                    {RANGE_OPTIONS.map((r) => (
+                        <Button
                             key={r}
+                            size="sm"
+                            variant="outline"
                             onClick={() => onRangeChange(r)}
                             disabled={!hasData}
-                            style={{
-                                padding: '4px 14px',
-                                borderRadius: '6px',
-                                fontSize: '11px',
-                                fontWeight: 700,
-                                letterSpacing: '0.1em',
-                                textTransform: 'uppercase',
-                                cursor: hasData ? 'pointer' : 'not-allowed',
-                                border: range === r ? '1px solid #38bdf8' : '1px solid transparent',
-                                background: range === r ? '#060b14' : '#0a1628',
-                                color: range === r ? '#38bdf8' : '#1e4976',
-                                opacity: !hasData ? 0.5 : 1,
-                            }}
+                            className={cn(
+                                "h-auto rounded-md px-3.5 py-1 text-[11px] font-bold uppercase tracking-[0.1em] border-transparent bg-dash-accent text-dash-muted hover:bg-dash-accent hover:text-sky-400 transition-colors",
+                                range === r && "border-sky-400 bg-dash-bg text-sky-400 hover:bg-dash-bg hover:text-sky-400"
+                            )}
                         >
                             {r.toUpperCase()}
-                        </button>
+                        </Button>
                     ))}
                 </div>
-            </div>
+            </CardHeader>
 
-            <div style={{ width: '100%', height: 320 }}>
-                {hasData ? (
-                    <ResponsiveContainer width="100%" height="100%">
-                        <LineChart data={chartData}>
-                            <XAxis
-                                dataKey="rawDate"
-                                tick={{ fill: '#1e4976', fontSize: 11, fontFamily: '"Segoe UI", Roboto, Helvetica, Arial, sans-serif', fontWeight: 600, letterSpacing: '0.05em' }}
-                                tickLine={false}
-                                axisLine={false}
-                                dy={10}
-                                tickFormatter={formatXAxis}
-                                interval={0}
-                                ticks={ticks}
-                            />
-                            <YAxis
-                                tick={{ fill: '#1e4976', fontSize: 11, fontFamily: '"Segoe UI", Roboto, Helvetica, Arial, sans-serif', fontWeight: 600 }}
-                                tickLine={false}
-                                axisLine={false}
-                                dx={-10}
-                                domain={['auto', 'auto']}
-                                tickFormatter={(v) => `${v}%`}
-                            />
-                            <Tooltip
-                                labelFormatter={(label) => {
-                                    const date = label instanceof Date ? label : new Date(label);
-                                    return date.toLocaleDateString('en-US', { month: 'long', day: 'numeric', year: 'numeric' });
-                                }}
-                                formatter={(value, name) => [
-                                    `${value}%`,
-                                    String(name).charAt(0).toUpperCase() + String(name).slice(1)
-                                ]}
-                                contentStyle={{
-                                    backgroundColor: '#080f1a',
-                                    borderRadius: '8px',
-                                    border: '1px solid #0f1f35',
-                                    color: '#fff',
-                                    fontFamily: '"Segoe UI", Roboto, Helvetica, Arial, sans-serif',
-                                    fontSize: '13px',
-                                }}
-                                itemStyle={{ fontWeight: 700, letterSpacing: '0.04em' }}
-                            />
-                            <Legend
-                                iconType="circle"
-                                wrapperStyle={{
-                                    paddingTop: '20px',
-                                    fontSize: '12px',
-                                    fontFamily: '"Segoe UI", Roboto, Helvetica, Arial, sans-serif',
-                                    fontWeight: 600,
-                                    letterSpacing: '0.06em',
-                                    color: '#1e4976',
-                                }}
-                            />
-                            {datasets.map(({ protocol }) => (
-                                <Line
-                                    key={protocol}
-                                    type="monotone"
-                                    dataKey={protocol}
-                                    name={protocol.charAt(0).toUpperCase() + protocol.slice(1)}
-                                    stroke={PLATFORM_COLORS[protocol] || PLATFORM_COLORS.default}
-                                    strokeWidth={2.5}
-                                    dot={false}
-                                    connectNulls
+            <CardContent className="p-0">
+                <div className="w-full h-80">
+                    {hasData ? (
+                        <ChartContainer config={chartConfig} className="h-full w-full">
+                            <LineChart data={chartData} margin={{ top: 10, right: 10, left: -20, bottom: 0 }}>
+                                <XAxis
+                                    dataKey="rawDate"
+                                    tick={{ fill: 'var(--color-dash-muted)', fontSize: 11, fontWeight: 600, letterSpacing: '0.05em' }}
+                                    tickLine={false}
+                                    axisLine={false}
+                                    dy={10}
+                                    tickFormatter={formatXAxis}
+                                    interval={0}
+                                    ticks={ticks}
                                 />
-                            ))}
-                        </LineChart>
-                    </ResponsiveContainer>
-                ) : (
-                    <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', width: '100%', height: '100%', color: '#1e4976', fontSize: '13px', border: '1px dashed #0f1f35', borderRadius: '8px' }}>
-                        No historical data available for this timeframe
-                    </div>
-                )}
-            </div>
-        </div>
+                                <YAxis
+                                    tick={{ fill: 'var(--color-dash-muted)', fontSize: 11, fontWeight: 600 }}
+                                    tickLine={false}
+                                    axisLine={false}
+                                    dx={-10}
+                                    domain={['auto', 'auto']}
+                                    tickFormatter={(v) => `${v}%`}
+                                />
+                                <ChartTooltip
+                                    cursor={{ stroke: 'var(--color-dash-border)', strokeWidth: 1, strokeDasharray: '4 4' }}
+                                    content={
+                                        <ChartTooltipContent
+                                            className="bg-dash-card border-dash-border font-sans font-bold"
+                                            labelFormatter={(label) => {
+                                                const date = label instanceof Date ? label : new Date(label);
+                                                return date.toLocaleDateString('en-US', { month: 'long', day: 'numeric', year: 'numeric' });
+                                            }}
+                                            formatter={(value, name) => [
+                                                `${value}%`,
+                                                String(name).charAt(0).toUpperCase() + String(name).slice(1)
+                                            ]}
+                                        />
+                                    }
+                                />
+                                <ChartLegend 
+                                    content={<ChartLegendContent className="pt-4 text-dash-muted font-bold tracking-widest text-xs" />} 
+                                />
+                                {datasets.map(({ protocol }) => (
+                                    <Line
+                                        key={protocol}
+                                        type="monotone"
+                                        dataKey={protocol}
+                                        stroke={`var(--color-${protocol})`}
+                                        strokeWidth={2.5}
+                                        dot={false}
+                                        connectNulls
+                                    />
+                                ))}
+                            </LineChart>
+                        </ChartContainer>
+                    ) : (
+                        <div className="flex items-center justify-center w-full h-full text-dash-muted text-[13px] border border-dashed border-dash-border rounded-lg">
+                            No historical data available for this timeframe
+                        </div>
+                    )}
+                </div>
+            </CardContent>
+        </Card>
     );
 };
