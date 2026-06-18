@@ -19,7 +19,7 @@ export default function TableRows({ token }: { token: MatchedTokens }) {
           </span>
         </TableCell>
         <TableCell className="data-value">
-          ${Number(token.leftSide.tvl).toLocaleString()}
+          ${Number(token.leftSide.tvl).toLocaleString('en-US')}
         </TableCell>
         <TableCell className="apy-green">
           {token.leftSide.supplyAPY}%
@@ -40,7 +40,7 @@ export default function TableRows({ token }: { token: MatchedTokens }) {
           </span>
         </TableCell>
         <TableCell className="data-value">
-          ${Number(token.rightSide.tvl).toLocaleString()}
+          ${Number(token.rightSide.tvl).toLocaleString('en-US')}
         </TableCell>
         <TableCell className="apy-green">
           {token.rightSide.supplyAPY}%
@@ -54,14 +54,14 @@ export default function TableRows({ token }: { token: MatchedTokens }) {
       </TableRow>
 
       <TableRow>
-        <TableCell className="font-medium text-purple-400">save</TableCell>
+        <TableCell className="font-medium">save</TableCell>
         <TableCell>
           <span className="mint-address" title={token.saveSide.mintAddress}>
             {token.saveSide.mintAddress}
           </span>
         </TableCell>
         <TableCell className="data-value">
-          ${Number(token.saveSide.tvl).toLocaleString()}
+          ${Number(token.saveSide.tvl).toLocaleString('en-US')}
         </TableCell>
         <TableCell className="apy-green">
           {token.saveSide.supplyAPY}%
