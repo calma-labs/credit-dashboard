@@ -1,30 +1,33 @@
-import matchedTokens from "./lendingFetchApp";
+import {
+  getLends,
+  getMints,
+  getStandarizedTokensList,
+} from "./lendingFetchApp";
 import ComparedTokens from "./globalComponents/comparedTokens";
-import './globalStyles/cardStyle.css'
+import { getSaveData } from "./saveFinance/saveData";
+import "./globalStyles/cardStyle.css";
 
-export const dynamic = 'force-dynamic';
+export const dynamic = "force-dynamic";
 
-//main function 
-export default async function App() 
-{
-
-  //matched tokens
-  const MATCHED_TOKENS = await matchedTokens();
-  
+//main function
+export default async function App() {
+  //lends, mints and tokens
+  const lends = await getLends();
+  const mints = await getMints();
+  const tokensList = await getStandarizedTokensList();
 
   return (
     <div>
-      
       <div className="title-container">
-        
         <h1 className="main-title">Credit Dashboard</h1>
-        <span className="title-badge">Lending Comparison</span>
-            
+        <span className="mint-address">Lending Comparison</span>
       </div>
 
-      <ComparedTokens tokens={MATCHED_TOKENS}></ComparedTokens>
-
+      <ComparedTokens
+        tokens={tokensList}
+        lends={lends}
+        symbols={mints}
+      ></ComparedTokens>
     </div>
   );
-
 }

@@ -38,48 +38,10 @@ export interface TokenData {
   totalAssets: number;
 }
 
-export type Period = '7d' | '1m' | '1y';
-
-export interface ChartPoint {
-  date: string;
-  yield: number;
-}
-
 export interface JupLendData {
   tokens: TokenData[];
   loading: boolean;
   error: string | null;
-}
-
-export function generateMockHistory(currentApy: number, period: Period): ChartPoint[] {
-  const now = Date.now();
-
-  const noise = (i: number) => {
-    const x = Math.sin(currentApy * 12.9898 + i * 78.233) * 43758.5453;
-    return (x - Math.floor(x)) * 2 - 1;
-  };
-
-  if (period === '7d') {
-    return Array.from({ length: 7 }, (_, i) => {
-      const date = new Date(now - (6 - i) * 86400000);
-      const val = Math.max(0, currentApy + noise(i) * currentApy * 0.05);
-      return { date: date.toLocaleDateString('pl-PL', { month: 'short', day: 'numeric' }), yield: +val.toFixed(4) };
-    });
-  }
-
-  if (period === '1m') {
-    return Array.from({ length: 30 }, (_, i) => {
-      const date = new Date(now - (29 - i) * 86400000);
-      const val = Math.max(0, currentApy * (0.7 + 0.3 * (i / 29)) + noise(i) * currentApy * 0.04);
-      return { date: date.toLocaleDateString('pl-PL', { month: 'short', day: 'numeric' }), yield: +val.toFixed(4) };
-    });
-  }
-
-  return Array.from({ length: 52 }, (_, i) => {
-    const date = new Date(now - (51 - i) * 7 * 86400000);
-    const val = Math.max(0, currentApy * (i / 51) + noise(i) * currentApy * 0.06);
-    return { date: date.toLocaleDateString('pl-PL', { month: 'short', day: 'numeric' }), yield: +val.toFixed(4) };
-  });
 }
 
 function tokenReservePDA(mint: PublicKey): PublicKey {
@@ -210,7 +172,7 @@ export async function standarizedJupLendToken(): Promise<StandarizedMetric[]>{
       supplyAPY:    Number(t.apy.toFixed(2)),
       utilization:  Number(t.utilization.toFixed(2)),
       borrowRate:   Number(t.borrowRate.toFixed(2)),
-
+      lending:      "juplend",
     })
 
   }))
