@@ -1,7 +1,7 @@
 "use client";
 
 import { useMemo } from 'react';
-import { LineChart, Line, XAxis, YAxis, CartesianGrid } from 'recharts';
+import { LineChart, Line, XAxis, YAxis } from 'recharts';
 import { Card, CardHeader, CardTitle, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
@@ -67,7 +67,7 @@ export const ApyChart = ({ title, dataKey, datasets, range, onRangeChange }: Pro
                     }
                     const timeKey = floored.toISOString();
                     if (!timeMap.has(timeKey)) {
-                        timeMap.set(timeKey, { rawDate: floored });
+                        timeMap.set(timeKey, { rawDate: floored, timestamp: floored.getTime() });
                     }
                     const existing = timeMap.get(timeKey);
                     existing[protocol] = p[dataKey];
@@ -159,20 +159,23 @@ export const ApyChart = ({ title, dataKey, datasets, range, onRangeChange }: Pro
                                     cursor={{ stroke: 'var(--color-dash-border)', strokeWidth: 1, strokeDasharray: '4 4' }}
                                     content={
                                         <ChartTooltipContent
-                                            className="bg-dash-card border-dash-border font-sans font-bold"
-                                            labelFormatter={(label) => {
-                                                const date = label instanceof Date ? label : new Date(label);
+                                            className="bg-dash-card border-dash-border font-sans font-bold text-white"
+                                            labelClassName="text-dash-muted"
+                                            labelFormatter={(_, payload) => {
+                                                const raw = payload?.[0]?.payload?.rawDate;
+                                                if (!raw) return '';
+                                                const date = raw instanceof Date ? raw : new Date(raw);
+                                                if (isNaN(date.getTime())) return '';
                                                 return date.toLocaleDateString('en-US', { month: 'long', day: 'numeric', year: 'numeric' });
                                             }}
                                             formatter={(value, name) => [
-                                                `${value}%`,
-                                                String(name).charAt(0).toUpperCase() + String(name).slice(1)
+                                                `${value}% ${String(name).charAt(0).toUpperCase() + String(name).slice(1)}`
                                             ]}
                                         />
                                     }
                                 />
-                                <ChartLegend 
-                                    content={<ChartLegendContent className="pt-4 text-dash-muted font-bold tracking-widest text-xs" />} 
+                                <ChartLegend
+                                    content={<ChartLegendContent className="pt-4 text-dash-muted font-bold tracking-widest text-xs" />}
                                 />
                                 {datasets.map(({ protocol }) => (
                                     <Line

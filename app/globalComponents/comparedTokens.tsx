@@ -1,5 +1,6 @@
 'use client';
 
+import Link from "next/link";
 import { type MatchedTokens } from "./globalTypes";
 import "../globalStyles/cardStyle.css";
 import {
@@ -24,7 +25,9 @@ export default function ComparedTokens({ tokens }: { tokens: MatchedTokens[] }) 
                         <TableHeader>
                             <TableRow>
                                 <TableHead className="w-[150px] font-bold text-lg">
-                                    {t.symbol}
+                                    <Link href={`/token/${t.symbol.toLowerCase()}`} className="hover:text-sky-400 transition-colors">
+                                        {t.symbol}
+                                    </Link>
                                 </TableHead>
                                 <TableHead>Mint</TableHead>
                                 <TableHead>TVL</TableHead>
