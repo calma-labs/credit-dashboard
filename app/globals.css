@@ -46,6 +46,15 @@
   --radius-2xl: calc(var(--radius) * 1.8);
   --radius-3xl: calc(var(--radius) * 2.2);
   --radius-4xl: calc(var(--radius) * 2.6);
+
+  --color-dash-bg: #060b14;
+  --color-dash-card: #080f1a;
+  --color-dash-border: #162a47;
+  --color-dash-accent: #0a1628;
+  --color-dash-accent-hover: #1f456e;
+  --color-dash-muted: #5c8bb8;
+  --color-dash-header: #8aaad1;
+  --color-dash-text: #f1f5f9;
 }
 
 :root {
@@ -81,6 +90,12 @@
   --sidebar-accent-foreground: oklch(0.205 0 0);
   --sidebar-border: oklch(0.922 0 0);
   --sidebar-ring: oklch(0.708 0 0);
+  --protocol-kamino: #38bdf8;
+  --protocol-jupiter: #c084fc;
+  --protocol-save: #4ade80;
+  --protocol-marginfi: #fb923c;
+  --protocol-default: #94a3b8;
+  --font-sans: "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
 }
 
 .dark {
