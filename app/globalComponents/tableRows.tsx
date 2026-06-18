@@ -1,78 +1,46 @@
-'use client';
+"use client";
 
-import { type MatchedTokens } from "./globalTypes";
+import { StandarizedMetric } from "./globalTypes";
 import { TableCell, TableRow } from "@/components/ui/table";
 
-export default function TableRows({ token }: { token: MatchedTokens }) {
+interface TableRowsProps {
+  metrics: StandarizedMetric[];
+  lendingName: string;
+}
 
-  if(!token){
-    return (<div><h1>ERROR, SOMETHING WENT WRONG!</h1></div>)
+export default function TableRows({ metrics, lendingName }: TableRowsProps) {
+  if (!metrics || metrics.length === 0) {
+    return (
+      <TableRow>
+        <TableCell className="font-medium">{lendingName}</TableCell>
+        <TableCell className="text-muted-foreground">-</TableCell>
+        <TableCell className="text-muted-foreground">-</TableCell>
+        <TableCell className="text-muted-foreground">-</TableCell>
+        <TableCell className="text-muted-foreground">-</TableCell>
+        <TableCell className="text-muted-foreground">-</TableCell>
+      </TableRow>
+    );
   }
 
   return (
     <>
-      <TableRow>
-        <TableCell className="font-medium">juplend</TableCell>
-        <TableCell>
-          <span className="mint-address" title={token.leftSide.mintAddress}>
-            {token.leftSide.mintAddress}
-          </span>
-        </TableCell>
-        <TableCell className="data-value">
-          ${Number(token.leftSide.tvl).toLocaleString('en-US')}
-        </TableCell>
-        <TableCell className="apy-green">
-          {token.leftSide.supplyAPY}%
-        </TableCell>
-        <TableCell className="data-value">
-          {token.leftSide.utilization}%
-        </TableCell>
-        <TableCell className="rate-red">
-          {token.leftSide.borrowRate}%
-        </TableCell>
-      </TableRow>
+      {metrics.map((metric, idx) => (
+        <TableRow key={`${metric.lending}-${metric.symbol}-${idx}`}>
+          <TableCell className="font-medium">
+            {metric.lending} {metrics.length > 1 ? `#${idx + 1}` : ""}
+          </TableCell>
 
-      <TableRow>
-        <TableCell className="font-medium">kamino</TableCell>
-        <TableCell>
-          <span className="mint-address" title={token.rightSide.mintAddress}>
-            {token.rightSide.mintAddress}
-          </span>
-        </TableCell>
-        <TableCell className="data-value">
-          ${Number(token.rightSide.tvl).toLocaleString('en-US')}
-        </TableCell>
-        <TableCell className="apy-green">
-          {token.rightSide.supplyAPY}%
-        </TableCell>
-        <TableCell className="data-value">
-          {token.rightSide.utilization}%
-        </TableCell>
-        <TableCell className="rate-red">
-          {token.rightSide.borrowRate}%
-        </TableCell>
-      </TableRow>
+          <TableCell className="data-value">
+            ${metric.tvl.toLocaleString()}
+          </TableCell>
 
-      <TableRow>
-        <TableCell className="font-medium">save</TableCell>
-        <TableCell>
-          <span className="mint-address" title={token.saveSide.mintAddress}>
-            {token.saveSide.mintAddress}
-          </span>
-        </TableCell>
-        <TableCell className="data-value">
-          ${Number(token.saveSide.tvl).toLocaleString('en-US')}
-        </TableCell>
-        <TableCell className="apy-green">
-          {token.saveSide.supplyAPY}%
-        </TableCell>
-        <TableCell className="data-value">
-          {token.saveSide.utilization}%
-        </TableCell>
-        <TableCell className="rate-red">
-          {token.saveSide.borrowRate}%
-        </TableCell>
-      </TableRow>
+          <TableCell className="apy-green">{metric.supplyAPY}%</TableCell>
+
+          <TableCell className="data-value">{metric.utilization}%</TableCell>
+
+          <TableCell className="rate-red">{metric.borrowRate}%</TableCell>
+        </TableRow>
+      ))}
     </>
   );
 }

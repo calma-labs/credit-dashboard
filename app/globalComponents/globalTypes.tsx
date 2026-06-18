@@ -6,6 +6,7 @@ export type StandarizedMetric = {
   utilization:  number,
   supplyAPY:    number,
   borrowRate:   number,   
+  lending:      string,
 }
 
 //compared metrics

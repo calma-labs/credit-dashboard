@@ -88,6 +88,7 @@ export async function kaminoStandarizedTokens(): Promise<StandarizedMetric[]>{
         utilization:  kaminoUtilization(t) ?? 0,
         supplyAPY:    kaminoSupplyAPY(t, GET_KAMINO_SLOT) ?? 0,
         borrowRate:   kaminoBorrowRate(t, GET_KAMINO_SLOT) ?? 0,
+        lending:      "kamino",
       
       });
   
