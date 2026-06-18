@@ -32,7 +32,6 @@ export default function ComparedTokens({
         <TableHeader>
           <TableRow>
             <TableHead className="w-[150px]">Lending</TableHead>
-            <TableHead>Mint Address</TableHead>
             <TableHead>TVL</TableHead>
             <TableHead>Supply APY</TableHead>
             <TableHead>Utilization</TableHead>
