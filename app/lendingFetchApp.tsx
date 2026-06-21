@@ -1,7 +1,7 @@
 import { kaminoStandarizedTokens } from './kaminolend/kamino_lend';
 import { standarizedJupLendToken } from './juplend/hooks/useJupLendData';
 import { type MatchedTokens, type ComparedMetric, StandarizedMetric } from './globalComponents/globalTypes';
-import { fetchSaveData } from './saveFinance/saveData';
+import { fetchSaveData } from './save/useSaveData';
 
 function fillMetric(fillingArg: StandarizedMetric): ComparedMetric {
   return {

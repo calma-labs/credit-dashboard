@@ -12,7 +12,7 @@ export default function TableRows({ token }: { token: MatchedTokens }) {
   return (
     <>
       <TableRow>
-        <TableCell className="font-medium">juplend</TableCell>
+        <TableCell className="font-medium">kamino</TableCell>
         <TableCell>
           <span className="mint-address" title={token.leftSide.mintAddress}>
             {token.leftSide.mintAddress}
@@ -33,7 +33,7 @@ export default function TableRows({ token }: { token: MatchedTokens }) {
       </TableRow>
 
       <TableRow>
-        <TableCell className="font-medium">kamino</TableCell>
+        <TableCell className="font-medium">juplend</TableCell>
         <TableCell>
           <span className="mint-address" title={token.rightSide.mintAddress}>
             {token.rightSide.mintAddress}
