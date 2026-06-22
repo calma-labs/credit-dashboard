@@ -1,5 +1,5 @@
 import { QueryClient } from '@tanstack/react-query';
-import { type StandarizedMetric, type MatchedTokens } from '../globalComponents/globalTypes';
+import { type StandarizedMetric } from '../globalComponents/globalTypes';
 
 const queryClient = new QueryClient();
 
@@ -34,56 +34,34 @@ export async function fetchSaveData(mintAddress: string) {
     }
   }
 
-  if (!reserveId) {
-    console.warn(`No Save reserve found for mint: ${mintAddress}`);
-    return null;
-  }
+  if (!reserveId) return null;
 
   const reserveRes = await fetch(`https://api.solend.fi/v1/reserves?ids=${reserveId}`, { cache: 'no-store' });
-
-  if (!reserveRes.ok) {
-    console.error(`Solend API Error: ${reserveRes.status}`);
-    return null;
-  }
+  if (!reserveRes.ok) return null;
 
   const reserveJson = await reserveRes.json();
-  const results = reserveJson?.results ?? [];
-  let entry = results.find((r: any) =>
-    r?.reserve?.pubkey === reserveId || r?.pubkey === reserveId
-  );
-  if (!entry) {
-    entry = results.find((r: any) => r?.reserve?.liquidity);
-  }
-
-  if (!entry) {
-    console.warn('No reserve data from Solend API');
-    return null;
-  }
+  const entry = reserveJson?.results?.find((r: any) => r?.reserve?.pubkey === reserveId || r?.pubkey === reserveId);
+  if (!entry) return null;
 
   const rates = entry.rates ?? {};
   const liq = entry.reserve?.liquidity ?? {};
 
-  const supplyAPY = Number(parseFloat(rates.supplyInterest ?? '0').toFixed(2));
-  const borrowRate = Number(parseFloat(rates.borrowInterest ?? '0').toFixed(2));
-
   const WAD = 1e18;
   const DECIMALS = Math.pow(10, liq.mintDecimals ?? 6);
 
-  const available = (Number(liq.availableAmount ?? 0) / DECIMALS);
-  const borrowed = (Number(liq.borrowedAmountWads ?? 0) / WAD / DECIMALS) * (Number(liq.marketPrice ?? 0) / WAD);
+  const priceUsd = Number(liq.marketPrice ?? 0) / WAD;
+  const availableTokens = Number(liq.availableAmount ?? 0) / DECIMALS;
+  const borrowedTokens = Number(liq.borrowedAmountWads ?? 0) / WAD / DECIMALS;
 
-  const totalSupply = available + borrowed;
-  const utilization = totalSupply > 0
-    ? Number(((borrowed / totalSupply) * 100).toFixed(2))
-    : 0;
-
-  const tvl = Number(available.toFixed(2));
+  const tvl = availableTokens * priceUsd;
+  const totalSupplyUsd = (availableTokens + borrowedTokens) * priceUsd;
+  const utilization = totalSupplyUsd > 0 ? Number(((borrowedTokens * priceUsd) / totalSupplyUsd * 100).toFixed(2)) : 0;
 
   return {
     mintAddress,
     tvl,
     utilization,
-    supplyAPY,
-    borrowRate,
+    supplyAPY: Number(parseFloat(rates.supplyInterest ?? '0').toFixed(2)),
+    borrowRate: Number(parseFloat(rates.borrowInterest ?? '0').toFixed(2)),
   };
 }

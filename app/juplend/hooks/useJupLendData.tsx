@@ -1,7 +1,6 @@
 import { PublicKey } from '@solana/web3.js';
 import { type StandarizedMetric } from '@/app/globalComponents/globalTypes';
 
-// Zmiana z import.meta.env na process.env
 export const RPC_URL = `https://mainnet.helius-rpc.com/?api-key=${process.env.NEXT_PUBLIC_HELIUS_API_KEY}`;
 const API_BASE = 'https://lite-api.jup.ag/lend/v1';
 const LIQUIDITY_PROGRAM = new PublicKey('jupeiUmn818Jg1ekPURTpr4mFo29p46vygyykFJ3wZC');
@@ -139,16 +138,13 @@ async function fetchTokenReserve(
   }
 }
 
-// Funkcja asynchroniczna zwracająca dokładnie strukturę JupLendData
 export async function useJupLendData(): Promise<JupLendData> {
-  
   try {
     const res = await fetch(`${API_BASE}/earn/tokens`, {
-      cache: 'no-store', // Wymuszenie świeżych danych przy każdym zapytaniu serwera
+      cache: 'no-store',
     });
     if (!res.ok) throw new Error(`API error: ${res.status}`);
     const apiTokens: ApiToken[] = await res.json();
-
 
     const tokens: TokenData[] = await Promise.all(
       apiTokens.map(async (t) => {
@@ -173,14 +169,12 @@ export async function useJupLendData(): Promise<JupLendData> {
       }),
     );
 
-    // Zwraca sukces dokładnie w takim formacie, jaki był w setData
     return {
       tokens: tokens.filter((t) => t.totalAssets > 0),
       loading: false,
       error: null,
     };
   } catch (e: any) {
-    // Zwraca błąd w formacie zgodnym z pierwotnym blokiem catch
     return {
       tokens: [],
       loading: false,
@@ -189,32 +183,23 @@ export async function useJupLendData(): Promise<JupLendData> {
   }
 }
 
-//standarizing the jupLend data
 export async function standarizedJupLendToken(): Promise<StandarizedMetric[]>{
-  
-  //using the juplend data
-  const JUPLEND_DATA  =   await useJupLendData();
-
-  //standarized metrics list
+  const JUPLEND_DATA = await useJupLendData();
   let standarizedJupLend: StandarizedMetric[] = [];
 
-  //mapping juplend's token to make comparison easier
   JUPLEND_DATA.tokens.map((t =>{
+    const apr = t.apy > 1 ? t.apy / 100 : t.apy;
+    const apy = Math.pow(1 + apr / 365, 365) - 1;
 
-    standarizedJupLend.push
-    ({
-
-      symbol: 	    t.symbol,
-	    mintAddress:  t.mint,
+    standarizedJupLend.push({
+      symbol:       t.symbol,
+      mintAddress:  t.mint,
       tvl:          Number(t.tvlUsd),
-      supplyAPY:    Number(t.apy.toFixed(2)),
+      supplyAPY:    Number((apy * 100).toFixed(2)),
       utilization:  Number(t.utilization.toFixed(2)),
       borrowRate:   Number(t.borrowRate.toFixed(2)),
-
-    })
-
-  }))
+    });
+  }));
   
-  //result list
   return standarizedJupLend;
 }
