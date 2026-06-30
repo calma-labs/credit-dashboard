@@ -5,7 +5,7 @@ export const RPC_URL = `https://mainnet.helius-rpc.com/?api-key=${process.env.NE
 const API_BASE = 'https://lite-api.jup.ag/lend/v1';
 const LIQUIDITY_PROGRAM = new PublicKey('jupeiUmn818Jg1ekPURTpr4mFo29p46vygyykFJ3wZC');
 
-async function getErr(error: any): Promise<any> {
+async function getErr(error: unknown): Promise<unknown> {
   return error;
 }
 
@@ -29,6 +29,7 @@ export interface TokenData {
   mint: string;
   decimals: number;
   apy: number;
+  apr: number;
   supplyRate: number;
   rewardsRate: number;
   borrowRate: number;
@@ -159,6 +160,7 @@ export async function useJupLendData(): Promise<JupLendData> {
           mint: t.assetAddress,
           decimals: t.decimals,
           apy: Number(t.totalRate) / 100,
+          apr: Number(t.totalRate) / 10000,
           supplyRate: Number(t.supplyRate) / 100,
           rewardsRate: Number(t.rewardsRate) / 100,
           borrowRate: reserve?.borrowRate ?? 0,
@@ -174,11 +176,11 @@ export async function useJupLendData(): Promise<JupLendData> {
       loading: false,
       error: null,
     };
-  } catch (e: any) {
+  } catch (e) {
     return {
       tokens: [],
       loading: false,
-      error: e.message ?? 'Błąd pobierania danych',
+      error: e instanceof Error ? e.message : 'Błąd pobierania danych',
     };
   }
 }
@@ -187,9 +189,8 @@ export async function standarizedJupLendToken(): Promise<StandarizedMetric[]>{
   const JUPLEND_DATA = await useJupLendData();
   let standarizedJupLend: StandarizedMetric[] = [];
 
-  JUPLEND_DATA.tokens.map((t =>{
-    const apr = t.apy > 1 ? t.apy / 100 : t.apy;
-    const apy = Math.pow(1 + apr / 365, 365) - 1;
+  JUPLEND_DATA.tokens.map((t) => {
+    const apy = Math.pow(1 + t.apr / 365, 365) - 1;
 
     standarizedJupLend.push({
       symbol:       t.symbol,
@@ -199,7 +200,7 @@ export async function standarizedJupLendToken(): Promise<StandarizedMetric[]>{
       utilization:  Number(t.utilization.toFixed(2)),
       borrowRate:   Number(t.borrowRate.toFixed(2)),
     });
-  }));
+  });
   
   return standarizedJupLend;
 }
