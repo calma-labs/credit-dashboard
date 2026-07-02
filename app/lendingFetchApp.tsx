@@ -1,68 +1,60 @@
 import { kaminoStandarizedTokens } from './kaminolend/kamino_lend';
 import { standarizedJupLendToken } from './juplend/hooks/useJupLendData';
 import { type MatchedTokens, type ComparedMetric, StandarizedMetric } from './globalComponents/globalTypes';
-import { fetchSaveData } from './save/useSaveData';
+import { fetchSaveData } from './save/saveData';
 
-function fillMetric(fillingArg: StandarizedMetric): ComparedMetric {
-  return {
+//this var is going to include every future lendings we are going to show on page
+const lendings = [
+  kaminoStandarizedTokens,
+  standarizedJupLendToken,
+  fetchSaveData,
+];
 
-    mintAddress:  fillingArg.mintAddress,
-    tvl:          fillingArg.tvl,
-    utilization:  fillingArg.utilization, 
-    supplyAPY:    fillingArg.supplyAPY,
-    borrowRate:   fillingArg.borrowRate,
+//safe fetch
+export async function safeFetch(): Promise<StandarizedMetric[][]> {
+  //mapping every token as <[][]>
+  const results = await Promise.allSettled(lendings.map((f) => f()));
 
-  };
+  return results.map((result) => {
+    if (result.status === 'fulfilled') {
+      return result.value;
+    }
+    return [];
+  });
 }
 
-export default async function matchedTokens() {
-  const LEFT_SIDE = await kaminoStandarizedTokens();
-  const RIGHT_SIDE = await standarizedJupLendToken();
+//all choosen lendings
+export async function getLends(): Promise<string[]> {
+  const allResults = await safeFetch();
 
-  let initialMatches: Omit<MatchedTokens, 'saveSide'>[] = [];
-
-  if (LEFT_SIDE.length === 0 || RIGHT_SIDE.length === 0) {
-    return [];
-  }
-
-  LEFT_SIDE.forEach(leftObject => {
-    
-    const matchingRightObject = RIGHT_SIDE.find(
-
-      rightObject => rightObject.symbol === leftObject.symbol
-
-    );
-
-    if (matchingRightObject) {
-      initialMatches.push({
-
-        symbol: leftObject.symbol,
-        leftSide: fillMetric(leftObject),
-        rightSide: fillMetric(matchingRightObject),
-
-      });
-    
-    }
+  //mapping lendings
+  const mint = allResults.flat().map((t) => {
+    return t.lending;
   });
 
-  const COMPARISON_RESULT: MatchedTokens[] = await Promise.all(
-    initialMatches.map(async (match) => {
-      const SAVE_DATA = await fetchSaveData(match.leftSide.mintAddress);
+  //removing duplicates
+  return [...new Set(mint)];
+}
 
-      return {
-        ...match,
-        saveSide: {
+//every token
+export async function getMints(): Promise<string[]> {
+  const allResults = await safeFetch();
 
-          mintAddress:  match.leftSide.mintAddress  || 'no Available token!',
-          tvl:          SAVE_DATA?.tvl              || 0,
-          supplyAPY:    SAVE_DATA?.supplyAPY        || 0,
-          utilization:  SAVE_DATA?.utilization      || 0,
-          borrowRate:   SAVE_DATA?.borrowRate       || 0,
+  //mapping symbols
+  const mint = allResults.flat().map((t) => {
+    return t.mintAddress;
+  });
 
-        }
-      };
-    })
-  );
+  //removing duplicates
+  return [...new Set(mint)];
+}
 
-  return COMPARISON_RESULT;
+//this function is returning standarized tokens from each lending as one list
+export async function getStandarizedTokensList(): Promise<StandarizedMetric[]> {
+  const allResults = await safeFetch();
+
+  //flatting [][]
+  const tokensList: StandarizedMetric[] = allResults.flat();
+
+  return tokensList;
 }

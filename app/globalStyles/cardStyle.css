@@ -1,6 +1,6 @@
 body {
   background-color: #0b0f19;
-  background-image: 
+  background-image:
     radial-gradient(at 0% 0%, rgba(99, 102, 241, 0.1) 0px, transparent 50%),
     radial-gradient(at 100% 100%, rgba(139, 92, 246, 0.1) 0px, transparent 50%);
   color: #f8fafc;
@@ -9,44 +9,64 @@ body {
   font-family: sans-serif;
 }
 
-h1, h2, h3 {
+h1,
+h2,
+h3 {
   color: #ffffff;
   text-shadow: 0 0 20px rgba(255, 255, 255, 0.1);
   padding-left: 10px;
 }
 
-.token-pair-table-wrapper {
-  background: rgba(17, 24, 39, 0.7);
+.p-4.bg-background.rounded-xl.border {
+  background: rgba(17, 24, 39, 0.7) !important;
   backdrop-filter: blur(16px);
   -webkit-backdrop-filter: blur(16px);
-  border: 1px solid rgba(255, 255, 255, 0.07);
-  border-radius: 16px;
-  padding: 20px;
+  border: 1px solid rgba(255, 255, 255, 0.07) !important;
+  border-radius: 16px !important;
+  padding: 20px !important;
   box-shadow: 0 4px 30px rgba(0, 0, 0, 0.4);
-  transition: transform 0.2s ease, border-color 0.2s ease, box-shadow 0.2s ease;
+  transition:
+    transform 0.2s ease,
+    border-color 0.2s ease,
+    box-shadow 0.2s ease;
+  max-w: 1280px;
+  margin: 24px auto;
 }
 
-.token-pair-table-wrapper:hover {
+.p-4.bg-background.rounded-xl.border:hover {
   transform: translateY(-2px);
-  border-color: rgba(99, 102, 241, 0.4);
+  border-color: rgba(99, 102, 241, 0.4) !important;
   box-shadow: 0 10px 40px rgba(99, 102, 241, 0.15);
 }
 
-.token-pair-table-wrapper table {
+.p-4.bg-background.rounded-xl.border table {
   background: transparent !important;
+  border-collapse: collapse !important;
+  width: 100%;
 }
 
-.token-pair-table-wrapper tr {
+.p-4.bg-background.rounded-xl.border tr {
   background: transparent !important;
   border-bottom: 1px solid rgba(255, 255, 255, 0.05) !important;
   transition: background-color 0.2s ease;
 }
 
-.token-pair-table-wrapper tbody tr:hover {
+.p-4.bg-background.rounded-xl.border tbody tr:hover {
   background: rgba(255, 255, 255, 0.02) !important;
 }
 
-.token-pair-table-wrapper th {
+.p-4.bg-background.rounded-xl.border tr:last-child {
+  border-bottom: 0 !important;
+}
+
+.p-4.bg-background.rounded-xl.border th,
+.p-4.bg-background.rounded-xl.border td {
+  padding: 14px 16px !important;
+  text-align: left;
+  vertical-align: middle;
+}
+
+.p-4.bg-background.rounded-xl.border th {
   color: #64748b !important;
   font-size: 0.75rem !important;
   font-weight: 600 !important;
@@ -55,12 +75,21 @@ h1, h2, h3 {
   border-bottom: 1px solid rgba(255, 255, 255, 0.1) !important;
 }
 
-.token-pair-table-wrapper th:first-child {
-  color: #38bdf8 !important; /* Ładny błękit cyjanowy */
+.p-4.bg-background.rounded-xl.border tr.bg-muted\/50 {
+  background: rgba(255, 255, 255, 0.01) !important;
+}
+
+.p-4.bg-background.rounded-xl.border tr.bg-muted\/50:hover {
+  background: rgba(255, 255, 255, 0.01) !important;
+}
+
+.p-4.bg-background.rounded-xl.border tr.bg-muted\/50 td.text-primary {
+  color: #38bdf8 !important;
   font-size: 1.25rem !important;
   font-weight: 800 !important;
   text-transform: none;
   letter-spacing: normal;
+  padding: 20px 16px !important;
 }
 
 .mint-address {
@@ -72,15 +101,27 @@ h1, h2, h3 {
   font-size: 0.8rem;
   border: 1px solid rgba(56, 189, 248, 0.2);
   display: inline-block;
-  max-width: 130px;
+  max-width: 230px;
+  margin: 10px 10px 10px 0px;
   white-space: nowrap;
   overflow: hidden;
   text-overflow: ellipsis;
+  cursor: pointer;
 }
 
 .data-value {
   color: #e2e8f0;
   font-weight: 500;
+}
+
+.font-medium {
+  color: #e2e8f0;
+  font-weight: 500;
+  text-transform: capitalize;
+}
+
+.text-muted-foreground {
+  color: rgba(255, 255, 255, 0.2) !important;
 }
 
 .apy-green {
@@ -95,21 +136,6 @@ h1, h2, h3 {
   text-shadow: 0 0 12px rgba(255, 23, 68, 0.4);
 }
 
-
-.title-badge {
-  background: rgba(0, 242, 254, 0.1);
-  color: #00f2fe;
-  font-size: 0.65rem;
-  font-weight: 700;
-  padding: 4px 8px;
-  border-radius: 4px;
-  letter-spacing: 0.15em;
-  text-transform: uppercase;
-  border: 1px solid rgba(0, 242, 254, 0.2);
-  display: inline-block;
-  margin-bottom: 8px;
-}
-
 .main-title {
   font-size: 2.25rem;
   font-weight: 800;
@@ -122,7 +148,7 @@ h1, h2, h3 {
   background-clip: text;
   text-shadow: 0 4px 20px rgba(255, 255, 255, 0.05);
 }
-.title-container{
+.title-container {
   width: 100%;
   display: flex;
   align-items: center;

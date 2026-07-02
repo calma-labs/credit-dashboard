@@ -38,48 +38,10 @@ export interface TokenData {
   totalAssets: number;
 }
 
-export type Period = '7d' | '1m' | '1y';
-
-export interface ChartPoint {
-  date: string;
-  yield: number;
-}
-
 export interface JupLendData {
   tokens: TokenData[];
   loading: boolean;
   error: string | null;
-}
-
-export function generateMockHistory(currentApy: number, period: Period): ChartPoint[] {
-  const now = Date.now();
-
-  const noise = (i: number) => {
-    const x = Math.sin(currentApy * 12.9898 + i * 78.233) * 43758.5453;
-    return (x - Math.floor(x)) * 2 - 1;
-  };
-
-  if (period === '7d') {
-    return Array.from({ length: 7 }, (_, i) => {
-      const date = new Date(now - (6 - i) * 86400000);
-      const val = Math.max(0, currentApy + noise(i) * currentApy * 0.05);
-      return { date: date.toLocaleDateString('pl-PL', { month: 'short', day: 'numeric' }), yield: +val.toFixed(4) };
-    });
-  }
-
-  if (period === '1m') {
-    return Array.from({ length: 30 }, (_, i) => {
-      const date = new Date(now - (29 - i) * 86400000);
-      const val = Math.max(0, currentApy * (0.7 + 0.3 * (i / 29)) + noise(i) * currentApy * 0.04);
-      return { date: date.toLocaleDateString('pl-PL', { month: 'short', day: 'numeric' }), yield: +val.toFixed(4) };
-    });
-  }
-
-  return Array.from({ length: 52 }, (_, i) => {
-    const date = new Date(now - (51 - i) * 7 * 86400000);
-    const val = Math.max(0, currentApy * (i / 51) + noise(i) * currentApy * 0.06);
-    return { date: date.toLocaleDateString('pl-PL', { month: 'short', day: 'numeric' }), yield: +val.toFixed(4) };
-  });
 }
 
 function tokenReservePDA(mint: PublicKey): PublicKey {
@@ -109,20 +71,20 @@ async function fetchTokenReserve(
       body,
     });
 
-    if (!res.ok){
+    if (!res.ok) {
       new_error = true;
       return null;
     }
     
     const json = await res.json();
     const b64 = json?.result?.value?.data?.[0];
-    if (!b64){
+    if (!b64) {
       new_error = true;
       return null;
     }
 
     const bytes = Uint8Array.from(atob(b64), (c) => c.charCodeAt(0));
-    if (bytes.length < 78){
+    if (bytes.length < 78) {
       new_error = true;
       return null;
     }
@@ -133,7 +95,7 @@ async function fetchTokenReserve(
     const utilization = view.getUint16(76, true) / 100;
 
     return { borrowRate, utilization };
-  } catch (e){
+  } catch (e) {
     new_error = true;
     return null;
   }
@@ -185,22 +147,20 @@ export async function useJupLendData(): Promise<JupLendData> {
   }
 }
 
-export async function standarizedJupLendToken(): Promise<StandarizedMetric[]>{
+export async function standarizedJupLendToken(): Promise<StandarizedMetric[]> {
   const JUPLEND_DATA = await useJupLendData();
-  let standarizedJupLend: StandarizedMetric[] = [];
 
-  JUPLEND_DATA.tokens.map((t) => {
+  return JUPLEND_DATA.tokens.map((t) => {
     const apy = Math.pow(1 + t.apr / 365, 365) - 1;
 
-    standarizedJupLend.push({
-      symbol:       t.symbol,
+    return {
+      symbol:       t.symbol.toUpperCase(),
       mintAddress:  t.mint,
       tvl:          Number(t.tvlUsd),
       supplyAPY:    Number((apy * 100).toFixed(2)),
       utilization:  Number(t.utilization.toFixed(2)),
       borrowRate:   Number(t.borrowRate.toFixed(2)),
-    });
+      lending:      "juplend",
+    };
   });
-  
-  return standarizedJupLend;
 }
