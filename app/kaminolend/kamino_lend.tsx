@@ -42,7 +42,7 @@ export async function fetchReserves(): Promise<KaminoReserve[]> {
     true
   );
 
-  return (market?.getReserves() ?? []).filter((reserve) => reserve.getBorrowedAmount().gt(0));
+  return (market?.getReserves() ?? []).filter((reserve) => reserve.state.config.status === 0)
 }
 
 //getting the slot for APYs
