@@ -10,6 +10,8 @@ export const metadata = {
   title: 'Credit dashboard',
 };
 
+type PlatformSnapshot = StandarizedMetric & { protocol: string };
+
 function normalizeSymbol(symbol: string): string {
     return symbol
         .toUpperCase()
@@ -36,29 +38,11 @@ export default async function TokenPage({ params }: { params: Promise<{ symbol: 
     const jupToken = findBestMatch(JUPLEND_DATA, upperSymbol);
     const saveToken = findBestMatch(SAVE_DATA, upperSymbol);
 
-    const snapshots = [
-        kaminoToken ? {
-            protocol:    'kamino',
-            tvl:         kaminoToken.tvl,
-            supplyAPY:   kaminoToken.supplyAPY,
-            utilization: kaminoToken.utilization,
-            borrowRate:  kaminoToken.borrowRate,
-        } : null,
-        jupToken ? {
-            protocol:    'jupiter',
-            tvl:         jupToken.tvl,
-            supplyAPY:   jupToken.supplyAPY,
-            utilization: jupToken.utilization,
-            borrowRate:  jupToken.borrowRate,
-        } : null,
-        saveToken ? {
-            protocol:    'save',
-            tvl:         saveToken.tvl,
-            supplyAPY:   saveToken.supplyAPY,
-            utilization: saveToken.utilization,
-            borrowRate:  saveToken.borrowRate,
-        } : null,
-    ].filter(Boolean) as any[];
+    const snapshots: PlatformSnapshot[] = [
+        kaminoToken ? { protocol: 'kamino', ...kaminoToken } : null,
+        jupToken    ? { protocol: 'jupiter', ...jupToken }   : null,
+        saveToken   ? { protocol: 'save', ...saveToken }     : null,
+    ].filter((s): s is PlatformSnapshot => s !== null);
 
     return <TokenDetailView symbol={upperSymbol} snapshots={snapshots} />;
 }

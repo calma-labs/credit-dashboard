@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
 
-const MIN_TVL = 1000;
+const MIN_TVL = 10_000;
 
 const PROTOCOL_SLUGS: Record<string, string[]> = {
     save: ['save', 'solend'],

@@ -28,7 +28,6 @@ export interface TokenData {
   symbol: string;
   mint: string;
   decimals: number;
-  apy: number;
   apr: number;
   supplyRate: number;
   rewardsRate: number;
@@ -121,7 +120,6 @@ export async function useJupLendData(): Promise<JupLendData> {
           symbol: t.asset.symbol,
           mint: t.assetAddress,
           decimals: t.decimals,
-          apy: Number(t.totalRate) / 100,
           apr: Number(t.totalRate) / 10000,
           supplyRate: Number(t.supplyRate) / 100,
           rewardsRate: Number(t.rewardsRate) / 100,
