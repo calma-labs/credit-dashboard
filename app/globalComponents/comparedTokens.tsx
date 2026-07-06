@@ -23,10 +23,8 @@ export default function ComparedTokens({
   tokens,
   symbols,
 }: ComparedTokensProps) {
-  // Stan przechowujący adresy tokenów (symbol/mintAddress), które są aktualnie rozwinięte
   const [expandedTokens, setExpandedTokens] = useState<Set<string>>(new Set());
 
-  // Funkcja do przełączania widoczności (dodaje lub usuwa adres z Set-a)
   const toggleExpand = (symbol: string) => {
     setExpandedTokens((prev) => {
       const next = new Set(prev);
@@ -64,12 +62,10 @@ export default function ComparedTokens({
             const tokenSymbol = matchingTokens[0];
             const slicedTokens = matchingTokens.slice(1);
 
-            // Sprawdzamy czy dany token widnieje w stanie jako "rozwinięty"
             const isExpanded = expandedTokens.has(symbol);
 
             return (
               <React.Fragment key={`fragment-${symbol}-${symbolIndex}`}>
-                {/* Wiersz nagłówkowy działa jako przycisk on/off dla reszty rynków */}
                 <TableRow
                   className="bg-muted/50 hover:bg-muted/70 cursor-pointer select-none transition-colors"
                   onClick={() => toggleExpand(symbol)}
