@@ -20,11 +20,12 @@ export async function safeFetch(): Promise<StandarizedMetric[][]> {
 
 //every tokens that are stored on each lendings, <StandarizedMetric[][]>
 const allResults = await safeFetch();
+const sortedResults = allResults.flat().sort((a, b) => b.tvl - a.tvl); //sorting by tvl, the highest first
 
 //all choosen lendings
 export async function getLends(): Promise<string[]> {
   //mapping lendings
-  const mint = allResults.flat().map((t) => {
+  const mint = sortedResults.map((t) => {
     return t.lending;
   });
 
@@ -35,11 +36,13 @@ export async function getLends(): Promise<string[]> {
 //every token
 export async function getMints(): Promise<string[]> {
   //mapping symbols
-  const mint = allResults.flat().map((t) => {
+
+  const mint = sortedResults.map((t) => {
     return t.mintAddress;
   });
 
   //removing duplicates
+
   return [...new Set(mint)];
 }
 
@@ -49,7 +52,7 @@ export async function getStandarizedTokensList(): Promise<StandarizedMetric[]> {
   if (allResults.some((list) => !list.length)) return [];
 
   //flatting [][]
-  const tokensList: StandarizedMetric[] = allResults.flat();
+  const tokensList: StandarizedMetric[] = sortedResults;
 
   return tokensList;
 }

@@ -1,6 +1,6 @@
 "use client";
 
-import React from "react";
+import React, { useState } from "react";
 import { StandarizedMetric } from "./globalTypes";
 import "../globalStyles/cardStyle.css";
 import {
@@ -21,9 +21,24 @@ interface ComparedTokensProps {
 
 export default function ComparedTokens({
   tokens,
-  lends,
   symbols,
 }: ComparedTokensProps) {
+  // Stan przechowujący adresy tokenów (symbol/mintAddress), które są aktualnie rozwinięte
+  const [expandedTokens, setExpandedTokens] = useState<Set<string>>(new Set());
+
+  // Funkcja do przełączania widoczności (dodaje lub usuwa adres z Set-a)
+  const toggleExpand = (symbol: string) => {
+    setExpandedTokens((prev) => {
+      const next = new Set(prev);
+      if (next.has(symbol)) {
+        next.delete(symbol);
+      } else {
+        next.add(symbol);
+      }
+      return next;
+    });
+  };
+
   if (!tokens || !tokens.length) return <div>Loading...</div>;
 
   return (
@@ -32,7 +47,6 @@ export default function ComparedTokens({
         <TableHeader>
           <TableRow>
             <TableHead className="w-[150px]">Lending</TableHead>
-            <TableHead>Mint Address</TableHead>
             <TableHead>TVL</TableHead>
             <TableHead>Supply APY</TableHead>
             <TableHead>Utilization</TableHead>
@@ -40,51 +54,64 @@ export default function ComparedTokens({
           </TableRow>
         </TableHeader>
         <TableBody>
-          {/* mapping symbol and index */}
           {symbols.map((symbol, symbolIndex) => {
             const matchingTokens = tokens.filter(
               (m: any) => m.mintAddress === symbol,
             );
 
-            //tokens appearing only on one lending are skipped
             if (matchingTokens.length <= 1) return null;
 
-            //...this is temporary for printing it's name
             const tokenSymbol = matchingTokens[0];
+            const slicedTokens = matchingTokens.slice(1);
+
+            // Sprawdzamy czy dany token widnieje w stanie jako "rozwinięty"
+            const isExpanded = expandedTokens.has(symbol);
 
             return (
               <React.Fragment key={`fragment-${symbol}-${symbolIndex}`}>
-                <TableRow className="bg-muted/50 hover:bg-muted/50">
+                {/* Wiersz nagłówkowy działa jako przycisk on/off dla reszty rynków */}
+                <TableRow
+                  className="bg-muted/50 hover:bg-muted/70 cursor-pointer select-none transition-colors"
+                  onClick={() => toggleExpand(symbol)}
+                >
                   <TableCell
                     colSpan={6}
                     className="font-bold text-base py-3 uppercase tracking-wider text-primary"
                   >
-                    <h1>Token: {tokenSymbol.symbol}</h1>
-                    <span
-                      className="mint-address"
-                      onClick={() =>
-                        navigator.clipboard.writeText(tokenSymbol.mintAddress)
-                      }
-                    >
-                      Mint: {tokenSymbol.mintAddress.slice(0, 5)}...
-                    </span>
+                    <div className="flex justify-between items-center w-full">
+                      <h1>
+                        {isExpanded ? "▼" : "▲"} Token: {tokenSymbol.symbol}
+                      </h1>
+                      <span
+                        className="mint-address text-xs font-mono normal-case"
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          navigator.clipboard.writeText(
+                            tokenSymbol.mintAddress,
+                          );
+                        }}
+                      >
+                        Mint: {tokenSymbol.mintAddress.slice(0, 5)}...
+                      </span>
+                    </div>
                   </TableCell>
                 </TableRow>
 
-                {/* adding symbol to tablerow*/}
-                {lends.map((lending, lendIndex) => {
-                  const matchedMetrics = tokens.filter(
-                    (t) => t.mintAddress === symbol && t.lending === lending,
-                  );
+                {/* ticker */}
+                <TableRows
+                  key={`row-${symbol}-${symbolIndex}`}
+                  metrics={[tokenSymbol]}
+                  lendingName={tokenSymbol.lending}
+                />
 
-                  return (
-                    <TableRows
-                      key={`row-${symbol}-${symbolIndex}-${lending}-${lendIndex}`}
-                      metrics={matchedMetrics}
-                      lendingName={lending}
-                    />
-                  );
-                })}
+                {/* visible rest */}
+                {isExpanded && (
+                  <TableRows
+                    key={`row-${symbol}-${symbolIndex}-slice`}
+                    metrics={slicedTokens}
+                    lendingName={""}
+                  />
+                )}
               </React.Fragment>
             );
           })}

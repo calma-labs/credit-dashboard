@@ -4,7 +4,6 @@ import {
   getStandarizedTokensList,
 } from "./lendingFetchApp";
 import ComparedTokens from "./globalComponents/comparedTokens";
-import { getSaveData } from "./saveFinance/saveData";
 import "./globalStyles/cardStyle.css";
 
 export const dynamic = "force-dynamic";
