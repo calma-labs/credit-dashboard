@@ -1,12 +1,11 @@
 import { PublicKey } from '@solana/web3.js';
 import { type StandarizedMetric } from '@/app/globalComponents/globalTypes';
 
-// Zmiana z import.meta.env na process.env
 export const RPC_URL = `https://mainnet.helius-rpc.com/?api-key=${process.env.NEXT_PUBLIC_HELIUS_API_KEY}`;
 const API_BASE = 'https://lite-api.jup.ag/lend/v1';
 const LIQUIDITY_PROGRAM = new PublicKey('jupeiUmn818Jg1ekPURTpr4mFo29p46vygyykFJ3wZC');
 
-async function getErr(error: any): Promise<any> {
+async function getErr(error: unknown): Promise<unknown> {
   return error;
 }
 
@@ -29,7 +28,7 @@ export interface TokenData {
   symbol: string;
   mint: string;
   decimals: number;
-  apy: number;
+  apr: number;
   supplyRate: number;
   rewardsRate: number;
   borrowRate: number;
@@ -71,20 +70,20 @@ async function fetchTokenReserve(
       body,
     });
 
-    if (!res.ok){
+    if (!res.ok) {
       new_error = true;
       return null;
     }
     
     const json = await res.json();
     const b64 = json?.result?.value?.data?.[0];
-    if (!b64){
+    if (!b64) {
       new_error = true;
       return null;
     }
 
     const bytes = Uint8Array.from(atob(b64), (c) => c.charCodeAt(0));
-    if (bytes.length < 78){
+    if (bytes.length < 78) {
       new_error = true;
       return null;
     }
@@ -95,22 +94,19 @@ async function fetchTokenReserve(
     const utilization = view.getUint16(76, true) / 100;
 
     return { borrowRate, utilization };
-  } catch (e){
+  } catch (e) {
     new_error = true;
     return null;
   }
 }
 
-// Funkcja asynchroniczna zwracająca dokładnie strukturę JupLendData
 export async function useJupLendData(): Promise<JupLendData> {
-  
   try {
     const res = await fetch(`${API_BASE}/earn/tokens`, {
-      cache: 'no-store', // Wymuszenie świeżych danych przy każdym zapytaniu serwera
+      cache: 'no-store',
     });
     if (!res.ok) throw new Error(`API error: ${res.status}`);
     const apiTokens: ApiToken[] = await res.json();
-
 
     const tokens: TokenData[] = await Promise.all(
       apiTokens.map(async (t) => {
@@ -124,7 +120,7 @@ export async function useJupLendData(): Promise<JupLendData> {
           symbol: t.asset.symbol,
           mint: t.assetAddress,
           decimals: t.decimals,
-          apy: Number(t.totalRate) / 100,
+          apr: Number(t.totalRate) / 10000,
           supplyRate: Number(t.supplyRate) / 100,
           rewardsRate: Number(t.rewardsRate) / 100,
           borrowRate: reserve?.borrowRate ?? 0,
@@ -135,48 +131,34 @@ export async function useJupLendData(): Promise<JupLendData> {
       }),
     );
 
-    // Zwraca sukces dokładnie w takim formacie, jaki był w setData
     return {
       tokens: tokens.filter((t) => t.totalAssets > 0),
       loading: false,
       error: null,
     };
-  } catch (e: any) {
-    // Zwraca błąd w formacie zgodnym z pierwotnym blokiem catch
+  } catch (e) {
     return {
       tokens: [],
       loading: false,
-      error: e.message ?? 'Błąd pobierania danych',
+      error: e instanceof Error ? e.message : 'Błąd pobierania danych',
     };
   }
 }
 
-//standarizing the jupLend data
-export async function standarizedJupLendToken(): Promise<StandarizedMetric[]>{
-  
-  //using the juplend data
-  const JUPLEND_DATA  =   await useJupLendData();
+export async function standarizedJupLendToken(): Promise<StandarizedMetric[]> {
+  const JUPLEND_DATA = await useJupLendData();
 
-  //standarized metrics list
-  let standarizedJupLend: StandarizedMetric[] = [];
+  return JUPLEND_DATA.tokens.map((t) => {
+    const apy = Math.pow(1 + t.apr / 365, 365) - 1;
 
-  //mapping juplend's token to make comparison easier
-  JUPLEND_DATA.tokens.map((t =>{
-
-    standarizedJupLend.push
-    ({
-
-      symbol: 	    t.symbol,
-	    mintAddress:  t.mint,
+    return {
+      symbol:       t.symbol.toUpperCase(),
+      mintAddress:  t.mint,
       tvl:          Number(t.tvlUsd),
-      supplyAPY:    Number(t.apy.toFixed(2)),
+      supplyAPY:    Number((apy * 100).toFixed(2)),
       utilization:  Number(t.utilization.toFixed(2)),
       borrowRate:   Number(t.borrowRate.toFixed(2)),
       lending:      "juplend",
-    })
-
-  }))
-  
-  //result list
-  return standarizedJupLend;
+    };
+  });
 }
