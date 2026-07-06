@@ -6,6 +6,7 @@ import { TableCell, TableRow } from "@/components/ui/table";
 interface TableRowsProps {
   metrics: StandarizedMetric[];
   lendingName: string;
+  mintAddress: string;
 }
 
 export default function TableRows({ metrics, lendingName }: TableRowsProps) {
