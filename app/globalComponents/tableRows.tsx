@@ -6,19 +6,14 @@ import { TableCell, TableRow } from "@/components/ui/table";
 interface TableRowsProps {
   metrics: StandarizedMetric[];
   lendingName: string;
-  mintAddress: string;
 }
 
-export default function TableRows({ metrics, lendingName, mintAddress }: TableRowsProps) {
+export default function TableRows({ metrics, lendingName }: TableRowsProps) {
   if (!metrics || metrics.length === 0) {
     return (
       <TableRow>
         <TableCell className="font-medium">{lendingName}</TableCell>
-        <TableCell>
-          <span className="mint-address" title={mintAddress}>
-            {mintAddress}
-          </span>
-        </TableCell>
+        <TableCell className="text-muted-foreground">-</TableCell>
         <TableCell className="text-muted-foreground">-</TableCell>
         <TableCell className="text-muted-foreground">-</TableCell>
         <TableCell className="text-muted-foreground">-</TableCell>
@@ -33,6 +28,10 @@ export default function TableRows({ metrics, lendingName, mintAddress }: TableRo
         <TableRow key={`${metric.lending}-${metric.symbol}-${idx}`}>
           <TableCell className="font-medium">
             {metric.lending} {metrics.length > 1 ? `#${idx + 1}` : ""}
+          </TableCell>
+
+          <TableCell className="px-5 py-4 text-[14px] text-dash-muted">
+            {metric.chain}
           </TableCell>
 
           <TableCell>

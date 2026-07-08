@@ -40,6 +40,7 @@ const chartConfig = {
     jupiter: { label: "Jupiter", color: "var(--protocol-jupiter)" },
     save: { label: "Save", color: "var(--protocol-save)" },
     marginfi: { label: "MarginFi", color: "var(--protocol-marginfi)" },
+    morpho: { label: "Morpho", color: "var(--protocol-morpho)" },
 } satisfies ChartConfig;
 
 export const ApyChart = ({ title, dataKey, datasets, range, onRangeChange }: Props) => {
@@ -182,7 +183,7 @@ export const ApyChart = ({ title, dataKey, datasets, range, onRangeChange }: Pro
                                         key={protocol}
                                         type="monotone"
                                         dataKey={protocol}
-                                        stroke={`var(--color-${protocol})`}
+                                        stroke={`var(--protocol-${protocol}, var(--protocol-default))`}
                                         strokeWidth={2.5}
                                         dot={false}
                                         connectNulls

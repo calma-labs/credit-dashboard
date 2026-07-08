@@ -159,6 +159,7 @@ export async function standarizedJupLendToken(): Promise<StandarizedMetric[]> {
       utilization:  Number(t.utilization.toFixed(2)),
       borrowRate:   Number(t.borrowRate.toFixed(2)),
       lending:      "juplend",
+      chain:        "Solana"
     };
   });
 }

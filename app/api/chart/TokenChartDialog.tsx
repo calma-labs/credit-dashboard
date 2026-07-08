@@ -21,6 +21,7 @@ interface PlatformSnapshot {
     supplyAPY: number;
     borrowRate: number;
     utilization: number;
+    chain: string;
 }
 
 interface TokenDetailProps {
@@ -28,7 +29,7 @@ interface TokenDetailProps {
     snapshots: PlatformSnapshot[];
 }
 
-const PROTOCOLS = ["kamino", "save", "jupiter"];
+const PROTOCOLS = ["kamino", "save", "jupiter","morpho"];
 
 const getProtocolColor = (protocol: string) =>
     `var(--protocol-${protocol}, var(--protocol-default))`;
@@ -117,7 +118,7 @@ export function TokenDetailView({ symbol, snapshots }: TokenDetailProps) {
                             <Table>
                                 <TableHeader>
                                     <TableRow className="border-b-2 border-dash-border bg-dash-accent hover:bg-dash-accent">
-                                        {['Platform', 'TVL', 'Supply APY', 'Borrow Rate', 'Utilization'].map(h => (
+                                        {['Platform', 'Chain', 'TVL', 'Supply APY', 'Borrow Rate', 'Utilization'].map(h => (
                                             <TableHead
                                                 key={h}
                                                 className="px-5 py-3.5 text-[12px] font-bold uppercase tracking-[0.1em] text-dash-header"
@@ -143,6 +144,9 @@ export function TokenDetailView({ symbol, snapshots }: TokenDetailProps) {
                                                 >
                                                     {s.protocol}
                                                 </span>
+                                            </TableCell>
+                                            <TableCell className="px-5 py-4 text-[14px] text-dash-muted">
+                                                {s.chain}
                                             </TableCell>
                                             <TableCell className="px-5 py-4 text-[13px] text-dash-text">
                                                 ${s.tvl.toLocaleString('en-US')}

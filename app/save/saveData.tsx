@@ -80,6 +80,7 @@ export async function fetchSaveData(): Promise<StandarizedMetric[]> {
       supplyAPY,
       borrowRate,
       lending: "save",
+      chain:   "Solana"
     };
   });
 

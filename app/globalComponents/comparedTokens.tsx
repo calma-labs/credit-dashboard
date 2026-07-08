@@ -20,6 +20,12 @@ interface ComparedTokensProps {
   symbols: string[];
 }
 
+function normalizeSymbol(symbol: string): string {
+    return symbol
+        .toUpperCase()
+        .replace(/^W(?=[A-Z])/, '');
+}
+
 export default function ComparedTokens({
   tokens,
   lends,
@@ -31,20 +37,16 @@ export default function ComparedTokens({
     <div className="p-4 bg-background rounded-xl border">
       {symbols.map((symbol, symbolIndex) => {
         const matchingTokens = tokens.filter(
-          (m: any) => m.mintAddress === symbol,
+          (m: any) => normalizeSymbol(m.symbol) === symbol,
         );
 
-        //tokens appearing only on one lending are skipped
         if (matchingTokens.length <= 1) return null;
-
-        //...this is temporary for printing it's name
-        const tokenSymbol = matchingTokens[0];
 
         return (
           <div key={`fragment-${symbol}-${symbolIndex}`} className="mb-8">
-            <Link href={`/token/${tokenSymbol.symbol.toLowerCase()}`}>
+            <Link href={`/token/${symbol.toLowerCase()}`}>
               <h1 className="text-2xl font-bold mb-3 text-sky-400">
-                {tokenSymbol.symbol}
+                {symbol}
               </h1>
             </Link>
 
@@ -52,6 +54,7 @@ export default function ComparedTokens({
               <TableHeader>
                 <TableRow>
                   <TableHead className="w-[150px]">Lending</TableHead>
+                  <TableHead>Chain</TableHead>
                   <TableHead>Mint</TableHead>
                   <TableHead>TVL</TableHead>
                   <TableHead>Supply APY</TableHead>
@@ -60,10 +63,9 @@ export default function ComparedTokens({
                 </TableRow>
               </TableHeader>
               <TableBody>
-                {/* adding symbol to tablerow*/}
                 {lends.map((lending, lendIndex) => {
                   const matchedMetrics = tokens.filter(
-                    (t) => t.mintAddress === symbol && t.lending === lending,
+                    (t) => normalizeSymbol(t.symbol) === symbol && t.lending === lending,
                   );
 
                   return (
@@ -71,7 +73,6 @@ export default function ComparedTokens({
                       key={`row-${symbol}-${symbolIndex}-${lending}-${lendIndex}`}
                       metrics={matchedMetrics}
                       lendingName={lending}
-                      mintAddress={symbol}
                     />
                   );
                 })}

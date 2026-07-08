@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
+import { fetchMorphoHistory, fetchMorphoDebug } from '@/app/morpho/fetchMorphoHistory';
 
-const MIN_TVL = 10_000;
+const MIN_TVL = 1_000;
 
 const PROTOCOL_SLUGS: Record<string, string[]> = {
     save: ['save', 'solend'],
@@ -23,6 +24,16 @@ export async function GET(request: NextRequest) {
         const symbol = searchParams.get('symbol')?.toUpperCase() || 'USDC';
         const protocol = searchParams.get('protocol')?.toLowerCase() || 'kamino';
         const debug = searchParams.get('debug') === '1';
+
+        if (protocol === 'morpho') {
+            if (debug) {
+                const result = await fetchMorphoDebug();
+                return NextResponse.json(result);
+            }
+
+            const result = await fetchMorphoHistory(symbol);
+            return NextResponse.json(result);
+        }
 
         const targetSlugs = PROTOCOL_SLUGS[protocol] ?? [protocol];
 
