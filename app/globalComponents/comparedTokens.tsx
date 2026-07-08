@@ -12,6 +12,7 @@ import {
   TableHeader,
 } from "@/components/ui/table";
 import TableRows from "./tableRows";
+import BlankRows from "./blankRows";
 
 interface ComparedTokensProps {
   tokens: StandarizedMetric[];
@@ -21,9 +22,12 @@ interface ComparedTokensProps {
 
 export default function ComparedTokens({
   tokens,
+  lends,
   symbols,
 }: ComparedTokensProps) {
-  const [expandedTokens, setExpandedTokens] = useState<Set<string>>(new Set());
+  const [expandedTokens, setExpandedTokens] = useState<Set<string>>(
+    new Set([symbols[0]]),
+  );
 
   const toggleExpand = (symbol: string) => {
     setExpandedTokens((prev) => {
@@ -47,6 +51,7 @@ export default function ComparedTokens({
             <TableHead className="w-[150px]">Lending</TableHead>
             <TableHead>TVL</TableHead>
             <TableHead>Supply APY</TableHead>
+            <TableHead>Borrow APY</TableHead>
             <TableHead>Utilization</TableHead>
             <TableHead>Borrow Rate</TableHead>
           </TableRow>
@@ -56,8 +61,6 @@ export default function ComparedTokens({
             const matchingTokens = tokens.filter(
               (m: any) => m.mintAddress === symbol,
             );
-
-            if (matchingTokens.length <= 1) return null;
 
             const tokenSymbol = matchingTokens[0];
             const slicedTokens = matchingTokens.slice(1);
@@ -93,19 +96,20 @@ export default function ComparedTokens({
                   </TableCell>
                 </TableRow>
 
-                {/* ticker */}
-                <TableRows
-                  key={`row-${symbol}-${symbolIndex}`}
-                  metrics={[tokenSymbol]}
-                  lendingName={tokenSymbol.lending}
-                />
-
                 {/* visible rest */}
                 {isExpanded && (
                   <TableRows
                     key={`row-${symbol}-${symbolIndex}-slice`}
-                    metrics={slicedTokens}
-                    lendingName={""}
+                    metrics={matchingTokens}
+                  />
+                )}
+
+                {/* visible rest */}
+                {isExpanded && (
+                  <BlankRows
+                    key={`row-${symbol}-${symbolIndex}-blankrow`}
+                    metrics={matchingTokens}
+                    lendingName={lends}
                   />
                 )}
               </React.Fragment>

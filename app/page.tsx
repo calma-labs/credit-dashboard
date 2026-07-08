@@ -5,6 +5,7 @@ import {
 } from "./lendingFetchApp";
 import ComparedTokens from "./globalComponents/comparedTokens";
 import "./globalStyles/cardStyle.css";
+import { kaminoStandarizedTokens } from "./kaminolend/kamino_lend";
 
 export const dynamic = "force-dynamic";
 

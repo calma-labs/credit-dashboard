@@ -78,8 +78,10 @@ export async function fetchSaveData(): Promise<StandarizedMetric[]> {
       tvl,
       utilization,
       supplyAPY,
+      borrowAPY: Number(((Math.exp(borrowRate / 100) - 1) * 100).toFixed(2)),
       borrowRate,
       lending: "save",
+      market: "",
     };
   });
 

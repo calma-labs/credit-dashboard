@@ -6,14 +6,7 @@ export type StandarizedMetric = {
   utilization: number;
   supplyAPY: number;
   borrowRate: number;
+  borrowAPY: number;
   lending: string;
-};
-
-//compared metrics
-export type ComparedMetric = {
-  mintAddress: string;
-  tvl: number | string;
-  utilization: number | string;
-  supplyAPY: number | string;
-  borrowRate: number | string;
+  market: string;
 };

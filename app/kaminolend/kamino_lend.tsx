@@ -30,7 +30,11 @@ function kaminoBorrowRate(token: KaminoReserve, slot: number): number {
 function kaminoSupplyAPY(token: KaminoReserve, slot: number): number {
   return Number((token.totalSupplyAPY(BigInt(slot)) * 100).toFixed(2));
 }
-
+function kaminoBorrowAPY(token: KaminoReserve, slot: number): number {
+  return Number(
+    ((Math.exp(kaminoBorrowRate(token, slot) / 100) - 1) * 100).toFixed(2),
+  );
+}
 //fetching every token
 export async function fetchReserves(): Promise<KaminoReserve[]> {
   const rpc = createSolanaRpc(RPC_URL);
@@ -48,7 +52,9 @@ export async function fetchReserves(): Promise<KaminoReserve[]> {
     ),
   );
 
-  return (market?.getReserves() ?? []).filter((reserve) => reserve.state.config.status === 0)
+  return results
+    .flatMap((market) => market?.getReserves() ?? [])
+    .filter((reserve) => reserve.getBorrowedAmount().gt(0));
 }
 
 //getting the slot for APYs
@@ -97,7 +103,9 @@ export async function kaminoStandarizedTokens(): Promise<StandarizedMetric[]> {
         utilization: kaminoUtilization(t) ?? 0,
         supplyAPY: kaminoSupplyAPY(t, getKaminoSlot) ?? 0,
         borrowRate: kaminoBorrowRate(t, getKaminoSlot) ?? 0,
-        lending: `kamino (${marketName})`,
+        borrowAPY: kaminoBorrowAPY(t, getKaminoSlot) ?? 0,
+        lending: `kamino`,
+        market: marketName,
       });
     });
   }
