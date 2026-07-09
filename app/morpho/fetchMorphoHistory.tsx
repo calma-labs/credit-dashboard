@@ -1,21 +1,19 @@
-import { NextRequest, NextResponse } from 'next/server';
+import {
+    type MorphoMarketsResponse,
+    type MorphoHistoryResponse,
+    type MorphoMarketSummary,
+    type MorphoMarketDetailState,
+    type MorphoDebugResult,
+    type MorphoHistoryPoint,
+    type MorphoSnapshot,
+    type MorphoHistoryResult,
+    type TimeseriesPoint,
+} from './morphoTypes';
 
-const MIN_TVL = 1_000;
 const MORPHO_API = 'https://api.morpho.org/graphql';
+const MIN_TVL = 1_000;
 
-
-export async function fetchMorphoDebug() {
-    const { res, json } = await fetchMorphoMarkets();
-
-    return {
-        httpStatus: res.status,
-        errors: json.errors ?? null,
-        itemCount: json?.data?.markets?.items?.length ?? 0,
-        sample: (json?.data?.markets?.items ?? []).slice(0, 5),
-    };
-}
-
-async function fetchMorphoMarkets() {
+async function fetchMorphoMarkets(): Promise<{ res: Response; json: MorphoMarketsResponse }> {
     const query = `
         query {
             markets(
@@ -41,19 +39,41 @@ async function fetchMorphoMarkets() {
         next: { revalidate: 300 },
     });
 
-    const json = await res.json();
+    const json: MorphoMarketsResponse = await res.json();
 
     return { res, json };
 }
 
-export async function fetchMorphoHistory(symbol: string) {
+export async function fetchMorphoDebug(): Promise<MorphoDebugResult> {
+    const { res, json } = await fetchMorphoMarkets();
+
+    return {
+        httpStatus: res.status,
+        errors: json.errors ?? null,
+        itemCount: json.data?.markets?.items?.length ?? 0,
+        sample: (json.data?.markets?.items ?? []).slice(0, 5),
+    };
+}
+
+function buildSnapshot(state: MorphoMarketDetailState | null | undefined): MorphoSnapshot | null {
+    if (!state) return null;
+
+    return {
+        tvl: state.supplyAssetsUsd !== null ? Math.round(state.supplyAssetsUsd) : null,
+        supplyAPY: state.supplyApy !== null ? parseFloat((state.supplyApy * 100).toFixed(2)) : null,
+        borrowRate: state.borrowApy !== null ? parseFloat((state.borrowApy * 100).toFixed(2)) : null,
+        utilization: state.utilization !== null ? parseFloat((state.utilization * 100).toFixed(2)) : null,
+    };
+}
+
+export async function fetchMorphoHistory(symbol: string): Promise<MorphoHistoryResult> {
     const { res: marketsRes, json: marketsJson } = await fetchMorphoMarkets();
 
     if (!marketsRes.ok) {
-        return { history: [], poolId: null, source: null };
+        return { history: [], poolId: null, source: null, snapshot: null };
     }
 
-    const markets: any[] = marketsJson?.data?.markets?.items ?? [];
+    const markets: MorphoMarketSummary[] = marketsJson.data?.markets?.items ?? [];
 
     const candidates = markets.filter((m) => {
         const marketSymbol = m.loanAsset.symbol.toUpperCase();
@@ -61,7 +81,7 @@ export async function fetchMorphoHistory(symbol: string) {
     });
 
     if (candidates.length === 0) {
-        return { history: [], poolId: null, source: null };
+        return { history: [], poolId: null, source: null, snapshot: null };
     }
 
     const best = candidates.reduce((a, b) =>
@@ -107,32 +127,25 @@ export async function fetchMorphoHistory(symbol: string) {
     });
 
     if (!historyRes.ok) {
-        return { history: [], poolId: best.marketId, source: 'morpho' };
+        return { history: [], poolId: best.marketId, source: 'morpho', snapshot: null };
     }
 
-    const historyJson = await historyRes.json();
-    const marketData = historyJson?.data?.marketById;
+    const historyJson: MorphoHistoryResponse = await historyRes.json();
+    const marketData = historyJson.data?.marketById;
 
-    const points = marketData?.historicalState?.supplyApy ?? [];
+    const points: TimeseriesPoint[] = marketData?.historicalState?.supplyApy ?? [];
 
-    const history = points.map((p: any) => ({
+    const history: MorphoHistoryPoint[] = points.map((p) => ({
         date: new Date(p.x * 1000).toISOString(),
         apy: parseFloat((p.y * 100).toFixed(2)),
         utilization: null,
     }));
-
-    const state = marketData?.state;
 
     return {
         history,
         poolId: best.marketId,
         source: 'morpho',
         matchedSymbol: symbol,
-        snapshot: state ? {
-            tvl: Math.round(state.supplyAssetsUsd ?? 0),
-            supplyAPY: parseFloat(((state.supplyApy ?? 0) * 100).toFixed(2)),
-            borrowRate: parseFloat(((state.borrowApy ?? 0) * 100).toFixed(2)),
-            utilization: parseFloat(((state.utilization ?? 0) * 100).toFixed(2)),
-        } : undefined,
+        snapshot: buildSnapshot(marketData?.state),
     };
 }

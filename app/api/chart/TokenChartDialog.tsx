@@ -14,6 +14,7 @@ import {
     TableHeader,
     TableRow,
 } from "@/components/ui/table";
+import ChainBadge from "@/app/globalComponents/chainBadge";
 
 interface PlatformSnapshot {
     protocol: string;
@@ -131,7 +132,7 @@ export function TokenDetailView({ symbol, snapshots }: TokenDetailProps) {
                                 <TableBody>
                                     {snapshots.length === 0 ? (
                                         <TableRow className="hover:bg-transparent">
-                                            <TableCell colSpan={5} className="px-5 py-5 text-[13px] italic text-dash-muted">
+                                            <TableCell colSpan={6} className="px-5 py-5 text-[13px] italic text-dash-muted">
                                                 No current data available
                                             </TableCell>
                                         </TableRow>
@@ -145,8 +146,8 @@ export function TokenDetailView({ symbol, snapshots }: TokenDetailProps) {
                                                     {s.protocol}
                                                 </span>
                                             </TableCell>
-                                            <TableCell className="px-5 py-4 text-[14px] text-dash-muted">
-                                                {s.chain}
+                                            <TableCell className="px-5 py-4">
+                                                <ChainBadge chain={s.chain} />
                                             </TableCell>
                                             <TableCell className="px-5 py-4 text-[13px] text-dash-text">
                                                 ${s.tvl.toLocaleString('en-US')}

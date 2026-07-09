@@ -2,6 +2,7 @@
 
 import { StandarizedMetric } from "./globalTypes";
 import { TableCell, TableRow } from "@/components/ui/table";
+import ChainBadge from "./chainBadge";
 
 interface TableRowsProps {
   metrics: StandarizedMetric[];
@@ -30,8 +31,8 @@ export default function TableRows({ metrics, lendingName }: TableRowsProps) {
             {metric.lending} {metrics.length > 1 ? `#${idx + 1}` : ""}
           </TableCell>
 
-          <TableCell className="px-5 py-4 text-[14px] text-dash-muted">
-            {metric.chain}
+          <TableCell>
+            <ChainBadge chain={metric.chain} />
           </TableCell>
 
           <TableCell>

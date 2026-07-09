@@ -36,3 +36,11 @@ export type MatchedTokens = {
   saveSide: ComparedMetric,
 
 }
+export type GraphQLError = {
+  message: string;
+}
+
+export type GraphQLResponse<T> = {
+  data?: T;
+  errors?: GraphQLError[];
+}
