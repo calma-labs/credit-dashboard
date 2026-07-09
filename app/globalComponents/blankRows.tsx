@@ -18,16 +18,16 @@ export default function TableRows({ metrics, lendingName }: TableRowsProps) {
         if (metric) return null;
         return (
           <TableRow key={`blank-row-${idx}`}>
-            <TableCell className="rate-red">{name}</TableCell>
-            <TableCell className="rate-red">-</TableCell>
+            <TableCell className="data-value">{name}</TableCell>
+            <TableCell className="data-value">-</TableCell>
 
-            <TableCell className="rate-red">-</TableCell>
+            <TableCell className="data-value">-</TableCell>
 
-            <TableCell className="rate-red">-</TableCell>
+            <TableCell className="data-value">-</TableCell>
 
-            <TableCell className="rate-red">-</TableCell>
+            <TableCell className="data-value">-</TableCell>
 
-            <TableCell className="rate-red">-</TableCell>
+            <TableCell className="data-value">-</TableCell>
           </TableRow>
         );
       })}
