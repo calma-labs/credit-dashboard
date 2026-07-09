@@ -15,7 +15,7 @@ export default function TableRows({ metrics }: TableRowsProps) {
           <TableCell className="font-medium">
             {metric.lending}{" "}
             {metric.market.length > 8
-              ? `(${metric.market.slice(0, 7)}...)`
+              ? `${metric.market.slice(0, 7)}...`
               : ""}
           </TableCell>
 
