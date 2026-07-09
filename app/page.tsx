@@ -4,8 +4,8 @@ import {
   getStandarizedTokensList,
 } from "./lendingFetchApp";
 import ComparedTokens from "./globalComponents/comparedTokens";
-import { fetchSaveData } from "./save/saveData";
 import "./globalStyles/cardStyle.css";
+import { kaminoStandarizedTokens } from "./kaminolend/kamino_lend";
 
 export const dynamic = "force-dynamic";
 

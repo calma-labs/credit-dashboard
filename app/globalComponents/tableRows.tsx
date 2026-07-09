@@ -5,47 +5,30 @@ import { TableCell, TableRow } from "@/components/ui/table";
 
 interface TableRowsProps {
   metrics: StandarizedMetric[];
-  lendingName: string;
-  mintAddress: string;
 }
 
-export default function TableRows({ metrics, lendingName, mintAddress }: TableRowsProps) {
-  if (!metrics || metrics.length === 0) {
-    return (
-      <TableRow>
-        <TableCell className="font-medium">{lendingName}</TableCell>
-        <TableCell>
-          <span className="mint-address" title={mintAddress}>
-            {mintAddress}
-          </span>
-        </TableCell>
-        <TableCell className="text-muted-foreground">-</TableCell>
-        <TableCell className="text-muted-foreground">-</TableCell>
-        <TableCell className="text-muted-foreground">-</TableCell>
-        <TableCell className="text-muted-foreground">-</TableCell>
-      </TableRow>
-    );
-  }
-
+export default function TableRows({ metrics }: TableRowsProps) {
   return (
     <>
       {metrics.map((metric, idx) => (
         <TableRow key={`${metric.lending}-${metric.symbol}-${idx}`}>
           <TableCell className="font-medium">
-            {metric.lending} {metrics.length > 1 ? `#${idx + 1}` : ""}
-          </TableCell>
-
-          <TableCell>
-            <span className="mint-address" title={metric.mintAddress}>
-              {metric.mintAddress}
-            </span>
+            {metric.lending}{" "}
+            {metric.market.length > 8
+              ? `${metric.market.slice(0, 7)}...`
+              : ""}
           </TableCell>
 
           <TableCell className="data-value">
-            ${Number(metric.tvl).toLocaleString('en-US')}
+            {metric.tvl.toLocaleString("en-US", {
+              style: "currency",
+              currency: "USD",
+            })}
           </TableCell>
 
           <TableCell className="apy-green">{metric.supplyAPY}%</TableCell>
+
+          <TableCell className="apy-green">{metric.borrowAPY}%</TableCell>
 
           <TableCell className="data-value">{metric.utilization}%</TableCell>
 

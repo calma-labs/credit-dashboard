@@ -1,9 +1,11 @@
-import { PublicKey } from '@solana/web3.js';
-import { type StandarizedMetric } from '@/app/globalComponents/globalTypes';
+import { PublicKey } from "@solana/web3.js";
+import { type StandarizedMetric } from "@/app/globalComponents/globalTypes";
 
 export const RPC_URL = `https://mainnet.helius-rpc.com/?api-key=${process.env.NEXT_PUBLIC_HELIUS_API_KEY}`;
-const API_BASE = 'https://lite-api.jup.ag/lend/v1';
-const LIQUIDITY_PROGRAM = new PublicKey('jupeiUmn818Jg1ekPURTpr4mFo29p46vygyykFJ3wZC');
+const API_BASE = "https://lite-api.jup.ag/lend/v1";
+const LIQUIDITY_PROGRAM = new PublicKey(
+  "jupeiUmn818Jg1ekPURTpr4mFo29p46vygyykFJ3wZC",
+);
 
 async function getErr(error: unknown): Promise<unknown> {
   return error;
@@ -46,7 +48,7 @@ export interface JupLendData {
 function tokenReservePDA(mint: PublicKey): PublicKey {
   const enc = new TextEncoder();
   const [pda] = PublicKey.findProgramAddressSync(
-    [enc.encode('reserve'), mint.toBytes()],
+    [enc.encode("reserve"), mint.toBytes()],
     LIQUIDITY_PROGRAM,
   );
   return pda;
@@ -58,15 +60,15 @@ async function fetchTokenReserve(
   try {
     const pda = tokenReservePDA(mint);
     const body = JSON.stringify({
-      jsonrpc: '2.0',
+      jsonrpc: "2.0",
       id: 1,
-      method: 'getAccountInfo',
-      params: [pda.toString(), { encoding: 'base64' }],
+      method: "getAccountInfo",
+      params: [pda.toString(), { encoding: "base64" }],
     });
 
     const res = await fetch(RPC_URL, {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
       body,
     });
 
@@ -74,7 +76,7 @@ async function fetchTokenReserve(
       new_error = true;
       return null;
     }
-    
+
     const json = await res.json();
     const b64 = json?.result?.value?.data?.[0];
     if (!b64) {
@@ -89,7 +91,7 @@ async function fetchTokenReserve(
     }
 
     const view = new DataView(bytes.buffer);
-    
+
     const borrowRate = view.getUint16(72, true) / 100;
     const utilization = view.getUint16(76, true) / 100;
 
@@ -103,7 +105,7 @@ async function fetchTokenReserve(
 export async function useJupLendData(): Promise<JupLendData> {
   try {
     const res = await fetch(`${API_BASE}/earn/tokens`, {
-      cache: 'no-store',
+      cache: "no-store",
     });
     if (!res.ok) throw new Error(`API error: ${res.status}`);
     const apiTokens: ApiToken[] = await res.json();
@@ -140,7 +142,7 @@ export async function useJupLendData(): Promise<JupLendData> {
     return {
       tokens: [],
       loading: false,
-      error: e instanceof Error ? e.message : 'Błąd pobierania danych',
+      error: e instanceof Error ? e.message : "Błąd pobierania danych",
     };
   }
 }
@@ -152,13 +154,15 @@ export async function standarizedJupLendToken(): Promise<StandarizedMetric[]> {
     const apy = Math.pow(1 + t.apr / 365, 365) - 1;
 
     return {
-      symbol:       t.symbol.toUpperCase(),
-      mintAddress:  t.mint,
-      tvl:          Number(t.tvlUsd),
-      supplyAPY:    Number((apy * 100).toFixed(2)),
-      utilization:  Number(t.utilization.toFixed(2)),
-      borrowRate:   Number(t.borrowRate.toFixed(2)),
-      lending:      "juplend",
+      symbol: t.symbol.toUpperCase(),
+      mintAddress: t.mint,
+      tvl: Number(t.tvlUsd),
+      supplyAPY: Number((apy * 100).toFixed(2)),
+      utilization: Number(t.utilization.toFixed(2)),
+      borrowRate: Number(t.borrowRate.toFixed(2)),
+      lending: "juplend",
+      market: "juplend",
+      borrowAPY: Number(((Math.exp(t.borrowRate / 100) - 1) * 100).toFixed(2)),
     };
   });
 }
