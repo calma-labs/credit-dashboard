@@ -12,9 +12,7 @@ const lendings = [
 ];
 
 function normalizeSymbol(symbol: string): string {
-    return symbol
-        .toUpperCase()
-        .replace(/^W(?=[A-Z])/, '');
+  return symbol.toUpperCase();
 }
 
 export async function safeFetch(): Promise<StandarizedMetric[][]> {
