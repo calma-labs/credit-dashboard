@@ -107,8 +107,6 @@ export async function kaminoStandarizedTokens(): Promise<StandarizedMetric[]> {
           borrowAPY: kaminoBorrowAPY(t, getKaminoSlot) ?? 0,
           lending: `kamino`,
           market: marketName,
-          LTV: t.stats.loanToValue * 100,
-          liqThreshold: t.stats.liquidationThreshold * 100,
         }));
       });
 
