@@ -95,7 +95,7 @@ export async function kaminoStandarizedTokens(): Promise<StandarizedMetric[]> {
           entry !== null && entry.market !== null,
       )
       .flatMap(({ market, config }) => {
-        const marketName = config.name ?? "isolated";
+        const marketName = market.getName() || config.name || "isolated";
 
         return market.getReserves().map((t) => ({
           symbol: t.symbol ?? "Unavailable",

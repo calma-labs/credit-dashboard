@@ -29,10 +29,8 @@ export default function TableRows({ metrics, lendingName }: TableRowsProps) {
       {metrics.map((metric, idx) => (
         <TableRow key={`${metric.lending}-${metric.symbol}-${idx}`}>
           <TableCell className="font-medium">
-            {metric.lending}{" "}
-            {metric.market.length > 8
-              ? `${metric.market.slice(0, 7)}...`
-              : ""}
+            {metric.lending}
+            {metric.market ? ` — ${metric.market}` : ""}
           </TableCell>
 
           <TableCell>
