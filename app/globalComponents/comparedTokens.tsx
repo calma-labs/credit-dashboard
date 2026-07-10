@@ -53,6 +53,8 @@ export default function ComparedTokens({
         <TableHeader>
           <TableRow>
             <TableHead className="w-[150px]">Lending</TableHead>
+            <TableHead>Chain</TableHead>
+            <TableHead>Mint Address</TableHead>
             <TableHead>TVL</TableHead>
             <TableHead>Supply APY</TableHead>
             <TableHead>Borrow APY</TableHead>

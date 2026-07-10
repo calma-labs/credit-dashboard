@@ -10,6 +10,7 @@ import { type StandarizedMetric } from "../globalComponents/globalTypes";
 
 const SLOT_DURATION_MS = 400;
 
+//kamino's metrics calculations
 function kaminoTVL(token: KaminoReserve): number {
   return Number(token.getDepositTvl().toFixed(2));
 }
@@ -34,29 +35,26 @@ function kaminoBorrowAPY(token: KaminoReserve, slot: number): number {
     ((Math.exp(kaminoBorrowRate(token, slot) / 100) - 1) * 100).toFixed(2),
   );
 }
-
 //fetching every token
 export async function fetchReserves(): Promise<KaminoReserve[]> {
   const rpc = createSolanaRpc(RPC_URL);
   const markets = await getMarketsFromApi();
 
-  const mainMarketConfig = markets.find((m) => m.isPrimary);
-
-  if (!mainMarketConfig) {
-    return [];
-  }
-
-  const market = await KaminoMarket.load(
-    rpc as Parameters<typeof KaminoMarket.load>[0],
-    address(mainMarketConfig.lendingMarket),
-    SLOT_DURATION_MS,
-    undefined,
-    true,
+  const results = await Promise.all(
+    markets.map((config) =>
+      KaminoMarket.load(
+        rpc as Parameters<typeof KaminoMarket.load>[0],
+        address(config.lendingMarket),
+        SLOT_DURATION_MS,
+        undefined,
+        true,
+      ),
+    ),
   );
 
-  return (market?.getReserves() ?? []).filter(
-    (reserve) => reserve.state.config.status === 0,
-  );
+  return results
+    .flatMap((market) => market?.getReserves() ?? [])
+    .filter((reserve) => reserve.getBorrowedAmount().gt(0));
 }
 
 //getting the slot for APYs
@@ -71,19 +69,47 @@ export async function getSlotForAPY() {
 
 //standarizing tokens
 export async function kaminoStandarizedTokens(): Promise<StandarizedMetric[]> {
-  const KAMINO_TOKENS: KaminoReserve[] = await fetchReserves();
+  //rpc
+  const rpc = createSolanaRpc(RPC_URL);
+
+  //fetching markets
+  const markets = await getMarketsFromApi();
+
+  //getting the slot
   const getKaminoSlot = await getSlotForAPY();
 
-  return KAMINO_TOKENS.map((t) => ({
-    symbol: t.symbol ?? "Unavailable",
-    mintAddress: t.stats.mintAddress ?? "Unavailable",
-    tvl: kaminoTVL(t) ?? 0,
-    utilization: kaminoUtilization(t) ?? 0,
-    supplyAPY: kaminoSupplyAPY(t, getKaminoSlot) ?? 0,
-    borrowRate: kaminoBorrowRate(t, getKaminoSlot) ?? 0,
-    borrowAPY: kaminoBorrowAPY(t, getKaminoSlot) ?? 0,
-    lending: "kamino",
-    market: "Main",
-    chain: "Solana",
-  }));
+  //array with results
+  let result: StandarizedMetric[] = [];
+
+  for (const config of markets) {
+    const market = await KaminoMarket.load(
+      rpc as Parameters<typeof KaminoMarket.load>[0],
+      address(config.lendingMarket),
+      SLOT_DURATION_MS,
+      undefined,
+      true,
+    );
+
+    //flag
+    if (!market) continue;
+
+    const marketName = config.name ?? "isolated";
+
+    market.getReserves().forEach((t) => {
+      result.push({
+        symbol: t.symbol ?? "Unavailable",
+        mintAddress: t.stats.mintAddress ?? "Unavailable",
+        tvl: kaminoTVL(t) ?? 0,
+        utilization: kaminoUtilization(t) ?? 0,
+        supplyAPY: kaminoSupplyAPY(t, getKaminoSlot) ?? 0,
+        borrowRate: kaminoBorrowRate(t, getKaminoSlot) ?? 0,
+        borrowAPY: kaminoBorrowAPY(t, getKaminoSlot) ?? 0,
+        lending: `kamino`,
+        market: marketName,
+        chain: "Solana",
+      });
+    });
+  }
+
+  return result;
 }
