@@ -1,6 +1,6 @@
 import {
   getLends,
-  getMints,
+  getSymbols,
   getStandarizedTokensList,
 } from "./lendingFetchApp";
 import ComparedTokens from "./globalComponents/comparedTokens";
@@ -9,11 +9,9 @@ import { kaminoStandarizedTokens } from "./kaminolend/kamino_lend";
 
 export const dynamic = "force-dynamic";
 
-//main function
 export default async function App() {
-  //lends, mints and tokens
   const lends = await getLends();
-  const mints = await getMints();
+  const tokenSymbols = await getSymbols();
   const tokensList = await getStandarizedTokensList();
 
   return (
@@ -26,7 +24,7 @@ export default async function App() {
       <ComparedTokens
         tokens={tokensList}
         lends={lends}
-        symbols={mints}
+        symbols={tokenSymbols}
       ></ComparedTokens>
     </div>
   );

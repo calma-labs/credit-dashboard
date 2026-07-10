@@ -2,12 +2,28 @@
 
 import { StandarizedMetric } from "./globalTypes";
 import { TableCell, TableRow } from "@/components/ui/table";
+import ChainBadge from "./chainBadge";
 
 interface TableRowsProps {
   metrics: StandarizedMetric[];
+  lendingName: string;
 }
 
-export default function TableRows({ metrics }: TableRowsProps) {
+export default function TableRows({ metrics, lendingName }: TableRowsProps) {
+  if (!metrics || metrics.length === 0) {
+    return (
+      <TableRow>
+        <TableCell className="font-medium">{lendingName}</TableCell>
+        <TableCell className="text-muted-foreground">-</TableCell>
+        <TableCell className="text-muted-foreground">-</TableCell>
+        <TableCell className="text-muted-foreground">-</TableCell>
+        <TableCell className="text-muted-foreground">-</TableCell>
+        <TableCell className="text-muted-foreground">-</TableCell>
+        <TableCell className="text-muted-foreground">-</TableCell>
+      </TableRow>
+    );
+  }
+
   return (
     <>
       {metrics.map((metric, idx) => (
@@ -17,6 +33,16 @@ export default function TableRows({ metrics }: TableRowsProps) {
             {metric.market.length > 8
               ? `${metric.market.slice(0, 7)}...`
               : ""}
+          </TableCell>
+
+          <TableCell>
+            <ChainBadge chain={metric.chain} />
+          </TableCell>
+
+          <TableCell>
+            <span className="mint-address" title={metric.mintAddress}>
+              {metric.mintAddress}
+            </span>
           </TableCell>
 
           <TableCell className="data-value">

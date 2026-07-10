@@ -163,6 +163,7 @@ export async function standarizedJupLendToken(): Promise<StandarizedMetric[]> {
       lending: "juplend",
       market: "juplend",
       borrowAPY: Number(((Math.exp(t.borrowRate / 100) - 1) * 100).toFixed(2)),
+      chain: "Solana",
     };
   });
 }

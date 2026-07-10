@@ -1,6 +1,7 @@
 "use client";
 
 import React, { useState } from "react";
+import Link from "next/link";
 import { StandarizedMetric } from "./globalTypes";
 import "../globalStyles/cardStyle.css";
 import {
@@ -12,12 +13,15 @@ import {
   TableHeader,
 } from "@/components/ui/table";
 import TableRows from "./tableRows";
-import BlankRows from "./blankRows";
 
 interface ComparedTokensProps {
   tokens: StandarizedMetric[];
   lends: string[];
   symbols: string[];
+}
+
+function normalizeSymbol(symbol: string): string {
+  return symbol.toUpperCase().replace(/^W(?=[A-Z])/, "");
 }
 
 export default function ComparedTokens({
@@ -49,6 +53,8 @@ export default function ComparedTokens({
         <TableHeader>
           <TableRow>
             <TableHead className="w-[150px]">Lending</TableHead>
+            <TableHead>Chain</TableHead>
+            <TableHead>Mint Address</TableHead>
             <TableHead>TVL</TableHead>
             <TableHead>Supply APY</TableHead>
             <TableHead>Borrow APY</TableHead>
@@ -58,12 +64,11 @@ export default function ComparedTokens({
         </TableHeader>
         <TableBody>
           {symbols.map((symbol, symbolIndex) => {
-            const matchingTokens = tokens.filter(
-              (m: any) => m.mintAddress === symbol,
-            );
+            const matchingTokens = tokens
+              .filter((m: any) => normalizeSymbol(m.symbol) === symbol)
+              .sort((a, b) => b.tvl - a.tvl);
 
-            const tokenSymbol = matchingTokens[0];
-            const slicedTokens = matchingTokens.slice(1);
+            if (matchingTokens.length <= 1) return null;
 
             const isExpanded = expandedTokens.has(symbol);
 
@@ -77,41 +82,33 @@ export default function ComparedTokens({
                     colSpan={6}
                     className="font-bold text-base py-3 uppercase tracking-wider text-primary"
                   >
-                    <div className="flex justify-between items-center w-full">
-                      <h1>
-                        {isExpanded ? "▼" : "▲"} Token: {tokenSymbol.symbol}
-                      </h1>
-                      <span
-                        className="mint-address text-xs font-mono normal-case"
-                        onClick={(e) => {
-                          e.stopPropagation();
-                          navigator.clipboard.writeText(
-                            tokenSymbol.mintAddress,
-                          );
-                        }}
+                    <h1>
+                      {isExpanded ? "▼" : "▲"}{" "}
+                      <Link
+                        href={`/token/${symbol.toLowerCase()}`}
+                        onClick={(e) => e.stopPropagation()}
+                        className="hover:underline"
                       >
-                        Mint: {tokenSymbol.mintAddress.slice(0, 5)}...
-                      </span>
-                    </div>
+                        Token: {symbol}
+                      </Link>
+                    </h1>
                   </TableCell>
                 </TableRow>
 
-                {/* visible rest */}
-                {isExpanded && (
-                  <TableRows
-                    key={`row-${symbol}-${symbolIndex}-slice`}
-                    metrics={matchingTokens}
-                  />
-                )}
+                {isExpanded &&
+                  lends.map((lending, lendIndex) => {
+                    const matchedMetrics = matchingTokens.filter(
+                      (t) => t.lending === lending,
+                    );
 
-                {/* visible rest */}
-                {isExpanded && (
-                  <BlankRows
-                    key={`row-${symbol}-${symbolIndex}-blankrow`}
-                    metrics={matchingTokens}
-                    lendingName={lends}
-                  />
-                )}
+                    return (
+                      <TableRows
+                        key={`row-${symbol}-${symbolIndex}-${lending}-${lendIndex}`}
+                        metrics={matchedMetrics}
+                        lendingName={lending}
+                      />
+                    );
+                  })}
               </React.Fragment>
             );
           })}
