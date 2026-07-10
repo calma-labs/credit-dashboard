@@ -155,3 +155,34 @@ h3 {
   justify-content: center;
   flex-direction: column;
 }
+
+.p-4.bg-background.rounded-xl.border
+  tr.bg-muted\/50
+  td.text-primary
+  > div.flex.justify-between {
+  justify-content: flex-start !important;
+  gap: 16px !important;
+}
+
+.mint-address {
+  margin: 0 !important;
+}
+
+.p-4.bg-background.rounded-xl.border tr.bg-muted\/50 {
+  transition:
+    background-color 0.3s ease,
+    box-shadow 0.3s ease !important;
+  position: relative;
+}
+
+.p-4.bg-background.rounded-xl.border tr.bg-muted\/50:hover {
+  background: rgba(56, 189, 248, 0.06) !important;
+
+  box-shadow:
+    inset 0 0 15px rgba(56, 189, 248, 0.1),
+    0 0 10px rgba(56, 189, 248, 0.05) !important;
+}
+
+.p-4.bg-background.rounded-xl.border tr.bg-muted\/50:hover td.text-primary h1 {
+  color: #ffffff !important;
+}

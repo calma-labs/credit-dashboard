@@ -1,13 +1,15 @@
-//standarized metric's type 
+//standarized metric's type
 export type StandarizedMetric = {
   symbol:       string,
   mintAddress:  string,
   tvl:          number,
   utilization:  number,
   supplyAPY:    number,
-  borrowRate:   number,   
+  borrowRate:   number,
+  borrowAPY:    number,
   lending:      string,
   chain:        string,
+  market:       string,
 }
 
 //compared metrics

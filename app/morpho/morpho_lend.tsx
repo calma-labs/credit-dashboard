@@ -83,7 +83,9 @@ export async function morphoStandarizedTokens(): Promise<StandarizedMetric[]> {
         supplyAPY:    Number((m.state.supplyApy * 100).toFixed(2)),
         utilization:  Number((m.state.utilization * 100).toFixed(2)),
         borrowRate:   Number((m.state.borrowApy * 100).toFixed(2)),
+        borrowAPY:    Number(((Math.exp(m.state.borrowApy) - 1) * 100).toFixed(2)),
         lending:      "morpho",
+        market:       "morpho",
         chain:        CHAIN_NAMES[m.chain.id] ?? `Chain ${m.chain.id}`,
       }));
   } catch (e) {
