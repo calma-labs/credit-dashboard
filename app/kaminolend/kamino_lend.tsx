@@ -52,9 +52,7 @@ export async function fetchReserves(): Promise<KaminoReserve[]> {
     ),
   );
 
-  return results
-    .flatMap((market) => market?.getReserves() ?? [])
-    .filter((reserve) => reserve.getBorrowedAmount().gt(0));
+  return results.flatMap((market) => market?.getReserves() ?? []);
 }
 
 //getting the slot for APYs
@@ -69,31 +67,35 @@ export async function getSlotForAPY() {
 
 //standarizing tokens
 export async function kaminoStandarizedTokens(): Promise<StandarizedMetric[]> {
-  //rpc
-  const rpc = createSolanaRpc(RPC_URL);
+  try {
+    const rpc = createSolanaRpc(RPC_URL);
+    const markets = await getMarketsFromApi();
+    const getKaminoSlot = await getSlotForAPY();
 
-  //fetching markets
-  const markets = await getMarketsFromApi();
-
-  //getting the slot
-  const getKaminoSlot = await getSlotForAPY();
-
-  //array with results
-  let result: StandarizedMetric[] = [];
-
-  for (const config of markets) {
-    const market = await KaminoMarket.load(
-      rpc as Parameters<typeof KaminoMarket.load>[0],
-      address(config.lendingMarket),
-      SLOT_DURATION_MS,
-      undefined,
-      true,
+    const loadedMarkets = await Promise.all(
+      markets.map(async (config) => {
+        try {
+          const market = await KaminoMarket.load(
+            rpc as Parameters<typeof KaminoMarket.load>[0],
+            address(config.lendingMarket),
+            SLOT_DURATION_MS,
+            undefined,
+            true,
+          );
+          return { market, config };
+        } catch (error) {
+          return null;
+        }
+      }),
     );
 
-    //flag
-    if (!market) continue;
-
-    const marketName = config.name ?? "isolated";
+    const result = loadedMarkets
+      .filter(
+        (entry): entry is { market: KaminoMarket; config: any } =>
+          entry !== null && entry.market !== null,
+      )
+      .flatMap(({ market, config }) => {
+        const marketName = config.name ?? "isolated";
 
     market.getReserves().forEach((t) => {
       result.push({
@@ -108,8 +110,9 @@ export async function kaminoStandarizedTokens(): Promise<StandarizedMetric[]> {
         market: marketName,
         chain: "Solana",
       });
-    });
-  }
 
-  return result;
+    return result;
+  } catch (globalError) {
+    return [];
+  }
 }
