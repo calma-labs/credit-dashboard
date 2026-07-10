@@ -97,18 +97,18 @@ export async function kaminoStandarizedTokens(): Promise<StandarizedMetric[]> {
       .flatMap(({ market, config }) => {
         const marketName = config.name ?? "isolated";
 
-    market.getReserves().forEach((t) => {
-      result.push({
-        symbol: t.symbol ?? "Unavailable",
-        mintAddress: t.stats.mintAddress ?? "Unavailable",
-        tvl: kaminoTVL(t) ?? 0,
-        utilization: kaminoUtilization(t) ?? 0,
-        supplyAPY: kaminoSupplyAPY(t, getKaminoSlot) ?? 0,
-        borrowRate: kaminoBorrowRate(t, getKaminoSlot) ?? 0,
-        borrowAPY: kaminoBorrowAPY(t, getKaminoSlot) ?? 0,
-        lending: `kamino`,
-        market: marketName,
-        chain: "Solana",
+        return market.getReserves().map((t) => ({
+          symbol: t.symbol ?? "Unavailable",
+          mintAddress: t.stats.mintAddress ?? "Unavailable",
+          tvl: kaminoTVL(t) ?? 0,
+          utilization: kaminoUtilization(t) ?? 0,
+          supplyAPY: kaminoSupplyAPY(t, getKaminoSlot) ?? 0,
+          borrowRate: kaminoBorrowRate(t, getKaminoSlot) ?? 0,
+          borrowAPY: kaminoBorrowAPY(t, getKaminoSlot) ?? 0,
+          lending: `kamino`,
+          market: marketName,
+          chain: "Solana",
+        }));
       });
 
     return result;
