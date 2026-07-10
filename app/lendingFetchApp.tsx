@@ -1,6 +1,6 @@
 import { kaminoStandarizedTokens } from "./kaminolend/kamino_lend";
 import { standarizedJupLendToken } from "./juplend/hooks/useJupLendData";
-import { type MatchedTokens, type ComparedMetric, StandarizedMetric } from "./globalComponents/globalTypes";
+import { type ComparedMetric, StandarizedMetric } from "./globalComponents/globalTypes";
 import { fetchSaveData } from "./save/saveData";
 import { morphoStandarizedTokens } from "./morpho/morpho_lend";
 

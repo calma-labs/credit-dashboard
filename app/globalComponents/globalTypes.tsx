@@ -21,23 +21,6 @@ export type ComparedMetric = {
   borrowRate:   number | string,   
 }
 
-
-//metric's type
-export type MatchedTokens = {
-  
-  //symbol of matching tokens
-  symbol: string;
-
-  //left side
-  leftSide: ComparedMetric,
-
-  //right side
-  rightSide: ComparedMetric,
-
-  //save Side
-  saveSide: ComparedMetric,
-
-}
 export type GraphQLError = {
   message: string;
 }

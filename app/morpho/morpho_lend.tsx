@@ -1,10 +1,11 @@
-import { type StandarizedMetric } from '@/app/globalComponents/globalTypes';
+import { QueryClient } from "@tanstack/react-query";
+import { type StandarizedMetric } from "@/app/globalComponents/globalTypes";
 
-const MORPHO_API = 'https://api.morpho.org/graphql';
+const MORPHO_API = "https://api.morpho.org/graphql";
 
 const CHAIN_NAMES: Record<number, string> = {
-  1: 'Ethereum',
-  8453: 'Base',
+  1: "Ethereum",
+  8453: "Base",
 };
 
 interface MorphoMarket {
@@ -17,6 +18,8 @@ interface MorphoMarket {
     borrowApy: number;
   };
 }
+
+const queryClient = new QueryClient();
 
 async function fetchMorphoMarkets(): Promise<MorphoMarket[]> {
   const query = `
@@ -42,10 +45,10 @@ async function fetchMorphoMarkets(): Promise<MorphoMarket[]> {
   `;
 
   const res = await fetch(MORPHO_API, {
-    method: 'POST',
-    headers: { 'Content-Type': 'application/json' },
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
     body: JSON.stringify({ query }),
-    next: { revalidate: 300 },
+    cache: "no-store",
   });
 
   if (!res.ok) {
@@ -55,40 +58,40 @@ async function fetchMorphoMarkets(): Promise<MorphoMarket[]> {
   const json = await res.json();
 
   if (json.errors) {
-    return [];
+    throw new Error(json.errors[0]?.message ?? "Morpho API returned errors");
   }
 
   return json?.data?.markets?.items ?? [];
 }
 
 export async function morphoStandarizedTokens(): Promise<StandarizedMetric[]> {
-  try {
-    const markets = await fetchMorphoMarkets();
+  const markets = await queryClient.fetchQuery({
+    queryKey: ["morphoMarkets"],
+    queryFn: fetchMorphoMarkets,
+    staleTime: 5 * 60 * 1000,
+  });
 
-    const bySymbol = new Map<string, MorphoMarket>();
-    for (const m of markets) {
-      const symbol = m.loanAsset.symbol.toUpperCase();
-      const existing = bySymbol.get(symbol);
-      if (!existing || m.state.supplyAssetsUsd > existing.state.supplyAssetsUsd) {
-        bySymbol.set(symbol, m);
-      }
+  const bySymbol = new Map<string, MorphoMarket>();
+  for (const m of markets) {
+    const symbol = m.loanAsset.symbol.toUpperCase();
+    const existing = bySymbol.get(symbol);
+    if (!existing || m.state.supplyAssetsUsd > existing.state.supplyAssetsUsd) {
+      bySymbol.set(symbol, m);
     }
-
-    return Array.from(bySymbol.values())
-      .filter((m) => m.state.supplyAssetsUsd > 1000)
-      .map((m) => ({
-        symbol:       m.loanAsset.symbol.toUpperCase(),
-        mintAddress:  m.loanAsset.address,
-        tvl:          Number(m.state.supplyAssetsUsd.toFixed(2)),
-        supplyAPY:    Number((m.state.supplyApy * 100).toFixed(2)),
-        utilization:  Number((m.state.utilization * 100).toFixed(2)),
-        borrowRate:   Number((m.state.borrowApy * 100).toFixed(2)),
-        borrowAPY:    Number(((Math.exp(m.state.borrowApy) - 1) * 100).toFixed(2)),
-        lending:      "morpho",
-        market:       "morpho",
-        chain:        CHAIN_NAMES[m.chain.id] ?? `Chain ${m.chain.id}`,
-      }));
-  } catch (e) {
-    return [];
   }
+
+  return Array.from(bySymbol.values())
+    .filter((m) => m.state.supplyAssetsUsd > 1000)
+    .map((m) => ({
+      symbol: m.loanAsset.symbol.toUpperCase(),
+      mintAddress: m.loanAsset.address,
+      tvl: Number(m.state.supplyAssetsUsd.toFixed(2)),
+      supplyAPY: Number((m.state.supplyApy * 100).toFixed(2)),
+      utilization: Number((m.state.utilization * 100).toFixed(2)),
+      borrowRate: Number((m.state.borrowApy * 100).toFixed(2)),
+      borrowAPY: Number(((Math.exp(m.state.borrowApy) - 1) * 100).toFixed(2)),
+      lending: "morpho",
+      market: "morpho",
+      chain: CHAIN_NAMES[m.chain.id] ?? `Chain ${m.chain.id}`,
+    }));
 }
