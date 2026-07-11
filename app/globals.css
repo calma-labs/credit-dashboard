@@ -47,14 +47,15 @@
   --radius-3xl: calc(var(--radius) * 2.2);
   --radius-4xl: calc(var(--radius) * 2.6);
 
-  --color-dash-bg: #060b14;
-  --color-dash-card: #080f1a;
-  --color-dash-border: #162a47;
-  --color-dash-accent: #0a1628;
-  --color-dash-accent-hover: #1f456e;
-  --color-dash-muted: #5c8bb8;
-  --color-dash-header: #8aaad1;
-  --color-dash-text: #f1f5f9;
+  --color-dash-bg: #0A0E17;
+  --color-dash-card: #0b111c;
+  --color-dash-border: #161d29;
+  --color-dash-accent: #111927;
+  --color-dash-accent-hover: #1a2535;
+  --color-dash-muted: #5C6577;
+  --color-dash-header: #8B96A9;
+  --color-dash-text: #EEF1F6;
+  --color-dash-primary: #4FE3C1;
 }
 
 :root {
@@ -96,7 +97,7 @@
   --protocol-morpho: #fbc808;
   --protocol-marginfi: #fb923c;
   --protocol-default: #94a3b8;
-  --font-sans: "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+  --font-sans: var(--font-geist-sans), system-ui, sans-serif;
 }
 
 .dark {
@@ -133,14 +134,56 @@
   --sidebar-ring: oklch(0.556 0 0);
 }
 
+@keyframes cmFade {
+  from { opacity: 0; transform: translateY(6px); }
+  to   { opacity: 1; transform: translateY(0); }
+}
+@keyframes cmDrawer {
+  from { opacity: 0; transform: translateX(28px); }
+  to   { opacity: 1; transform: translateX(0); }
+}
+@keyframes cmOverlay {
+  from { opacity: 0; }
+  to   { opacity: 1; }
+}
+
 @layer base {
   * {
     @apply border-border outline-ring/50;
   }
   body {
     @apply bg-background text-foreground;
+    text-rendering: optimizeLegibility;
   }
   html {
     @apply font-sans;
+  }
+  ::selection {
+    background: rgba(79, 227, 193, 0.28);
+  }
+  ::-webkit-scrollbar {
+    width: 10px;
+    height: 10px;
+  }
+  ::-webkit-scrollbar-track {
+    background: transparent;
+  }
+  ::-webkit-scrollbar-thumb {
+    background: #232c3d;
+    border-radius: 6px;
+    border: 2px solid #0A0E17;
+  }
+  ::-webkit-scrollbar-thumb:hover {
+    background: #2f3a4f;
+  }
+  input::placeholder {
+    color: #5C6577;
+  }
+  a {
+    color: #4FE3C1;
+    text-decoration: none;
+  }
+  a:hover {
+    color: #7cebd2;
   }
 }
