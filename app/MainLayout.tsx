@@ -3,6 +3,7 @@
 import { useState, useMemo } from "react";
 import { type StandarizedMetric } from "./globalComponents/globalTypes";
 import ComparedTokens from "./globalComponents/comparedTokens";
+import { FilterSelect } from "@/components/ui/filter-select";
 
 interface Stats {
     totalTVL: string;
@@ -23,36 +24,20 @@ interface MainLayoutProps {
 
 const AC = '#4FE3C1';
 
-function Select({
-    value,
-    onChange,
-    children,
-}: {
-    value: string;
-    onChange: (v: string) => void;
-    children: React.ReactNode;
-}) {
-    return (
-        <div style={{ position: 'relative' }}>
-            <select
-                value={value}
-                onChange={e => onChange(e.target.value)}
-                style={{
-                    height: 40, padding: '0 32px 0 13px', borderRadius: 10,
-                    border: '1px solid #232c3d', background: 'rgba(255,255,255,.02)',
-                    color: '#c7cdd8', fontSize: 13, fontFamily: 'inherit',
-                    cursor: 'pointer', outline: 'none', appearance: 'none',
-                }}
-            >
-                {children}
-            </select>
-            <span style={{
-                position: 'absolute', right: 12, top: '50%', transform: 'translateY(-50%)',
-                pointerEvents: 'none', color: '#5C6577', fontSize: 10,
-            }}>▾</span>
-        </div>
-    );
-}
+const PROTOCOL_COLORS: Record<string, string> = {
+    kamino:   '#38bdf8',
+    jupiter:  '#c084fc',
+    save:     '#4ade80',
+    solend:   '#4ade80',
+    morpho:   '#fbc808',
+    marginfi: '#fb923c',
+};
+
+const CHAIN_COLORS: Record<string, string> = {
+    Solana:   '#9945FF',
+    Ethereum: '#627EEA',
+    Base:     '#0052FF',
+};
 
 function StatCard({
     label,
@@ -86,38 +71,24 @@ function StatCard({
     );
 }
 
-function normalizeSymbol(symbol: string): string {
-    return symbol.toUpperCase().replace(/^W(?=[A-Z])/, '');
-}
-
 export default function MainLayout({ tokens, lends, symbols, chains, stats }: MainLayoutProps) {
     const [search, setSearch]     = useState('');
     const [protocol, setProtocol] = useState('All');
     const [chain, setChain]       = useState('All');
     const [asset, setAsset]       = useState('All');
 
-    const filteredTokens = useMemo(() => {
-        let r = tokens;
-        if (protocol !== 'All') r = r.filter(t => t.lending === protocol);
-        if (chain    !== 'All') r = r.filter(t => t.chain   === chain);
-        return r;
-    }, [tokens, protocol, chain]);
-
-    const filteredLends = useMemo(
-        () => protocol === 'All' ? lends : lends.filter(l => l === protocol),
-        [lends, protocol]
-    );
-
-    const filteredSymbols = useMemo(() => {
+    const rows = useMemo(() => {
         const q = search.toLowerCase().trim();
-        return symbols.filter(s => {
-            if (asset !== 'All' && s !== asset) return false;
-            if (q && !s.toLowerCase().includes(q)) return false;
-            return filteredTokens.some(t => normalizeSymbol(t.symbol) === s);
+        return tokens.filter(t => {
+            if (protocol !== 'All' && t.lending !== protocol)      return false;
+            if (chain    !== 'All' && t.chain   !== chain)         return false;
+            if (asset    !== 'All' && t.symbol.toUpperCase() !== asset) return false;
+            if (q && !t.symbol.toLowerCase().includes(q) && !t.lending.toLowerCase().includes(q)) return false;
+            return true;
         });
-    }, [symbols, asset, search, filteredTokens]);
+    }, [tokens, protocol, chain, asset, search]);
 
-    const shownCount = filteredSymbols.length;
+    const shownCount = rows.length;
 
     return (
         <div style={{ minHeight: '100vh', background: '#0A0E17', color: '#EEF1F6' }}>
@@ -237,7 +208,7 @@ export default function MainLayout({ tokens, lends, symbols, chains, stats }: Ma
                 <div style={{ display: 'flex', alignItems: 'center', gap: 12, marginBottom: 16, flexWrap: 'wrap' }}>
                     {/* Search */}
                     <div style={{ position: 'relative', flex: 1, minWidth: 200, maxWidth: 320 }}>
-                        <span style={{ position: 'absolute', left: 13, top: '50%', transform: 'translateY(-50%)', color: '#5C6577', fontSize: 14 }}>⌕</span>
+                        <span style={{ position: 'absolute', left: 13, top: '50%', transform: 'translateY(-50%)', color: '#5C6577', fontSize: 14, pointerEvents: 'none' }}>⌕</span>
                         <input
                             value={search}
                             onChange={e => setSearch(e.target.value)}
@@ -251,28 +222,46 @@ export default function MainLayout({ tokens, lends, symbols, chains, stats }: Ma
                         />
                     </div>
 
-                    <Select value={protocol} onChange={setProtocol}>
-                        <option value="All">All protocols</option>
-                        {lends.map(l => <option key={l} value={l}>{l}</option>)}
-                    </Select>
+                    <FilterSelect
+                        value={protocol}
+                        onChange={setProtocol}
+                        options={[
+                            { value: 'All', label: 'All protocols' },
+                            ...lends.map(l => ({
+                                value: l,
+                                label: l,
+                                color: PROTOCOL_COLORS[l.toLowerCase()] ?? '#556677',
+                                swatchShape: 'square' as const,
+                            })),
+                        ]}
+                    />
 
-                    <Select value={chain} onChange={setChain}>
-                        <option value="All">All chains</option>
-                        {chains.map(c => <option key={c} value={c}>{c}</option>)}
-                    </Select>
+                    <FilterSelect
+                        value={chain}
+                        onChange={setChain}
+                        options={[
+                            { value: 'All', label: 'All chains' },
+                            ...chains.map(c => ({
+                                value: c,
+                                label: c,
+                                color: CHAIN_COLORS[c] ?? '#556677',
+                                swatchShape: 'circle' as const,
+                            })),
+                        ]}
+                    />
 
-                    <Select value={asset} onChange={setAsset}>
-                        <option value="All">All assets</option>
-                        {symbols.map(s => <option key={s} value={s}>{s}</option>)}
-                    </Select>
+                    <FilterSelect
+                        value={asset}
+                        onChange={setAsset}
+                        options={[
+                            { value: 'All', label: 'All assets' },
+                            ...symbols.map(s => ({ value: s, label: s })),
+                        ]}
+                    />
                 </div>
 
                 {/* Table */}
-                <ComparedTokens
-                    tokens={filteredTokens}
-                    lends={filteredLends}
-                    symbols={filteredSymbols}
-                />
+                <ComparedTokens rows={rows} />
 
             </main>
         </div>

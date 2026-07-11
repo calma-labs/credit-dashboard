@@ -134,6 +134,10 @@
   --sidebar-ring: oklch(0.556 0 0);
 }
 
+@keyframes cmFade {
+  from { opacity: 0; transform: translateY(6px); }
+  to   { opacity: 1; transform: translateY(0); }
+}
 @keyframes cmDrawer {
   from { opacity: 0; transform: translateX(28px); }
   to   { opacity: 1; transform: translateX(0); }
