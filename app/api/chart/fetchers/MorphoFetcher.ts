@@ -64,7 +64,7 @@ export class MorphoFetcher extends BaseTokenFetcher {
         };
     }
 
-    async fetch(platform: string, asset: string, collateral?: string): Promise<TokenDataResult> {
+    async fetch(platform: string, asset: string, collateral?: string): Promise<TokenDataResult | null> {
         try {
             const { res: marketsRes, json: marketsJson } = await this.fetchMorphoMarkets();
 
@@ -80,7 +80,7 @@ export class MorphoFetcher extends BaseTokenFetcher {
             });
 
             if (candidates.length === 0) {
-                return this.getEmptyResult(asset);
+                return null;
             }
 
             const best = candidates.reduce((a, b) =>

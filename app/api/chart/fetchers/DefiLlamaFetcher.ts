@@ -1,6 +1,7 @@
 import { BaseTokenFetcher } from './BaseTokenFetcher';
 import { TokenDataResult } from './types';
 import { type StandarizedMetric } from '../../../globalComponents/globalTypes';
+import { symbolMatches } from './utils';
 
 const MIN_TVL = 1_000;
 
@@ -31,19 +32,12 @@ interface DefiLlamaChartEntry {
 }
 
 export class DefiLlamaFetcher extends BaseTokenFetcher {
-    private symbolMatches(poolSymbol: string, target: string): boolean {
-        const normalized = poolSymbol
-            .replace(/\s*\(.*?\)/g, '')
-            .replace(/-[A-Z0-9]+$/, '')
-            .trim();
-        return normalized === target || normalized === `W${target}`;
-    }
 
     async fetchMetrics(): Promise<StandarizedMetric[]> {
         return [];
     }
 
-    async fetch(platform: string, asset: string, collateral?: string): Promise<TokenDataResult> {
+    async fetch(platform: string, asset: string, collateral?: string): Promise<TokenDataResult | null> {
         try {
             const targetSlugs = PROTOCOL_SLUGS[platform] ?? [platform];
 
@@ -63,7 +57,7 @@ export class DefiLlamaFetcher extends BaseTokenFetcher {
                     pools.filter((p) => {
                         if (p.project !== slug || p.chain !== 'Solana') return false;
                         const poolSymbol = (p.symbol || '').toUpperCase();
-                        return this.symbolMatches(poolSymbol, asset) && (p.tvlUsd ?? 0) > MIN_TVL;
+                        return symbolMatches(poolSymbol, asset) && (p.tvlUsd ?? 0) > MIN_TVL;
                     })
                 )
                 .sort((a, b) => (b.tvlUsd ?? 0) - (a.tvlUsd ?? 0));
@@ -71,7 +65,7 @@ export class DefiLlamaFetcher extends BaseTokenFetcher {
             const tokenPool = tokenPools[0] ?? null;
 
             if (!tokenPool) {
-                return this.getEmptyResult(asset);
+                return null;
             }
 
             const chartRes = await fetch(
@@ -86,7 +80,7 @@ export class DefiLlamaFetcher extends BaseTokenFetcher {
             const chartJson = await chartRes.json();
 
             if (!chartJson.data?.length) {
-                return this.getEmptyResult(asset, tokenPool.project, tokenPool.pool);
+                return null;
             }
 
             const history = chartJson.data

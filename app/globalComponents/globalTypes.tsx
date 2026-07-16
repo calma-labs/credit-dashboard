@@ -10,6 +10,7 @@ export type StandarizedMetric = {
   lending:      string,
   chain:        string,
   market:       string,
+  protocolTotalActiveLoans?: number | null,
 }
 
 //compared metrics
