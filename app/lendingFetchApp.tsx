@@ -1,22 +1,13 @@
-import { kaminoStandarizedTokens } from "./kaminolend/kamino_lend";
-import { standarizedJupLendToken } from "./juplend/hooks/useJupLendData";
 import { type ComparedMetric, StandarizedMetric } from "./globalComponents/globalTypes";
-import { fetchSaveData } from "./save/saveData";
-import { morphoStandarizedTokens } from "./morpho/morpho_lend";
-
-const lendings = [
-  kaminoStandarizedTokens,
-  standarizedJupLendToken,
-  fetchSaveData,
-  morphoStandarizedTokens,
-];
+import { FetchingManager } from './api/chart/fetchers/FetchingManager';
 
 function normalizeSymbol(symbol: string): string {
   return symbol.toUpperCase();
 }
 
 export async function safeFetch(): Promise<StandarizedMetric[][]> {
-  const results = await Promise.allSettled(lendings.map((f) => f()));
+  const fetchers = FetchingManager.getAllFetchers();
+  const results = await Promise.allSettled(fetchers.map((f) => f.fetchMetrics()));
 
   return results.map((result, i) => {
     if (result.status === "fulfilled") {
