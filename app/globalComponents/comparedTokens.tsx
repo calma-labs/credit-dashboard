@@ -8,7 +8,7 @@ interface Props {
     rows: StandarizedMetric[];
 }
 
-type SortKey = 'symbol' | 'lending' | 'tvl' | 'supplyAPY' | 'borrowRate' | 'utilization';
+type SortKey = 'symbol' | 'lending' | 'tvl' | 'supplyAPY' | 'borrowRate' | 'utilization' | 'lltv';
 type SortDir = 'asc' | 'desc';
 
 const PROTOCOL_COLORS: Record<string, string> = {
@@ -25,6 +25,12 @@ const TOKEN_COLORS: Record<string, string> = {
     SOL:   '#9945FF', ETH:  '#627EEA',  BTC:  '#F7931A',
     WETH:  '#627EEA', WBTC: '#F09242',  CBBTC:'#F7931A',
     PYUSD: '#043CC6', USDE: '#3B3B45',  JITOSOL:'#4FD6B8',
+};
+
+const CHAIN_COLORS: Record<string, string> = {
+    Solana:   '#9945FF',
+    Ethereum: '#627EEA',
+    Base:     '#0052FF',
 };
 
 function normalizeSymbol(s: string): string {
@@ -85,6 +91,22 @@ function HeaderCell({ label, sk, align = 'left', sortKey, sortDir, onSort }: Hea
     );
 }
 
+function CollateralBadge({ symbol }: { symbol: string }) {
+    const norm = normalizeSymbol(symbol);
+    const color = TOKEN_COLORS[norm] ?? '#556677';
+    return (
+        <span style={{
+            display: 'inline-flex', alignItems: 'center', gap: 5,
+            background: `${color}18`, border: `1px solid ${color}44`,
+            borderRadius: 6, padding: '2px 7px',
+            fontSize: 11.5, fontWeight: 600, color,
+            fontFamily: "'Geist Mono', monospace",
+        }}>
+            {norm}
+        </span>
+    );
+}
+
 export default function ComparedTokens({ rows }: Props) {
     const [selected, setSelected]   = useState<string | null>(null);
     const [sortKey, setSortKey]     = useState<SortKey>('tvl');
@@ -104,6 +126,11 @@ export default function ComparedTokens({ rows }: Props) {
         return [...rows].sort((a, b) => {
             if (sortKey === 'symbol')  return normalizeSymbol(a.symbol).localeCompare(normalizeSymbol(b.symbol)) * dir;
             if (sortKey === 'lending') return a.lending.localeCompare(b.lending) * dir;
+            if (sortKey === 'lltv') {
+                const aVal = a.lltv ?? 0;
+                const bVal = b.lltv ?? 0;
+                return (aVal - bVal) * dir;
+            }
             return ((a[sortKey] as number) - (b[sortKey] as number)) * dir;
         });
     }, [rows, sortKey, sortDir]);
@@ -121,22 +148,24 @@ export default function ComparedTokens({ rows }: Props) {
                 overflow: 'hidden', overflowX: 'auto',
                 background: 'rgba(255,255,255,.008)',
             }}>
-                <table style={{ width: '100%', minWidth: 720, borderCollapse: 'collapse' }}>
+                <table style={{ width: '100%', minWidth: 900, borderCollapse: 'collapse' }}>
                     <thead>
                         <tr>
                             <HeaderCell label="Asset"       sk="symbol"      {...hProps} />
+                            <HeaderCell label="Collateral"                   {...hProps} />
                             <HeaderCell label="Protocol"    sk="lending"     {...hProps} />
                             <HeaderCell label="Chain"                        {...hProps} />
                             <HeaderCell label="TVL"         sk="tvl"         align="right" {...hProps} />
                             <HeaderCell label="Supply APY"  sk="supplyAPY"   align="right" {...hProps} />
                             <HeaderCell label="Borrow APY"  sk="borrowRate"  align="right" {...hProps} />
+                            <HeaderCell label="LLTV"        sk="lltv"        align="right" {...hProps} />
                             <HeaderCell label="Utilization" sk="utilization" {...hProps} />
                         </tr>
                     </thead>
                     <tbody>
                         {sorted.length === 0 ? (
                             <tr>
-                                <td colSpan={7} style={{ padding: '56px 16px', textAlign: 'center', color: '#5C6577', fontSize: 14 }}>
+                                <td colSpan={9} style={{ padding: '56px 16px', textAlign: 'center', color: '#5C6577', fontSize: 14 }}>
                                     No markets match your filters.
                                 </td>
                             </tr>
@@ -145,6 +174,7 @@ export default function ComparedTokens({ rows }: Props) {
                             const tkColor   = TOKEN_COLORS[sym] ?? '#556677';
                             const ptColor   = protoColor(row.lending);
                             const uColor    = utilColor(row.utilization);
+                            const chainColor = CHAIN_COLORS[row.chain] ?? '#556677';
 
                             return (
                                 <tr
@@ -154,7 +184,6 @@ export default function ComparedTokens({ rows }: Props) {
                                     onMouseEnter={e => (e.currentTarget.style.background = 'rgba(79,227,193,.055)')}
                                     onMouseLeave={e => (e.currentTarget.style.background = 'transparent')}
                                 >
-                                    {/* Asset */}
                                     <td style={{ padding: '14px 16px', verticalAlign: 'middle' }}>
                                         <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
                                             <span style={{
@@ -174,7 +203,13 @@ export default function ComparedTokens({ rows }: Props) {
                                         </div>
                                     </td>
 
-                                    {/* Protocol */}
+                                    <td style={{ padding: '14px 16px', verticalAlign: 'middle' }}>
+                                        {row.collateral
+                                            ? <CollateralBadge symbol={row.collateral} />
+                                            : <span style={{ color: '#3a4251', fontSize: 12 }}>—</span>
+                                        }
+                                    </td>
+
                                     <td style={{ padding: '14px 16px', verticalAlign: 'middle' }}>
                                         <span style={{ display: 'inline-flex', alignItems: 'center', gap: 8 }}>
                                             <span style={{
@@ -186,33 +221,32 @@ export default function ComparedTokens({ rows }: Props) {
                                         </span>
                                     </td>
 
-                                    {/* Chain */}
                                     <td style={{ padding: '14px 16px', verticalAlign: 'middle' }}>
                                         <span style={{ display: 'inline-flex', alignItems: 'center', gap: 7, fontSize: 12.5, color: '#8B96A9' }}>
                                             <span style={{
                                                 width: 7, height: 7, borderRadius: '50%', flex: 'none',
-                                                background: row.chain === 'Ethereum' ? '#627EEA' : '#9945FF',
+                                                background: chainColor,
                                             }} />
                                             {row.chain}
                                         </span>
                                     </td>
 
-                                    {/* TVL */}
                                     <td style={{ padding: '14px 16px', verticalAlign: 'middle', textAlign: 'right', fontFamily: "'Geist Mono', monospace", fontSize: 13.5, fontWeight: 600 }}>
                                         {formatTVL(row.tvl)}
                                     </td>
 
-                                    {/* Supply APY */}
                                     <td style={{ padding: '14px 16px', verticalAlign: 'middle', textAlign: 'right', fontFamily: "'Geist Mono', monospace", fontSize: 13.5, fontWeight: 600, color: '#4FE3C1' }}>
                                         {row.supplyAPY}%
                                     </td>
 
-                                    {/* Borrow APY */}
-                                    <td style={{ padding: '14px 16px', verticalAlign: 'middle', textAlign: 'right', fontFamily: "'Geist Mono', monospace", fontSize: 13.5, fontWeight: 500, color: '#c7cdd8' }}>
+                                    <td style={{ padding: '14px 16px', verticalAlign: 'middle', textAlign: 'right', fontFamily: "'Geist Mono', monospace", fontSize: 13.5, fontWeight: 500, color: '#F0854A' }}>
                                         {row.borrowRate}%
                                     </td>
 
-                                    {/* Utilization */}
+                                    <td style={{ padding: '14px 16px', verticalAlign: 'middle', textAlign: 'right', fontFamily: "'Geist Mono', monospace", fontSize: 13, color: '#8B96A9' }}>
+                                        {row.lltv != null ? `${row.lltv}%` : <span style={{ color: '#3a4251' }}>—</span>}
+                                    </td>
+
                                     <td style={{ padding: '14px 16px', verticalAlign: 'middle' }}>
                                         <div style={{ display: 'flex', alignItems: 'center', gap: 9 }}>
                                             <div style={{ width: 58, height: 5, borderRadius: 4, background: '#1d2635', overflow: 'hidden', flex: 'none' }}>

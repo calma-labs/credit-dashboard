@@ -29,6 +29,9 @@ export default async function App() {
     ]);
 
     const chains = [...new Set(tokensList.map((t) => t.chain).filter(Boolean))];
+    const collaterals = [...new Set(
+        tokensList.map((t) => t.collateral?.toUpperCase()).filter((c): c is string => !!c)
+    )];
 
     const totalTVL = tokensList.reduce((sum, t) => sum + t.tvl, 0);
     const allAPYs  = tokensList.map((t) => t.supplyAPY).filter((a) => a > 0);
@@ -54,6 +57,7 @@ export default async function App() {
             lends={lends}
             symbols={tokenSymbols}
             chains={chains}
+            collaterals={collaterals}
             stats={stats}
         />
     );

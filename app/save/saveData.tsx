@@ -2,89 +2,150 @@ import { QueryClient } from "@tanstack/react-query";
 import { type StandarizedMetric } from "@/app/globalComponents/globalTypes";
 
 const queryClient = new QueryClient();
+const SAVE_API = "https://api.solend.fi";
+const MIN_TVL_USD = 100_000;
 
-async function fetchMarketConfigs(): Promise<any[]> {
-  const res = await fetch(
-    "https://api.solend.fi/v1/markets/configs?scope=all",
-    { cache: "no-store" },
-  );
-  if (!res.ok) throw new Error("Failed to fetch Save market configs");
+interface SaveReserveConfig {
+  asset?: string;
+  address: string;
+  liquidityToken?: {
+    symbol?: string;
+    mint?: string;
+    decimals?: number;
+  };
+}
+
+interface SaveMarketConfig {
+  name: string;
+  isPrimary?: boolean;
+  hidden?: boolean;
+  reserves?: SaveReserveConfig[];
+}
+
+interface SaveReserveResult {
+  rates?: {
+    supplyInterest?: string;
+    borrowInterest?: string;
+  };
+  reserve?: {
+    pubkey?: string;
+    liquidity?: {
+      mintDecimals?: number;
+      borrowedAmountWads?: string;
+      availableAmount?: string;
+      marketPrice?: string;
+      mintPubkey?: string;
+    };
+  };
+}
+
+async function fetchAllMarketConfigs(): Promise<SaveMarketConfig[]> {
+  const res = await fetch(`${SAVE_API}/v1/markets/configs?scope=all`, {
+    cache: "no-store",
+  });
+  if (!res.ok) throw new Error(`Save configs API error: ${res.status}`);
   return res.json();
 }
 
+async function fetchReserves(
+  addresses: string[],
+): Promise<SaveReserveResult[]> {
+  if (addresses.length === 0) return [];
+  const ids = addresses.join(",");
+  const res = await fetch(`${SAVE_API}/v1/reserves?ids=${ids}`, {
+    cache: "no-store",
+  });
+  if (!res.ok) return [];
+  const json = await res.json();
+  return json?.results ?? [];
+}
+
+function computeMetric(
+  entry: SaveReserveResult,
+  symbolFromConfig: string,
+  marketName: string,
+): StandarizedMetric | null {
+  const rates = entry.rates ?? {};
+  const liq = entry.reserve?.liquidity ?? {};
+
+  const WADS = 1e18;
+  const DECIMALS = Math.pow(10, liq.mintDecimals ?? 6);
+  const borrowed =
+    parseFloat(liq.borrowedAmountWads ?? "0") / WADS / DECIMALS;
+  const available = parseFloat(liq.availableAmount ?? "0") / DECIMALS;
+  const total = borrowed + available;
+  const marketPrice = parseFloat(liq.marketPrice ?? "0");
+  let tvlRaw =
+    total > 0 && marketPrice > 0 ? Math.round(total * marketPrice) : 0;
+  const tvl = tvlRaw / WADS;
+
+  if (tvl < MIN_TVL_USD) return null;
+
+  const supplyAPY = Number(
+    parseFloat(rates.supplyInterest ?? "0").toFixed(2),
+  );
+  const borrowRate = Number(
+    parseFloat(rates.borrowInterest ?? "0").toFixed(2),
+  );
+  const utilization =
+    total > 0 ? parseFloat(((borrowed / total) * 100).toFixed(2)) : 0;
+  const mintAddress = liq.mintPubkey ?? "";
+
+  return {
+    symbol: symbolFromConfig.toUpperCase(),
+    mintAddress,
+    tvl,
+    utilization,
+    supplyAPY,
+    borrowAPY: borrowRate,
+    borrowRate,
+    lending: "save",
+    market: marketName,
+    chain: "Solana",
+  };
+}
+
 export async function fetchSaveData(): Promise<StandarizedMetric[]> {
-  const marketConfigs = await queryClient.fetchQuery({
-    queryKey: ["saveMarketConfigs"],
-    queryFn: fetchMarketConfigs,
+  const allMarkets = await queryClient.fetchQuery({
+    queryKey: ["saveAllMarketConfigs"],
+    queryFn: fetchAllMarketConfigs,
     staleTime: 5 * 60 * 1000,
   });
 
-  const mainMarket = marketConfigs.find(
-    (m: any) => m.name === "Main" || m.isPrimary,
-  );
-  if (!mainMarket || !mainMarket.reserves) {
-    console.warn("Main market not found in configs");
-    return [];
-  }
-
-  const names: string = mainMarket.reserves
-    .map((t: any) => t.address)
-    .join(",");
-
-  const reserves = await fetch(
-    `https://api.solend.fi/v1/reserves?ids=${names}`,
-    { cache: "no-store" },
+  const visibleMarkets = allMarkets.filter(
+    (m) => !m.hidden && m.reserves && m.reserves.length > 0,
   );
 
-  if (!reserves.ok) {
-    console.error(`Solend API Error: ${reserves.status}`);
-    return [];
-  }
+  const results: StandarizedMetric[] = [];
 
-  const JSON_reserves = await reserves.json();
-  const results = JSON_reserves?.results ?? [];
+  await Promise.all(
+    visibleMarkets.map(async (market) => {
+      const reserves = market.reserves ?? [];
+      const addresses = reserves.map((r) => r.address);
 
-  const standarizedSaveTokens = results.map((entry: any) => {
-    const rates = entry.rates ?? {};
-    const liq = entry.reserve?.liquidity ?? {};
-    const reserveId = entry.reserve?.pubkey || entry.pubkey;
-    const configReserve = mainMarket.reserves.find(
-      (r: any) => r.address === reserveId,
-    );
-    const symbol = configReserve?.liquidityToken?.symbol ?? "UNKNOWN";
-    const mintAddress = liq.mintPubkey;
-    const supplyAPY = Number(
-      parseFloat(rates.supplyInterest ?? "0").toFixed(2),
-    );
-    const borrowRate = Number(
-      parseFloat(rates.borrowInterest ?? "0").toFixed(2),
-    );
-    const WADS = 1e18;
-    const DECIMALS = Math.pow(10, liq.mintDecimals ?? 6);
-    const borrowed =
-      parseFloat(liq.borrowedAmountWads ?? "0") / WADS / DECIMALS;
-    const available = parseFloat(liq.availableAmount ?? "0") / DECIMALS;
-    const total = borrowed + available;
-    const utilization =
-      total > 0 ? parseFloat(((borrowed / total) * 100).toFixed(2)) : 0;
-    const marketPrice = parseFloat(liq.marketPrice ?? "0");
-    let tvl =
-      total > 0 && marketPrice > 0 ? Math.round(total * marketPrice) : 0;
-    tvl = tvl / WADS;
+      const reserveResults = await fetchReserves(addresses);
 
-    return {
-      symbol,
-      mintAddress,
-      tvl,
-      utilization,
-      supplyAPY,
-      borrowAPY: Number(((Math.exp(borrowRate / 100) - 1) * 100).toFixed(2)),
-      borrowRate,
-      lending: "save",
-      market: "",
-      chain: "Solana",
-    };
-  });
+      reserveResults.forEach((entry) => {
+        const reservePubkey = entry.reserve?.pubkey;
+        const configReserve = reserves.find(
+          (r) => r.address === reservePubkey,
+        );
 
-  return standarizedSaveTokens;
+        const symbol =
+          configReserve?.asset ??
+          configReserve?.liquidityToken?.symbol ??
+          "UNKNOWN";
+
+        if (symbol === "UNKNOWN") return;
+
+        const rawName = market.isPrimary ? "Main" : market.name;
+        const marketLabel = `${rawName} Pool`;
+
+        const metric = computeMetric(entry, symbol, marketLabel);
+        if (metric) results.push(metric);
+      });
+    }),
+  );
+
+  return results;
 }

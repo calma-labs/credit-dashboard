@@ -21,17 +21,17 @@ interface TokenDetailProps {
 const PROTOCOLS = ["kamino", "save", "jupiter", "morpho"];
 
 const PROTOCOL_COLORS: Record<string, string> = {
-    kamino:   '#38bdf8',
-    jupiter:  '#c084fc',
-    save:     '#4ade80',
-    morpho:   '#fbc808',
+    kamino: '#38bdf8',
+    jupiter: '#c084fc',
+    save: '#4ade80',
+    morpho: '#fbc808',
     marginfi: '#fb923c',
 };
 
 const CHAIN_COLORS: Record<string, string> = {
-    Solana:   '#9945FF',
+    Solana: '#9945FF',
     Ethereum: '#627EEA',
-    Base:     '#0052FF',
+    Base: '#0052FF',
 };
 
 function formatTVL(tvl: number): string {
@@ -75,6 +75,7 @@ export function TokenDetailView({ symbol, snapshots }: TokenDetailProps) {
 
     const [datasets, setDatasets] = useState<any[]>([]);
     const [loading, setLoading] = useState(true);
+    const [activeLoans, setActiveLoans] = useState<Record<string, number>>({});
 
     const rangeParam = searchParams.get("range") as '7d' | '1m' | '1y' | 'all';
     const currentRange = ['7d', '1m', '1y', 'all'].includes(rangeParam) ? rangeParam : '1y';
@@ -94,6 +95,11 @@ export function TokenDetailView({ symbol, snapshots }: TokenDetailProps) {
                 try {
                     const res = await fetch(`/api/chart?symbol=${symbol}&protocol=${protocol}`);
                     const data = await res.json();
+
+                    if (data.snapshot?.protocolTotalActiveLoans) {
+                        setActiveLoans(prev => ({ ...prev, [protocol]: data.snapshot.protocolTotalActiveLoans }));
+                    }
+
                     return { protocol, history: data.history || [] };
                 } catch {
                     return { protocol, history: [] };
@@ -199,22 +205,12 @@ export function TokenDetailView({ symbol, snapshots }: TokenDetailProps) {
 
                 {/* Protocol breakdown table */}
                 {snapshots.length > 0 && (
-                    <div style={{
-                        border: '1px solid #161d29', borderRadius: 14,
-                        overflow: 'hidden', background: 'rgba(255,255,255,.008)',
-                        marginTop: 16,
-                    }}>
-                        <table style={{ width: '100%', borderCollapse: 'collapse', minWidth: 540 }}>
+                    <div className="border border-dash-border rounded-[14px] overflow-x-auto bg-white/[0.008] mt-4">
+                        <table className="w-full border-collapse min-w-[540px]">
                             <thead>
                                 <tr>
-                                    {['Protocol', 'Chain', 'TVL', 'Supply APY', 'Borrow Rate', 'Utilization'].map(h => (
-                                        <th key={h} style={{
-                                            padding: '12px 16px', textAlign: 'left',
-                                            fontSize: 11, fontWeight: 600, color: '#6b7688',
-                                            fontFamily: "'Geist Mono', monospace",
-                                            letterSpacing: '.04em', textTransform: 'uppercase',
-                                            borderBottom: '1px solid #161d29', whiteSpace: 'nowrap',
-                                        }}>
+                                    {['Protocol', 'Chain', 'TVL', 'Total Active Loans', 'Supply APY', 'Borrow Rate', 'Utilization'].map(h => (
+                                        <th key={h} className="px-4 py-3 text-left text-[11px] font-semibold text-[#6b7688] font-mono tracking-wider uppercase border-b border-dash-border whitespace-nowrap">
                                             {h}
                                         </th>
                                     ))}
@@ -224,34 +220,35 @@ export function TokenDetailView({ symbol, snapshots }: TokenDetailProps) {
                                 {snapshots.map(s => (
                                     <tr
                                         key={s.protocol}
-                                        style={{ borderBottom: '1px solid #10151f', transition: 'background .12s' }}
-                                        onMouseEnter={e => (e.currentTarget.style.background = 'rgba(79,227,193,.055)')}
-                                        onMouseLeave={e => (e.currentTarget.style.background = 'transparent')}
+                                        className="border-b border-[#10151f] transition-colors hover:bg-[#4fe3c1]/[0.055]"
                                     >
-                                        <td style={{ padding: '14px 16px', verticalAlign: 'middle' }}>
-                                            <span style={{ display: 'inline-flex', alignItems: 'center', gap: 8 }}>
-                                                <span style={{
-                                                    width: 8, height: 8, borderRadius: 2, flex: 'none',
-                                                    background: PROTOCOL_COLORS[s.protocol] ?? '#556',
-                                                }} />
-                                                <span style={{ fontWeight: 600, fontSize: 13.5, textTransform: 'capitalize', color: '#EEF1F6' }}>
+                                        <td className="px-4 py-3.5 align-middle">
+                                            <span className="inline-flex items-center gap-2">
+                                                <span
+                                                    className="w-2 h-2 rounded-sm flex-none"
+                                                    style={{ background: PROTOCOL_COLORS[s.protocol] ?? '#556' }}
+                                                />
+                                                <span className="font-semibold text-[13.5px] capitalize text-dash-text">
                                                     {s.protocol}
                                                 </span>
                                             </span>
                                         </td>
-                                        <td style={{ padding: '14px 16px', verticalAlign: 'middle' }}>
+                                        <td className="px-4 py-3.5 align-middle">
                                             <ChainCell chain={s.chain} />
                                         </td>
-                                        <td style={{ padding: '14px 16px', verticalAlign: 'middle', fontFamily: "'Geist Mono', monospace", fontSize: 13.5, fontWeight: 600, color: '#EEF1F6' }}>
+                                        <td className="px-4 py-3.5 align-middle font-mono text-[13.5px] font-semibold text-dash-text">
                                             {formatTVL(s.tvl)}
                                         </td>
-                                        <td style={{ padding: '14px 16px', verticalAlign: 'middle', fontFamily: "'Geist Mono', monospace", fontSize: 13.5, fontWeight: 600, color: '#4FE3C1' }}>
+                                        <td className="px-4 py-3.5 align-middle font-mono text-[13.5px] font-semibold text-dash-text">
+                                            {activeLoans[s.protocol] ? formatTVL(activeLoans[s.protocol]) : '—'}
+                                        </td>
+                                        <td className="px-4 py-3.5 align-middle font-mono text-[13.5px] font-semibold text-dash-primary">
                                             {s.supplyAPY.toFixed(2)}%
                                         </td>
-                                        <td style={{ padding: '14px 16px', verticalAlign: 'middle', fontFamily: "'Geist Mono', monospace", fontSize: 13.5, fontWeight: 500, color: '#c7cdd8' }}>
+                                        <td className="px-4 py-3.5 align-middle font-mono text-[13.5px] font-medium text-[#c7cdd8]">
                                             {s.borrowRate.toFixed(2)}%
                                         </td>
-                                        <td style={{ padding: '14px 16px', verticalAlign: 'middle', fontFamily: "'Geist Mono', monospace", fontSize: 13.5, color: '#c7cdd8' }}>
+                                        <td className="px-4 py-3.5 align-middle font-mono text-[13.5px] text-[#c7cdd8]">
                                             {s.utilization.toFixed(1)}%
                                         </td>
                                     </tr>

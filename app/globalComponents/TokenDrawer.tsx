@@ -7,23 +7,23 @@ const PROTOCOLS = ['kamino', 'save', 'jupiter', 'morpho'];
 const AC = '#4FE3C1';
 
 const PROTOCOL_COLORS: Record<string, string> = {
-    kamino:   '#38bdf8',
-    jupiter:  '#c084fc',
-    save:     '#4ade80',
-    morpho:   '#fbc808',
+    kamino: '#38bdf8',
+    jupiter: '#c084fc',
+    save: '#4ade80',
+    morpho: '#fbc808',
     marginfi: '#fb923c',
 };
 
 const PROTOCOL_CHAINS: Record<string, string> = {
-    kamino:   'Solana',
-    save:     'Solana',
-    jupiter:  'Solana',
-    morpho:   'Ethereum',
+    kamino: 'Solana',
+    save: 'Solana',
+    jupiter: 'Solana',
+    morpho: 'Ethereum',
     marginfi: 'Solana',
 };
 
 const CHAIN_COLORS: Record<string, string> = {
-    Solana:   '#9945FF',
+    Solana: '#9945FF',
     Ethereum: '#627EEA',
 };
 
@@ -34,6 +34,7 @@ interface ProtocolData {
     supplyAPY: number;
     borrowRate: number;
     utilization: number;
+    protocolTotalActiveLoans?: number | null;
 }
 
 interface TokenDrawerProps {
@@ -43,8 +44,8 @@ interface TokenDrawerProps {
 
 function formatTVL(tvl: number): string {
     if (tvl >= 1_000_000_000) return `$${(tvl / 1_000_000_000).toFixed(1)}B`;
-    if (tvl >= 1_000_000)     return `$${(tvl / 1_000_000).toFixed(1)}M`;
-    if (tvl >= 1_000)         return `$${(tvl / 1_000).toFixed(1)}K`;
+    if (tvl >= 1_000_000) return `$${(tvl / 1_000_000).toFixed(1)}M`;
+    if (tvl >= 1_000) return `$${(tvl / 1_000).toFixed(1)}K`;
     return `$${tvl}`;
 }
 
@@ -110,10 +111,11 @@ export default function TokenDrawer({ symbol, onClose }: TokenDrawerProps) {
                     .map(r => ({
                         protocol: r.protocol,
                         chain: PROTOCOL_CHAINS[r.protocol] ?? 'Unknown',
-                        tvl:         r.data.snapshot.tvl         ?? 0,
-                        supplyAPY:   r.data.snapshot.supplyAPY   ?? 0,
-                        borrowRate:  r.data.snapshot.borrowRate  ?? 0,
+                        tvl: r.data.snapshot.tvl ?? 0,
+                        supplyAPY: r.data.snapshot.supplyAPY ?? 0,
+                        borrowRate: r.data.snapshot.borrowRate ?? 0,
                         utilization: r.data.snapshot.utilization ?? 0,
+                        protocolTotalActiveLoans: r.data.snapshot.protocolTotalActiveLoans ?? null,
                     }))
             );
 
@@ -201,21 +203,12 @@ export default function TokenDrawer({ symbol, onClose }: TokenDrawerProps) {
 
                         {/* Protocol breakdown */}
                         {snapshots.length > 0 && (
-                            <div style={{
-                                border: '1px solid #161d29', borderRadius: 14,
-                                overflow: 'hidden', background: 'rgba(255,255,255,.008)', marginTop: 16,
-                            }}>
-                                <table style={{ width: '100%', borderCollapse: 'collapse' }}>
+                            <div className="border border-dash-border rounded-[14px] overflow-x-auto bg-white/[0.008] mt-4">
+                                <table className="w-full border-collapse min-w-[540px]">
                                     <thead>
                                         <tr>
-                                            {['Protocol', 'Chain', 'TVL', 'Supply', 'Borrow', 'Util'].map(h => (
-                                                <th key={h} style={{
-                                                    padding: '10px 12px', textAlign: 'left',
-                                                    fontSize: 10, fontWeight: 600, color: '#6b7688',
-                                                    fontFamily: "'Geist Mono', monospace",
-                                                    letterSpacing: '.04em', textTransform: 'uppercase',
-                                                    borderBottom: '1px solid #161d29', whiteSpace: 'nowrap',
-                                                }}>
+                                            {['Protocol', 'Chain', 'TVL', 'Total Active Loans', 'Supply', 'Borrow', 'Util'].map(h => (
+                                                <th key={h} className="px-3 py-2.5 text-left text-[10px] font-semibold text-[#6b7688] font-mono tracking-wider uppercase border-b border-dash-border whitespace-nowrap">
                                                     {h}
                                                 </th>
                                             ))}
@@ -225,40 +218,41 @@ export default function TokenDrawer({ symbol, onClose }: TokenDrawerProps) {
                                         {snapshots.map(s => (
                                             <tr
                                                 key={s.protocol}
-                                                style={{ borderBottom: '1px solid #10151f', transition: 'background .12s' }}
-                                                onMouseEnter={e => (e.currentTarget.style.background = 'rgba(79,227,193,.055)')}
-                                                onMouseLeave={e => (e.currentTarget.style.background = 'transparent')}
+                                                className="border-b border-[#10151f] transition-colors hover:bg-[#4fe3c1]/[0.055]"
                                             >
-                                                <td style={{ padding: '12px', verticalAlign: 'middle' }}>
-                                                    <span style={{ display: 'inline-flex', alignItems: 'center', gap: 7 }}>
-                                                        <span style={{
-                                                            width: 8, height: 8, borderRadius: 2, flex: 'none',
-                                                            background: PROTOCOL_COLORS[s.protocol] ?? '#556',
-                                                        }} />
-                                                        <span style={{ fontWeight: 600, fontSize: 13, textTransform: 'capitalize', color: '#EEF1F6' }}>
+                                                <td className="p-3 align-middle">
+                                                    <span className="inline-flex items-center gap-2">
+                                                        <span
+                                                            className="w-2 h-2 rounded-sm flex-none"
+                                                            style={{ background: PROTOCOL_COLORS[s.protocol] ?? '#556' }}
+                                                        />
+                                                        <span className="font-semibold text-[13px] capitalize text-dash-text">
                                                             {s.protocol}
                                                         </span>
                                                     </span>
                                                 </td>
-                                                <td style={{ padding: '12px', verticalAlign: 'middle' }}>
-                                                    <span style={{ display: 'inline-flex', alignItems: 'center', gap: 6, fontSize: 12, color: '#8B96A9' }}>
-                                                        <span style={{
-                                                            width: 6, height: 6, borderRadius: '50%', flex: 'none',
-                                                            background: CHAIN_COLORS[s.chain] ?? '#556',
-                                                        }} />
+                                                <td className="p-3 align-middle">
+                                                    <span className="inline-flex items-center gap-1.5 text-xs text-dash-header">
+                                                        <span
+                                                            className="w-1.5 h-1.5 rounded-full flex-none"
+                                                            style={{ background: CHAIN_COLORS[s.chain] ?? '#556' }}
+                                                        />
                                                         {s.chain}
                                                     </span>
                                                 </td>
-                                                <td style={{ padding: '12px', verticalAlign: 'middle', fontFamily: "'Geist Mono', monospace", fontSize: 12.5, fontWeight: 600, color: '#EEF1F6' }}>
+                                                <td className="p-3 align-middle font-mono text-[12.5px] font-semibold text-dash-text">
                                                     {formatTVL(s.tvl)}
                                                 </td>
-                                                <td style={{ padding: '12px', verticalAlign: 'middle', fontFamily: "'Geist Mono', monospace", fontSize: 12.5, fontWeight: 600, color: AC }}>
+                                                <td className="p-3 align-middle font-mono text-[12.5px] font-semibold text-dash-text">
+                                                    {s.protocolTotalActiveLoans ? formatTVL(s.protocolTotalActiveLoans) : '—'}
+                                                </td>
+                                                <td className="p-3 align-middle font-mono text-[12.5px] font-semibold text-dash-primary">
                                                     {s.supplyAPY.toFixed(2)}%
                                                 </td>
-                                                <td style={{ padding: '12px', verticalAlign: 'middle', fontFamily: "'Geist Mono', monospace", fontSize: 12.5, fontWeight: 500, color: '#c7cdd8' }}>
+                                                <td className="p-3 align-middle font-mono text-[12.5px] font-medium text-[#c7cdd8]">
                                                     {s.borrowRate.toFixed(2)}%
                                                 </td>
-                                                <td style={{ padding: '12px', verticalAlign: 'middle', fontFamily: "'Geist Mono', monospace", fontSize: 12.5, color: '#c7cdd8' }}>
+                                                <td className="p-3 align-middle font-mono text-[12.5px] text-[#c7cdd8]">
                                                     {s.utilization.toFixed(1)}%
                                                 </td>
                                             </tr>

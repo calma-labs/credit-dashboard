@@ -21,6 +21,8 @@ export type MorphoMarketSummary = {
   marketId: string;
   chain: { id: number };
   loanAsset: { symbol: string };
+  collateralAsset: { symbol: string } | null;
+  lltv: string | null;
   state: MorphoMarketState;
 }
 

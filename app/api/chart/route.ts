@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { fetchMorphoDebug } from '@/app/morpho/fetchMorphoHistory';
 import { FetchingManager } from './fetchers/FetchingManager';
+import { symbolMatches } from './fetchers/utils';
 
 const MIN_TVL = 1_000;
 
@@ -11,12 +12,13 @@ const PROTOCOL_SLUGS: Record<string, string[]> = {
     marginfi: ['marginfi'],
 };
 
-function symbolMatches(poolSymbol: string, target: string): boolean {
-    const normalized = poolSymbol
-        .replace(/\s*\(.*?\)/g, '')
-        .replace(/-[A-Z0-9]+$/, '')
-        .trim();
-    return normalized === target || normalized === `W${target}`;
+interface DefiLlamaPoolRoute {
+    pool: string;
+    project: string;
+    chain: string;
+    symbol?: string;
+    poolMeta?: string;
+    tvlUsd: number;
 }
 
 export async function GET(request: NextRequest) {
@@ -41,7 +43,7 @@ export async function GET(request: NextRequest) {
             }
 
             const poolsJson = await poolsRes.json();
-            const pools: any[] = poolsJson.data ?? [];
+            const pools: DefiLlamaPoolRoute[] = poolsJson.data ?? [];
 
             const allForProtocol = pools.filter(p => targetSlugs.includes(p.project) && p.chain === 'Solana');
             const tokenPools = targetSlugs
@@ -71,10 +73,9 @@ export async function GET(request: NextRequest) {
             });
         }
 
-        const fetcher = FetchingManager.getFetcher(protocol);
-        const result = await fetcher.fetch(protocol, symbol, collateral);
+        const result = await FetchingManager.fetch(protocol, symbol, collateral);
 
-        if (result.history.length === 0 && !result.poolId) {
+        if (!result || (result.history.length === 0 && !result.poolId)) {
             return NextResponse.json({ history: [], poolId: null, source: null });
         }
 
