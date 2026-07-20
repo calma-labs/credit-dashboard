@@ -18,14 +18,7 @@ function kaminoUtilization(token: KaminoReserve): number {
   return Number((token.calculateUtilizationRatio() * 100).toFixed(2));
 }
 function kaminoBorrowRate(token: KaminoReserve, slot: number): number {
-  return Number(
-    (
-      token.calculateBorrowAPR(
-        BigInt(slot),
-        Math.floor(token.calculateUtilizationRatio() * 10000),
-      ) * 100
-    ).toFixed(2),
-  );
+  return Number((token.calculateBorrowAPR(BigInt(slot), 0) * 100).toFixed(2));
 }
 function kaminoSupplyAPY(token: KaminoReserve, slot: number): number {
   return Number((token.totalSupplyAPY(BigInt(slot)) * 100).toFixed(2));
@@ -97,18 +90,20 @@ export async function kaminoStandarizedTokens(): Promise<StandarizedMetric[]> {
       .flatMap(({ market, config }) => {
         const marketName = market.getName() || config.name || "isolated";
 
-        return market.getReserves().map((t) => ({
-          symbol: t.symbol ?? "Unavailable",
-          mintAddress: t.stats.mintAddress ?? "Unavailable",
-          tvl: kaminoTVL(t) ?? 0,
-          utilization: kaminoUtilization(t) ?? 0,
-          supplyAPY: kaminoSupplyAPY(t, getKaminoSlot) ?? 0,
-          borrowRate: kaminoBorrowRate(t, getKaminoSlot) ?? 0,
-          borrowAPY: kaminoBorrowAPY(t, getKaminoSlot) ?? 0,
-          lending: `kamino`,
-          market: marketName,
-          chain: "Solana",
-        }));
+        return market.getReserves()
+          .filter(t => kaminoTVL(t) > 100000)
+          .map((t) => ({
+            symbol: t.symbol ?? "Unavailable",
+            mintAddress: t.stats.mintAddress ?? "Unavailable",
+            tvl: kaminoTVL(t) ?? 0,
+            utilization: kaminoUtilization(t) ?? 0,
+            supplyAPY: kaminoSupplyAPY(t, getKaminoSlot) ?? 0,
+            borrowRate: kaminoBorrowRate(t, getKaminoSlot) ?? 0,
+            borrowAPY: kaminoBorrowAPY(t, getKaminoSlot) ?? 0,
+            lending: `kamino`,
+            market: marketName,
+            chain: "Solana",
+          }));
       });
 
     return result;

@@ -11,7 +11,7 @@ import { type StandarizedMetric } from '../../../globalComponents/globalTypes';
 import { morphoStandarizedTokens } from '../../../morpho/morpho_lend';
 
 const MORPHO_API = 'https://api.morpho.org/graphql';
-const MIN_TVL = 1_000;
+const MIN_TVL = 100_000;
 
 export class MorphoFetcher extends BaseTokenFetcher {
     async fetchMetrics(): Promise<StandarizedMetric[]> {
@@ -27,7 +27,7 @@ export class MorphoFetcher extends BaseTokenFetcher {
         const query = `
             query {
                 markets(
-                    first: 100
+                    first: 200
                     orderBy: SupplyAssetsUsd
                     orderDirection: Desc
                     where: { chainId_in: [1, 8453], listed: true }
@@ -36,6 +36,8 @@ export class MorphoFetcher extends BaseTokenFetcher {
                         marketId
                         chain { id }
                         loanAsset { symbol }
+                        collateralAsset { symbol }
+                        lltv
                         state { supplyAssetsUsd }
                     }
                 }

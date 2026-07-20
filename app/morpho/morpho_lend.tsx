@@ -10,6 +10,8 @@ const CHAIN_NAMES: Record<number, string> = {
 
 interface MorphoMarket {
   loanAsset: { symbol: string; address: string; decimals: number };
+  collateralAsset: { symbol: string } | null;
+  lltv: string | null;
   chain: { id: number };
   state: {
     supplyAssetsUsd: number;
@@ -25,13 +27,15 @@ async function fetchMorphoMarkets(): Promise<MorphoMarket[]> {
   const query = `
     query {
       markets(
-        first: 100
+        first: 200
         orderBy: SupplyAssetsUsd
         orderDirection: Desc
         where: { chainId_in: [1, 8453], listed: true }
       ) {
         items {
           loanAsset { address symbol decimals }
+          collateralAsset { symbol }
+          lltv
           chain { id }
           state {
             supplyAssetsUsd
@@ -71,27 +75,23 @@ export async function morphoStandarizedTokens(): Promise<StandarizedMetric[]> {
     staleTime: 5 * 60 * 1000,
   });
 
-  const bySymbol = new Map<string, MorphoMarket>();
-  for (const m of markets) {
-    const symbol = m.loanAsset.symbol.toUpperCase();
-    const existing = bySymbol.get(symbol);
-    if (!existing || m.state.supplyAssetsUsd > existing.state.supplyAssetsUsd) {
-      bySymbol.set(symbol, m);
-    }
-  }
-
-  return Array.from(bySymbol.values())
-    .filter((m) => m.state.supplyAssetsUsd > 1000)
-    .map((m) => ({
-      symbol: m.loanAsset.symbol.toUpperCase(),
-      mintAddress: m.loanAsset.address,
-      tvl: Number(m.state.supplyAssetsUsd.toFixed(2)),
-      supplyAPY: Number((m.state.supplyApy * 100).toFixed(2)),
-      utilization: Number((m.state.utilization * 100).toFixed(2)),
-      borrowRate: Number((m.state.borrowApy * 100).toFixed(2)),
-      borrowAPY: Number(((Math.exp(m.state.borrowApy) - 1) * 100).toFixed(2)),
-      lending: "morpho",
-      market: "morpho",
-      chain: CHAIN_NAMES[m.chain.id] ?? `Chain ${m.chain.id}`,
-    }));
+  return markets
+    .filter((m) => m.state.supplyAssetsUsd > 100000)
+    .map((m) => {
+      const lltvRaw = m.lltv ? Number(m.lltv) / 1e18 : null;
+      return {
+        symbol: m.loanAsset.symbol.toUpperCase(),
+        mintAddress: m.loanAsset.address,
+        tvl: Number(m.state.supplyAssetsUsd.toFixed(2)),
+        supplyAPY: Number((m.state.supplyApy * 100).toFixed(2)),
+        utilization: Number((m.state.utilization * 100).toFixed(2)),
+        borrowRate: Number((m.state.borrowApy * 100).toFixed(2)),
+        borrowAPY: Number((m.state.borrowApy * 100).toFixed(2)),
+        lending: "morpho",
+        market: "morpho",
+        chain: CHAIN_NAMES[m.chain.id] ?? `Chain ${m.chain.id}`,
+        collateral: m.collateralAsset?.symbol ?? undefined,
+        lltv: lltvRaw !== null ? Number((lltvRaw * 100).toFixed(2)) : undefined,
+      };
+    });
 }

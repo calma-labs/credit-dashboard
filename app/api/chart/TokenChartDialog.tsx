@@ -21,17 +21,17 @@ interface TokenDetailProps {
 const PROTOCOLS = ["kamino", "save", "jupiter", "morpho"];
 
 const PROTOCOL_COLORS: Record<string, string> = {
-    kamino:   '#38bdf8',
-    jupiter:  '#c084fc',
-    save:     '#4ade80',
-    morpho:   '#fbc808',
+    kamino: '#38bdf8',
+    jupiter: '#c084fc',
+    save: '#4ade80',
+    morpho: '#fbc808',
     marginfi: '#fb923c',
 };
 
 const CHAIN_COLORS: Record<string, string> = {
-    Solana:   '#9945FF',
+    Solana: '#9945FF',
     Ethereum: '#627EEA',
-    Base:     '#0052FF',
+    Base: '#0052FF',
 };
 
 function formatTVL(tvl: number): string {
@@ -95,7 +95,7 @@ export function TokenDetailView({ symbol, snapshots }: TokenDetailProps) {
                 try {
                     const res = await fetch(`/api/chart?symbol=${symbol}&protocol=${protocol}`);
                     const data = await res.json();
-                    
+
                     if (data.snapshot?.protocolTotalActiveLoans) {
                         setActiveLoans(prev => ({ ...prev, [protocol]: data.snapshot.protocolTotalActiveLoans }));
                     }
@@ -205,7 +205,7 @@ export function TokenDetailView({ symbol, snapshots }: TokenDetailProps) {
 
                 {/* Protocol breakdown table */}
                 {snapshots.length > 0 && (
-                    <div className="border border-dash-border rounded-[14px] overflow-hidden bg-white/[0.008] mt-4">
+                    <div className="border border-dash-border rounded-[14px] overflow-x-auto bg-white/[0.008] mt-4">
                         <table className="w-full border-collapse min-w-[540px]">
                             <thead>
                                 <tr>
@@ -224,9 +224,9 @@ export function TokenDetailView({ symbol, snapshots }: TokenDetailProps) {
                                     >
                                         <td className="px-4 py-3.5 align-middle">
                                             <span className="inline-flex items-center gap-2">
-                                                <span 
+                                                <span
                                                     className="w-2 h-2 rounded-sm flex-none"
-                                                    style={{ background: PROTOCOL_COLORS[s.protocol] ?? '#556' }} 
+                                                    style={{ background: PROTOCOL_COLORS[s.protocol] ?? '#556' }}
                                                 />
                                                 <span className="font-semibold text-[13.5px] capitalize text-dash-text">
                                                     {s.protocol}

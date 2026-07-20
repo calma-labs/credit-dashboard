@@ -16,7 +16,7 @@ export function downsampleToDaily<T>(
     mapPoint: (p: T, dateKey: string) => TokenHistoryPoint
 ): TokenHistoryPoint[] {
     const dailyMap = new Map<string, T>();
-    
+
     for (const p of points) {
         const dateKey = new Date(getTimestamp(p) * 1000).toISOString().split('T')[0];
         dailyMap.set(dateKey, p);
@@ -43,10 +43,10 @@ export async function fetchProtocolTotalActiveLoansFromDefiLlama(platform: strin
         // Add common overrides if needed
         if (slug === 'jupiter') slug = 'jup-lend';
         if (slug === 'marginfi') slug = 'marginfi';
-        
+
         const url = `https://api.llama.fi/protocol/${slug}`;
         const data = await fetchJson<any>(url, 3600); // cache for 1 hour
-        
+
         if (data && data.currentChainTvls && typeof data.currentChainTvls.borrowed === 'number') {
             return data.currentChainTvls.borrowed;
         }

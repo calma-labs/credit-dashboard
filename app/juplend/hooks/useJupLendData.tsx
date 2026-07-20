@@ -3,13 +3,6 @@ import { type StandarizedMetric } from "@/app/globalComponents/globalTypes";
 
 export const RPC_URL = `https://mainnet.helius-rpc.com/?api-key=${process.env.NEXT_PUBLIC_HELIUS_API_KEY}`;
 const API_BASE = "https://lite-api.jup.ag/lend/v1";
-const LIQUIDITY_PROGRAM = new PublicKey(
-  "jupeiUmn818Jg1ekPURTpr4mFo29p46vygyykFJ3wZC",
-);
-
-async function getErr(error: unknown): Promise<unknown> {
-  return error;
-}
 
 export let new_error = false;
 
@@ -24,6 +17,32 @@ interface ApiToken {
   supplyRate: string;
   rewardsRate: string;
   totalRate: string;
+}
+
+interface BorrowVault {
+  id: number;
+  address: string;
+  supplyToken: {
+    address: string;
+    symbol: string;
+    uiSymbol: string;
+    decimals: number;
+    price: string;
+  };
+  borrowToken: {
+    address: string;
+    symbol: string;
+    uiSymbol: string;
+    decimals: number;
+    price: string;
+  };
+  totalSupply: string;
+  totalBorrow: string;
+  collateralFactor: number;
+  liquidationThreshold: number;
+  supplyRate: number;
+  borrowRate: number;
+  totalPositions: number;
 }
 
 export interface TokenData {
@@ -44,6 +63,10 @@ export interface JupLendData {
   loading: boolean;
   error: string | null;
 }
+
+const LIQUIDITY_PROGRAM = new PublicKey(
+  "jupeiUmn818Jg1ekPURTpr4mFo29p46vygyykFJ3wZC",
+);
 
 function tokenReservePDA(mint: PublicKey): PublicKey {
   const enc = new TextEncoder();
@@ -91,12 +114,11 @@ async function fetchTokenReserve(
     }
 
     const view = new DataView(bytes.buffer);
-
     const borrowRate = view.getUint16(72, true) / 100;
     const utilization = view.getUint16(76, true) / 100;
 
     return { borrowRate, utilization };
-  } catch (e) {
+  } catch {
     new_error = true;
     return null;
   }
@@ -134,7 +156,7 @@ export async function useJupLendData(): Promise<JupLendData> {
     );
 
     return {
-      tokens: tokens.filter((t) => t.totalAssets > 0),
+      tokens: tokens.filter((t) => t.tvlUsd > 100000),
       loading: false,
       error: null,
     };
@@ -147,12 +169,61 @@ export async function useJupLendData(): Promise<JupLendData> {
   }
 }
 
-export async function standarizedJupLendToken(): Promise<StandarizedMetric[]> {
-  const JUPLEND_DATA = await useJupLendData();
+async function fetchBorrowVaults(): Promise<BorrowVault[]> {
+  try {
+    const res = await fetch(`${API_BASE}/borrow/vaults`, {
+      cache: "no-store",
+    });
+    if (!res.ok) return [];
+    return await res.json();
+  } catch {
+    return [];
+  }
+}
 
+export async function standarizedJupLendToken(): Promise<StandarizedMetric[]> {
+  const vaults = await fetchBorrowVaults();
+
+  if (vaults.length > 0) {
+    return vaults
+      .filter((v) => {
+        const supplyPrice = parseFloat(v.supplyToken.price) || 0;
+        const supplyUsd = (Number(v.totalSupply) / Math.pow(10, v.supplyToken.decimals)) * supplyPrice;
+        return supplyUsd > 100000;
+      })
+      .map((v) => {
+        const borrowPrice = parseFloat(v.borrowToken.price) || 0;
+        const supplyPrice = parseFloat(v.supplyToken.price) || 0;
+        const tvlUsd = (Number(v.totalSupply) / Math.pow(10, v.supplyToken.decimals)) * supplyPrice;
+        const borrowUsd = (Number(v.totalBorrow) / Math.pow(10, v.borrowToken.decimals)) * borrowPrice;
+        const utilization = tvlUsd > 0 ? Number(((borrowUsd / tvlUsd) * 100).toFixed(2)) : 0;
+
+        const supplyAPY = Number((v.supplyRate / 100).toFixed(2));
+        const borrowAPY = Number((v.borrowRate / 100).toFixed(2));
+        const lltv = Number(((v.collateralFactor / 1000) * 100).toFixed(2));
+        const liqThreshold = Number(((v.liquidationThreshold / 1000) * 100).toFixed(2));
+
+        return {
+          symbol: v.borrowToken.uiSymbol.toUpperCase(),
+          mintAddress: v.borrowToken.address,
+          tvl: Number(tvlUsd.toFixed(2)),
+          supplyAPY,
+          utilization,
+          borrowRate: borrowAPY,
+          borrowAPY,
+          lending: "jupiter",
+          market: "jupiter",
+          chain: "Solana",
+          collateral: v.supplyToken.uiSymbol.toUpperCase(),
+          lltv,
+          liqThreshold,
+        };
+      });
+  }
+
+  const JUPLEND_DATA = await useJupLendData();
   return JUPLEND_DATA.tokens.map((t) => {
     const apy = Math.pow(1 + t.apr / 365, 365) - 1;
-
     return {
       symbol: t.symbol.toUpperCase(),
       mintAddress: t.mint,
@@ -160,8 +231,8 @@ export async function standarizedJupLendToken(): Promise<StandarizedMetric[]> {
       supplyAPY: Number((apy * 100).toFixed(2)),
       utilization: Number(t.utilization.toFixed(2)),
       borrowRate: Number(t.borrowRate.toFixed(2)),
-      lending: "juplend",
-      market: "juplend",
+      lending: "jupiter",
+      market: "jupiter",
       borrowAPY: Number(((Math.exp(t.borrowRate / 100) - 1) * 100).toFixed(2)),
       chain: "Solana",
     };

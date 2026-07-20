@@ -19,6 +19,7 @@ interface MainLayoutProps {
     lends: string[];
     symbols: string[];
     chains: string[];
+    collaterals: string[];
     stats: Stats;
 }
 
@@ -71,22 +72,24 @@ function StatCard({
     );
 }
 
-export default function MainLayout({ tokens, lends, symbols, chains, stats }: MainLayoutProps) {
-    const [search, setSearch]     = useState('');
-    const [protocol, setProtocol] = useState('All');
-    const [chain, setChain]       = useState('All');
-    const [asset, setAsset]       = useState('All');
+export default function MainLayout({ tokens, lends, symbols, chains, collaterals, stats }: MainLayoutProps) {
+    const [search, setSearch]         = useState('');
+    const [protocol, setProtocol]     = useState('All');
+    const [chain, setChain]           = useState('All');
+    const [asset, setAsset]           = useState('All');
+    const [collateral, setCollateral] = useState('All');
 
     const rows = useMemo(() => {
         const q = search.toLowerCase().trim();
         return tokens.filter(t => {
-            if (protocol !== 'All' && t.lending !== protocol)      return false;
-            if (chain    !== 'All' && t.chain   !== chain)         return false;
-            if (asset    !== 'All' && t.symbol.toUpperCase() !== asset) return false;
+            if (protocol   !== 'All' && t.lending !== protocol)      return false;
+            if (chain      !== 'All' && t.chain   !== chain)         return false;
+            if (asset      !== 'All' && t.symbol.toUpperCase() !== asset) return false;
+            if (collateral !== 'All' && (t.collateral?.toUpperCase() ?? '') !== collateral) return false;
             if (q && !t.symbol.toLowerCase().includes(q) && !t.lending.toLowerCase().includes(q)) return false;
             return true;
         });
-    }, [tokens, protocol, chain, asset, search]);
+    }, [tokens, protocol, chain, asset, collateral, search]);
 
     const shownCount = rows.length;
 
@@ -256,6 +259,15 @@ export default function MainLayout({ tokens, lends, symbols, chains, stats }: Ma
                         options={[
                             { value: 'All', label: 'All assets' },
                             ...symbols.map(s => ({ value: s, label: s })),
+                        ]}
+                    />
+
+                    <FilterSelect
+                        value={collateral}
+                        onChange={setCollateral}
+                        options={[
+                            { value: 'All', label: 'All collateral' },
+                            ...collaterals.map(c => ({ value: c, label: c })),
                         ]}
                     />
                 </div>

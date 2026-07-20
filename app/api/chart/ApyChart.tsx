@@ -41,11 +41,11 @@ const METRIC_OPTIONS = [
 ] as const;
 
 const chartConfig = {
-    kamino:   { label: "Kamino",   color: "#38bdf8" },
-    jupiter:  { label: "Jupiter",  color: "#c084fc" },
-    save:     { label: "Save",     color: "#4ade80" },
+    kamino: { label: "Kamino", color: "#38bdf8" },
+    jupiter: { label: "Jupiter", color: "#c084fc" },
+    save: { label: "Save", color: "#4ade80" },
     marginfi: { label: "MarginFi", color: "#fb923c" },
-    morpho:   { label: "Morpho",   color: "#fbc808" },
+    morpho: { label: "Morpho", color: "#fbc808" },
 } satisfies ChartConfig;
 
 const AC = '#4FE3C1';
@@ -145,9 +145,9 @@ export const ApyChart = ({ datasets, range, onRangeChange }: Props) => {
             return true;
         });
         // Keep at most ~6 labels regardless of range to prevent overlap
-        if (range === '7d')  return unique.map(d => d.rawDate);
-        if (range === '1m')  return unique.filter((_, i) => i % 6 === 0).map(d => d.rawDate);
-        if (range === '1y')  return unique.filter((_, i) => i % 3 === 0).map(d => d.rawDate);
+        if (range === '7d') return unique.map(d => d.rawDate);
+        if (range === '1m') return unique.filter((_, i) => i % 6 === 0).map(d => d.rawDate);
+        if (range === '1y') return unique.filter((_, i) => i % 3 === 0).map(d => d.rawDate);
         const step = Math.max(1, Math.ceil(unique.length / 5));
         return unique.filter((_, i) => i % step === 0).map(d => d.rawDate);
     }, [chartData, range, hasData]);

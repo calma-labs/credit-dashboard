@@ -7,23 +7,23 @@ const PROTOCOLS = ['kamino', 'save', 'jupiter', 'morpho'];
 const AC = '#4FE3C1';
 
 const PROTOCOL_COLORS: Record<string, string> = {
-    kamino:   '#38bdf8',
-    jupiter:  '#c084fc',
-    save:     '#4ade80',
-    morpho:   '#fbc808',
+    kamino: '#38bdf8',
+    jupiter: '#c084fc',
+    save: '#4ade80',
+    morpho: '#fbc808',
     marginfi: '#fb923c',
 };
 
 const PROTOCOL_CHAINS: Record<string, string> = {
-    kamino:   'Solana',
-    save:     'Solana',
-    jupiter:  'Solana',
-    morpho:   'Ethereum',
+    kamino: 'Solana',
+    save: 'Solana',
+    jupiter: 'Solana',
+    morpho: 'Ethereum',
     marginfi: 'Solana',
 };
 
 const CHAIN_COLORS: Record<string, string> = {
-    Solana:   '#9945FF',
+    Solana: '#9945FF',
     Ethereum: '#627EEA',
 };
 
@@ -44,8 +44,8 @@ interface TokenDrawerProps {
 
 function formatTVL(tvl: number): string {
     if (tvl >= 1_000_000_000) return `$${(tvl / 1_000_000_000).toFixed(1)}B`;
-    if (tvl >= 1_000_000)     return `$${(tvl / 1_000_000).toFixed(1)}M`;
-    if (tvl >= 1_000)         return `$${(tvl / 1_000).toFixed(1)}K`;
+    if (tvl >= 1_000_000) return `$${(tvl / 1_000_000).toFixed(1)}M`;
+    if (tvl >= 1_000) return `$${(tvl / 1_000).toFixed(1)}K`;
     return `$${tvl}`;
 }
 
@@ -111,9 +111,9 @@ export default function TokenDrawer({ symbol, onClose }: TokenDrawerProps) {
                     .map(r => ({
                         protocol: r.protocol,
                         chain: PROTOCOL_CHAINS[r.protocol] ?? 'Unknown',
-                        tvl:         r.data.snapshot.tvl         ?? 0,
-                        supplyAPY:   r.data.snapshot.supplyAPY   ?? 0,
-                        borrowRate:  r.data.snapshot.borrowRate  ?? 0,
+                        tvl: r.data.snapshot.tvl ?? 0,
+                        supplyAPY: r.data.snapshot.supplyAPY ?? 0,
+                        borrowRate: r.data.snapshot.borrowRate ?? 0,
                         utilization: r.data.snapshot.utilization ?? 0,
                         protocolTotalActiveLoans: r.data.snapshot.protocolTotalActiveLoans ?? null,
                     }))
@@ -203,8 +203,8 @@ export default function TokenDrawer({ symbol, onClose }: TokenDrawerProps) {
 
                         {/* Protocol breakdown */}
                         {snapshots.length > 0 && (
-                            <div className="border border-dash-border rounded-[14px] overflow-hidden bg-white/[0.008] mt-4">
-                                <table className="w-full border-collapse">
+                            <div className="border border-dash-border rounded-[14px] overflow-x-auto bg-white/[0.008] mt-4">
+                                <table className="w-full border-collapse min-w-[540px]">
                                     <thead>
                                         <tr>
                                             {['Protocol', 'Chain', 'TVL', 'Total Active Loans', 'Supply', 'Borrow', 'Util'].map(h => (
@@ -222,9 +222,9 @@ export default function TokenDrawer({ symbol, onClose }: TokenDrawerProps) {
                                             >
                                                 <td className="p-3 align-middle">
                                                     <span className="inline-flex items-center gap-2">
-                                                        <span 
+                                                        <span
                                                             className="w-2 h-2 rounded-sm flex-none"
-                                                            style={{ background: PROTOCOL_COLORS[s.protocol] ?? '#556' }} 
+                                                            style={{ background: PROTOCOL_COLORS[s.protocol] ?? '#556' }}
                                                         />
                                                         <span className="font-semibold text-[13px] capitalize text-dash-text">
                                                             {s.protocol}
@@ -233,9 +233,9 @@ export default function TokenDrawer({ symbol, onClose }: TokenDrawerProps) {
                                                 </td>
                                                 <td className="p-3 align-middle">
                                                     <span className="inline-flex items-center gap-1.5 text-xs text-dash-header">
-                                                        <span 
+                                                        <span
                                                             className="w-1.5 h-1.5 rounded-full flex-none"
-                                                            style={{ background: CHAIN_COLORS[s.chain] ?? '#556' }} 
+                                                            style={{ background: CHAIN_COLORS[s.chain] ?? '#556' }}
                                                         />
                                                         {s.chain}
                                                     </span>
