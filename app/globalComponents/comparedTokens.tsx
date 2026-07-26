@@ -8,7 +8,7 @@ interface Props {
     rows: StandarizedMetric[];
 }
 
-type SortKey = 'symbol' | 'lending' | 'tvl' | 'supplyAPY' | 'borrowRate' | 'utilization' | 'lltv';
+type SortKey = 'symbol' | 'lending' | 'tvl' | 'supplyAPY' | 'borrowRate' | 'utilization' | 'lltv' | 'ltv';
 type SortDir = 'asc' | 'desc';
 
 const PROTOCOL_COLORS: Record<string, string> = {
@@ -131,6 +131,11 @@ export default function ComparedTokens({ rows }: Props) {
                 const bVal = b.lltv ?? 0;
                 return (aVal - bVal) * dir;
             }
+            if (sortKey === 'ltv') {
+                const aVal = a.ltv ?? 0;
+                const bVal = b.ltv ?? 0;
+                return (aVal - bVal) * dir;
+            }
             return ((a[sortKey] as number) - (b[sortKey] as number)) * dir;
         });
     }, [rows, sortKey, sortDir]);
@@ -158,6 +163,7 @@ export default function ComparedTokens({ rows }: Props) {
                             <HeaderCell label="TVL"         sk="tvl"         align="right" {...hProps} />
                             <HeaderCell label="Supply APY"  sk="supplyAPY"   align="right" {...hProps} />
                             <HeaderCell label="Borrow APY"  sk="borrowRate"  align="right" {...hProps} />
+                            <HeaderCell label="Max LTV"     sk="ltv"         align="right" {...hProps} />
                             <HeaderCell label="LLTV"        sk="lltv"        align="right" {...hProps} />
                             <HeaderCell label="Utilization" sk="utilization" {...hProps} />
                         </tr>
@@ -165,7 +171,7 @@ export default function ComparedTokens({ rows }: Props) {
                     <tbody>
                         {sorted.length === 0 ? (
                             <tr>
-                                <td colSpan={9} style={{ padding: '56px 16px', textAlign: 'center', color: '#5C6577', fontSize: 14 }}>
+                                <td colSpan={10} style={{ padding: '56px 16px', textAlign: 'center', color: '#5C6577', fontSize: 14 }}>
                                     No markets match your filters.
                                 </td>
                             </tr>
@@ -204,8 +210,8 @@ export default function ComparedTokens({ rows }: Props) {
                                     </td>
 
                                     <td style={{ padding: '14px 16px', verticalAlign: 'middle' }}>
-                                        {row.collateral
-                                            ? <CollateralBadge symbol={row.collateral} />
+                                        {row.collateral || row.lending === 'kamino'
+                                            ? <CollateralBadge symbol={row.collateral || row.symbol} />
                                             : <span style={{ color: '#3a4251', fontSize: 12 }}>—</span>
                                         }
                                     </td>
@@ -241,6 +247,10 @@ export default function ComparedTokens({ rows }: Props) {
 
                                     <td style={{ padding: '14px 16px', verticalAlign: 'middle', textAlign: 'right', fontFamily: "'Geist Mono', monospace", fontSize: 13.5, fontWeight: 500, color: '#F0854A' }}>
                                         {row.borrowRate}%
+                                    </td>
+
+                                    <td style={{ padding: '14px 16px', verticalAlign: 'middle', textAlign: 'right', fontFamily: "'Geist Mono', monospace", fontSize: 13, color: '#8B96A9' }}>
+                                        {row.ltv != null ? `${row.ltv}%` : <span style={{ color: '#3a4251' }}>—</span>}
                                     </td>
 
                                     <td style={{ padding: '14px 16px', verticalAlign: 'middle', textAlign: 'right', fontFamily: "'Geist Mono', monospace", fontSize: 13, color: '#8B96A9' }}>

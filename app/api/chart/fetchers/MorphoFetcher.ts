@@ -55,7 +55,7 @@ export class MorphoFetcher extends BaseTokenFetcher {
         return { res, json };
     }
 
-    private buildSnapshot(state: MorphoMarketDetailState | null | undefined) {
+    private buildSnapshot(state: MorphoMarketDetailState | null | undefined, lltv?: string | null) {
         if (!state) return null;
 
         return {
@@ -63,6 +63,7 @@ export class MorphoFetcher extends BaseTokenFetcher {
             supplyAPY: state.supplyApy !== null && state.supplyApy !== undefined ? parseFloat((state.supplyApy * 100).toFixed(2)) : 0,
             borrowRate: state.borrowApy !== null && state.borrowApy !== undefined ? parseFloat((state.borrowApy * 100).toFixed(2)) : 0,
             utilization: state.utilization !== null && state.utilization !== undefined ? parseFloat((state.utilization * 100).toFixed(2)) : 0,
+            lltv: lltv ? parseFloat(lltv) * 100 : null,
         };
     }
 
@@ -148,7 +149,7 @@ export class MorphoFetcher extends BaseTokenFetcher {
                 poolId: best.marketId,
                 source: 'morpho',
                 matchedSymbol: asset,
-                snapshot: this.buildSnapshot(marketData?.state),
+                snapshot: this.buildSnapshot(marketData?.state, best.lltv),
             };
         } catch (error) {
             return this.handleError(error, platform, asset);

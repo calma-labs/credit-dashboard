@@ -91,6 +91,7 @@ export async function morphoStandarizedTokens(): Promise<StandarizedMetric[]> {
         market: "morpho",
         chain: CHAIN_NAMES[m.chain.id] ?? `Chain ${m.chain.id}`,
         collateral: m.collateralAsset?.symbol ?? undefined,
+        ltv: lltvRaw !== null ? Number((lltvRaw * 100).toFixed(2)) : undefined,
         lltv: lltvRaw !== null ? Number((lltvRaw * 100).toFixed(2)) : undefined,
       };
     });

@@ -11,6 +11,7 @@ export type StandarizedMetric = {
   chain: string,
   market: string,
   collateral?: string,
+  ltv?: number,
   lltv?: number,
   liqThreshold?: number,
   protocolTotalActiveLoans?: number | null,

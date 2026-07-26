@@ -29,6 +29,10 @@ interface SaveReserveResult {
   };
   reserve?: {
     pubkey?: string;
+    config?: {
+      loanToValueRatio?: number;
+      liquidationThreshold?: number;
+    };
     liquidity?: {
       mintDecimals?: number;
       borrowedAmountWads?: string;
@@ -90,6 +94,9 @@ function computeMetric(
   const utilization =
     total > 0 ? parseFloat(((borrowed / total) * 100).toFixed(2)) : 0;
   const mintAddress = liq.mintPubkey ?? "";
+  const config = entry.reserve?.config ?? {};
+  const ltv = config.loanToValueRatio ?? 0;
+  const lltv = config.liquidationThreshold ?? 0;
 
   return {
     symbol: symbolFromConfig.toUpperCase(),
@@ -102,6 +109,8 @@ function computeMetric(
     lending: "save",
     market: marketName,
     chain: "Solana",
+    ltv,
+    lltv,
   };
 }
 

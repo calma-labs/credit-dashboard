@@ -11,6 +11,7 @@ interface PlatformSnapshot {
     borrowRate: number;
     utilization: number;
     chain: string;
+    lltv?: number | null;
 }
 
 interface TokenDetailProps {
@@ -209,7 +210,7 @@ export function TokenDetailView({ symbol, snapshots }: TokenDetailProps) {
                         <table className="w-full border-collapse min-w-[540px]">
                             <thead>
                                 <tr>
-                                    {['Protocol', 'Chain', 'TVL', 'Total Active Loans', 'Supply APY', 'Borrow Rate', 'Utilization'].map(h => (
+                                    {['Protocol', 'Chain', 'TVL', 'Total Active Loans', 'Supply APY', 'Borrow Rate', 'Utilization', 'LLTV'].map(h => (
                                         <th key={h} className="px-4 py-3 text-left text-[11px] font-semibold text-[#6b7688] font-mono tracking-wider uppercase border-b border-dash-border whitespace-nowrap">
                                             {h}
                                         </th>
@@ -250,6 +251,9 @@ export function TokenDetailView({ symbol, snapshots }: TokenDetailProps) {
                                         </td>
                                         <td className="px-4 py-3.5 align-middle font-mono text-[13.5px] text-[#c7cdd8]">
                                             {s.utilization.toFixed(1)}%
+                                        </td>
+                                        <td className="px-4 py-3.5 align-middle font-mono text-[13.5px] font-medium text-[#c7cdd8]">
+                                            {s.lltv ? (s.lltv * 100).toFixed(2) + '%' : '—'}
                                         </td>
                                     </tr>
                                 ))}

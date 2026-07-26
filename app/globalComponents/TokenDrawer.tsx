@@ -35,6 +35,7 @@ interface ProtocolData {
     borrowRate: number;
     utilization: number;
     protocolTotalActiveLoans?: number | null;
+    lltv?: number | null;
 }
 
 interface TokenDrawerProps {
@@ -116,6 +117,7 @@ export default function TokenDrawer({ symbol, onClose }: TokenDrawerProps) {
                         borrowRate: r.data.snapshot.borrowRate ?? 0,
                         utilization: r.data.snapshot.utilization ?? 0,
                         protocolTotalActiveLoans: r.data.snapshot.protocolTotalActiveLoans ?? null,
+                        lltv: r.data.snapshot.lltv ?? null,
                     }))
             );
 
@@ -207,7 +209,7 @@ export default function TokenDrawer({ symbol, onClose }: TokenDrawerProps) {
                                 <table className="w-full border-collapse min-w-[540px]">
                                     <thead>
                                         <tr>
-                                            {['Protocol', 'Chain', 'TVL', 'Total Active Loans', 'Supply', 'Borrow', 'Util'].map(h => (
+                                            {['Protocol', 'Chain', 'TVL', 'Total Active Loans', 'Supply', 'Borrow', 'Util', 'LLTV'].map(h => (
                                                 <th key={h} className="px-3 py-2.5 text-left text-[10px] font-semibold text-[#6b7688] font-mono tracking-wider uppercase border-b border-dash-border whitespace-nowrap">
                                                     {h}
                                                 </th>
@@ -254,6 +256,9 @@ export default function TokenDrawer({ symbol, onClose }: TokenDrawerProps) {
                                                 </td>
                                                 <td className="p-3 align-middle font-mono text-[12.5px] text-[#c7cdd8]">
                                                     {s.utilization.toFixed(1)}%
+                                                </td>
+                                                <td className="p-3 align-middle font-mono text-[12.5px] font-medium text-[#c7cdd8]">
+                                                    {s.lltv ? (s.lltv * 100).toFixed(2) + '%' : '—'}
                                                 </td>
                                             </tr>
                                         ))}

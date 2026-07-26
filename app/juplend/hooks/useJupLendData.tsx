@@ -200,8 +200,8 @@ export async function standarizedJupLendToken(): Promise<StandarizedMetric[]> {
 
         const supplyAPY = Number((v.supplyRate / 100).toFixed(2));
         const borrowAPY = Number((v.borrowRate / 100).toFixed(2));
-        const lltv = Number(((v.collateralFactor / 1000) * 100).toFixed(2));
-        const liqThreshold = Number(((v.liquidationThreshold / 1000) * 100).toFixed(2));
+        const ltv = Number(((v.collateralFactor / 1000) * 100).toFixed(2));
+        const lltv = Number(((v.liquidationThreshold / 1000) * 100).toFixed(2));
 
         return {
           symbol: v.borrowToken.uiSymbol.toUpperCase(),
@@ -215,8 +215,9 @@ export async function standarizedJupLendToken(): Promise<StandarizedMetric[]> {
           market: "jupiter",
           chain: "Solana",
           collateral: v.supplyToken.uiSymbol.toUpperCase(),
+          ltv,
           lltv,
-          liqThreshold,
+          liqThreshold: lltv,
         };
       });
   }

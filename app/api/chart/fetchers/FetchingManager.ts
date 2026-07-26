@@ -52,12 +52,14 @@ export class FetchingManager {
     }
 
     static getAllFetchers(): ITokenFetcher[] {
-        return [
+        const fetchers = [
             this.fetchers['kamino'],
             this.fetchers['jupiter'],
             this.fetchers['save'],
             this.fetchers['morpho'],
             this.fetchers['marginfi'],
         ];
+        console.log('[FetchingManager] Returning fetchers:', fetchers.length);
+        return fetchers;
     }
 }

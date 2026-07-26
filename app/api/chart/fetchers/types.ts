@@ -12,6 +12,7 @@ export interface TokenSnapshot {
     borrowRate: number;
     utilization: number;
     protocolTotalActiveLoans?: number | null;
+    lltv?: number | null;
 }
 
 export interface TokenDataResult {
