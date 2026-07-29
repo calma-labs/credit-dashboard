@@ -59,7 +59,6 @@ export class FetchingManager {
             this.fetchers['morpho'],
             this.fetchers['marginfi'],
         ];
-        console.log('[FetchingManager] Returning fetchers:', fetchers.length);
         return fetchers;
     }
 }
