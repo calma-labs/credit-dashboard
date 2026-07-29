@@ -5,10 +5,9 @@ import { useState, useRef, useEffect } from "react";
 export interface SelectOption {
     value: string;
     label: string;
-    /** Small colored swatch shown left of the label (protocol dot, chain dot, etc.) */
     color?: string;
-    /** Square (protocol badge) vs circle (chain dot). Defaults to circle. */
     swatchShape?: "square" | "circle";
+    icon?: string;
 }
 
 interface FilterSelectProps {
@@ -80,7 +79,6 @@ export function FilterSelect({ value, onChange, options }: FilterSelectProps) {
                 </span>
             </button>
 
-            {/* ── Panel ── */}
             {open && (
                 <div
                     style={{
@@ -115,6 +113,22 @@ export function FilterSelect({ value, onChange, options }: FilterSelectProps) {
 }
 
 function Swatch({ option, size }: { option: SelectOption | undefined; size: number }) {
+    if (option?.icon) {
+        const isSquare = option.swatchShape === "square";
+        return (
+            <img
+                src={option.icon}
+                alt=""
+                style={{
+                    width: size + 6,
+                    height: size + 6,
+                    borderRadius: isSquare ? 3 : "50%",
+                    objectFit: "contain",
+                    flex: "none",
+                }}
+            />
+        );
+    }
     if (!option?.color) return null;
     const isSquare = option.swatchShape === "square";
     return (

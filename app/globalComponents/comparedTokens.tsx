@@ -3,6 +3,7 @@
 import { useState, useMemo } from "react";
 import { StandarizedMetric } from "./globalTypes";
 import TokenDrawer from "./TokenDrawer";
+import { ProtocolIcon, ChainIcon, AssetIcon } from "./iconUtils";
 
 interface Props {
     rows: StandarizedMetric[];
@@ -96,12 +97,13 @@ function CollateralBadge({ symbol }: { symbol: string }) {
     const color = TOKEN_COLORS[norm] ?? '#556677';
     return (
         <span style={{
-            display: 'inline-flex', alignItems: 'center', gap: 5,
+            display: 'inline-flex', alignItems: 'center', gap: 6,
             background: `${color}18`, border: `1px solid ${color}44`,
-            borderRadius: 6, padding: '2px 7px',
+            borderRadius: 12, padding: '2px 8px 2px 2px',
             fontSize: 11.5, fontWeight: 600, color,
             fontFamily: "'Geist Mono', monospace",
         }}>
+            <AssetIcon name={norm} size={18} />
             {norm}
         </span>
     );
@@ -186,14 +188,7 @@ export default function ComparedTokens({ rows }: Props) {
                                 >
                                     <td style={{ padding: '14px 16px', verticalAlign: 'middle' }}>
                                         <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
-                                            <span style={{
-                                                width: 28, height: 28, borderRadius: '50%',
-                                                background: tkColor, flex: 'none',
-                                                display: 'inline-flex', alignItems: 'center', justifyContent: 'center',
-                                                fontSize: 11, fontWeight: 700, color: '#fff',
-                                                fontFamily: "'Geist Mono', monospace",
-                                                boxShadow: '0 1px 4px rgba(0,0,0,.4)',
-                                            }}>{sym[0]}</span>
+                                            <AssetIcon name={sym} size={28} />
                                             <div style={{ lineHeight: 1.3 }}>
                                                 <div style={{ fontWeight: 600, fontSize: 13.5, letterSpacing: '-0.01em' }}>{sym}</div>
                                                 {row.market && (
@@ -212,21 +207,14 @@ export default function ComparedTokens({ rows }: Props) {
 
                                     <td style={{ padding: '14px 16px', verticalAlign: 'middle' }}>
                                         <span style={{ display: 'inline-flex', alignItems: 'center', gap: 8 }}>
-                                            <span style={{
-                                                width: 18, height: 18, borderRadius: 5, background: ptColor, flex: 'none',
-                                                display: 'inline-flex', alignItems: 'center', justifyContent: 'center',
-                                                fontSize: 10, fontWeight: 800, color: '#08120c',
-                                            }}>{row.lending[0].toUpperCase()}</span>
+                                            <ProtocolIcon name={row.lending} size={18} />
                                             <span style={{ fontSize: 13, color: '#c7cdd8', fontWeight: 500 }}>{row.lending}</span>
                                         </span>
                                     </td>
 
                                     <td style={{ padding: '14px 16px', verticalAlign: 'middle' }}>
                                         <span style={{ display: 'inline-flex', alignItems: 'center', gap: 7, fontSize: 12.5, color: '#8B96A9' }}>
-                                            <span style={{
-                                                width: 7, height: 7, borderRadius: '50%', flex: 'none',
-                                                background: chainColor,
-                                            }} />
+                                            <ChainIcon name={row.chain} size={14} />
                                             {row.chain}
                                         </span>
                                     </td>
