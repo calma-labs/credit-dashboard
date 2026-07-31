@@ -74,8 +74,7 @@ function computeMetric(
 
   const WADS = 1e18;
   const DECIMALS = Math.pow(10, liq.mintDecimals ?? 6);
-  const borrowed =
-    parseFloat(liq.borrowedAmountWads ?? "0") / WADS / DECIMALS;
+  const borrowed = parseFloat(liq.borrowedAmountWads ?? "0") / WADS / DECIMALS;
   const available = parseFloat(liq.availableAmount ?? "0") / DECIMALS;
   const total = borrowed + available;
   const marketPrice = parseFloat(liq.marketPrice ?? "0");
@@ -85,21 +84,19 @@ function computeMetric(
 
   if (tvl < MIN_TVL_USD) return null;
 
-  const supplyAPY = Number(
-    parseFloat(rates.supplyInterest ?? "0").toFixed(2),
-  );
-  const borrowRate = Number(
-    parseFloat(rates.borrowInterest ?? "0").toFixed(2),
-  );
+  const supplyAPY = Number(parseFloat(rates.supplyInterest ?? "0").toFixed(2));
+  const borrowRate = Number(parseFloat(rates.borrowInterest ?? "0").toFixed(2));
   const utilization =
     total > 0 ? parseFloat(((borrowed / total) * 100).toFixed(2)) : 0;
   const mintAddress = liq.mintPubkey ?? "";
   const config = entry.reserve?.config ?? {};
-  const ltv = config.loanToValueRatio ?? 0;
+  const maxLTV = config.loanToValueRatio ?? 0;
   const lltv = config.liquidationThreshold ?? 0;
 
+  const symbol = symbolFromConfig.toUpperCase();
+
   return {
-    symbol: symbolFromConfig.toUpperCase(),
+    symbol,
     mintAddress,
     tvl,
     utilization,
@@ -109,7 +106,8 @@ function computeMetric(
     lending: "save",
     market: marketName,
     chain: "Solana",
-    ltv,
+    collateral: symbol,
+    maxLTV,
     lltv,
   };
 }
@@ -136,9 +134,7 @@ export async function fetchSaveData(): Promise<StandarizedMetric[]> {
 
       reserveResults.forEach((entry) => {
         const reservePubkey = entry.reserve?.pubkey;
-        const configReserve = reserves.find(
-          (r) => r.address === reservePubkey,
-        );
+        const configReserve = reserves.find((r) => r.address === reservePubkey);
 
         const symbol =
           configReserve?.asset ??

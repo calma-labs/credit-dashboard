@@ -1,29 +1,33 @@
-import { type StandarizedMetric } from '../../../globalComponents/globalTypes';
+import { type StandarizedMetric } from "../../../globalComponents/globalTypes";
 
 export interface TokenHistoryPoint {
-    date: string;
-    apy: number;
-    utilization: number | null;
+  date: string;
+  apy: number;
+  utilization: number | null;
 }
 
 export interface TokenSnapshot {
-    tvl: number;
-    supplyAPY: number;
-    borrowRate: number;
-    utilization: number;
-    protocolTotalActiveLoans?: number | null;
-    lltv?: number | null;
+  tvl: number;
+  supplyAPY: number;
+  borrowRate: number;
+  utilization: number;
+  protocolTotalActiveLoans?: number | null;
+  lltv?: number | null;
 }
 
 export interface TokenDataResult {
-    poolId: string | null;
-    source: string | null;
-    matchedSymbol: string;
-    snapshot: TokenSnapshot | null;
-    history: TokenHistoryPoint[];
+  poolId: string | null;
+  source: string | null;
+  matchedSymbol: string;
+  snapshot: TokenSnapshot | null;
+  history: TokenHistoryPoint[];
 }
 
 export interface ITokenFetcher {
-    fetch(platform: string, asset: string, collateral?: string): Promise<TokenDataResult | null>;
-    fetchMetrics(): Promise<StandarizedMetric[]>;
+  fetch(
+    platform: string,
+    asset: string,
+    collateral?: string,
+  ): Promise<TokenDataResult | null>;
+  fetchMetrics(): Promise<StandarizedMetric[]>;
 }

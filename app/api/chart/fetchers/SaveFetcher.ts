@@ -2,6 +2,7 @@ import { BaseTokenFetcher } from "./BaseTokenFetcher";
 import { TokenDataResult, TokenHistoryPoint, TokenSnapshot } from "./types";
 import { type StandarizedMetric } from "../../../globalComponents/globalTypes";
 import { symbolMatches, fetchJson } from "./utils";
+import { fetchSaveData } from "../../../save/saveData";
 
 const LLAMA_API = "https://yields.llama.fi";
 
@@ -60,21 +61,7 @@ export class SaveFetcher extends BaseTokenFetcher {
 
   async fetchMetrics(): Promise<StandarizedMetric[]> {
     try {
-      const pools = await this.fetchSavePools();
-
-      return pools.map((p) => ({
-        symbol: p.symbol,
-        mintAddress: p.underlyingTokens?.[0] ?? "",
-        tvl: p.tvlUsd ?? 0,
-        utilization: 0, // DeFiLlama nie zwraca bezpośrednio wskaźnika utilization
-        supplyAPY: parseFloat((p.apy ?? 0).toFixed(2)),
-        borrowRate: parseFloat((p.apyBaseBorrow ?? 0).toFixed(2)),
-        borrowAPY: parseFloat((p.apyBaseBorrow ?? 0).toFixed(2)),
-        lending: "save",
-        market: p.project,
-        chain: "Solana",
-        ltv: p.ltv ? parseFloat((p.ltv * 100).toFixed(2)) : 0,
-      }));
+      return await fetchSaveData();
     } catch (err) {
       console.error("[SaveFetcher] Error mapping metrics:", err);
       return [];

@@ -115,7 +115,7 @@ export default function MainLayout({ tokens, lends, symbols, chains, collaterals
                             boxShadow: `0 4px 12px rgba(79,227,193,.25)`,
                         }}>◆</div>
                         <div style={{ lineHeight: 1 }}>
-                            <div style={{ fontWeight: 700, fontSize: 14, letterSpacing: '-0.02em' }}>Calma</div>
+                            <div style={{ fontWeight: 700, fontSize: 14, letterSpacing: '-0.02em' }}>beaver finance</div>
                             <div style={{ fontSize: 9, color: '#5C6577', fontFamily: "'Geist Mono', monospace", letterSpacing: '.08em', marginTop: 2 }}>
                                 LENDING DATA
                             </div>

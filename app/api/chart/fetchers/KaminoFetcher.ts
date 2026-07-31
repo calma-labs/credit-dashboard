@@ -100,7 +100,7 @@ export class KaminoFetcher extends BaseTokenFetcher {
       return reserves
         .map((r) => {
           // LTV (Max Loan to Value)
-          const ltvValue = parseFloat(r.maxLtv);
+          const maxLTVValue = parseFloat(r.maxLtv);
           // LLTV (Liquidation LTV / Liquidation Threshold)
           const lltvValue = parseFloat(
             r.liquidationLtv || r.liquidationThreshold || "0",
@@ -130,7 +130,7 @@ export class KaminoFetcher extends BaseTokenFetcher {
             lending: "kamino",
             market: r.marketName ?? "main",
             chain: "Solana",
-            ltv: parseFloat((ltvValue * 100).toFixed(2)),
+            maxLTV: parseFloat((maxLTVValue * 100).toFixed(2)),
             lltv: parseFloat((lltvValue * 100).toFixed(2)),
           };
         })
