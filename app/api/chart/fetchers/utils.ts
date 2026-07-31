@@ -51,8 +51,7 @@ export async function fetchProtocolTotalActiveLoansFromDefiLlama(platform: strin
             return data.currentChainTvls.borrowed;
         }
         return null;
-    } catch (err) {
-        console.warn(`[utils] Could not fetch protocol total active loans for ${platform} from DefiLlama`);
+    } catch {
         return null;
     }
 }

@@ -30,7 +30,7 @@ interface SaveReserveResult {
   reserve?: {
     pubkey?: string;
     config?: {
-      loanToValueRatio?: number;
+      maxLTV?: number;
       liquidationThreshold?: number;
     };
     liquidity?: {
@@ -51,6 +51,36 @@ async function fetchAllMarketConfigs(): Promise<SaveMarketConfig[]> {
   return res.json();
 }
 
+interface SaveReserveApiResult {
+  rates?: SaveReserveResult["rates"];
+  reserve?: Omit<NonNullable<SaveReserveResult["reserve"]>, "config"> & {
+    config?: {
+      loanToValueRatio?: number;
+      liquidationThreshold?: number;
+    };
+  };
+}
+
+function normalizeReserve(entry: SaveReserveApiResult): SaveReserveResult {
+  const config = entry.reserve?.config;
+  if (!entry.reserve || !config) {
+    return entry;
+  }
+
+  const { loanToValueRatio, liquidationThreshold } = config;
+
+  return {
+    rates: entry.rates,
+    reserve: {
+      ...entry.reserve,
+      config: {
+        maxLTV: loanToValueRatio,
+        liquidationThreshold,
+      },
+    },
+  };
+}
+
 async function fetchReserves(
   addresses: string[],
 ): Promise<SaveReserveResult[]> {
@@ -61,7 +91,7 @@ async function fetchReserves(
   });
   if (!res.ok) return [];
   const json = await res.json();
-  return json?.results ?? [];
+  return (json?.results ?? []).map(normalizeReserve);
 }
 
 function computeMetric(
@@ -90,7 +120,7 @@ function computeMetric(
     total > 0 ? parseFloat(((borrowed / total) * 100).toFixed(2)) : 0;
   const mintAddress = liq.mintPubkey ?? "";
   const config = entry.reserve?.config ?? {};
-  const maxLTV = config.loanToValueRatio ?? 0;
+  const maxLTV = config.maxLTV ?? 0;
   const lltv = config.liquidationThreshold ?? 0;
 
   const symbol = symbolFromConfig.toUpperCase();

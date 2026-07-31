@@ -38,11 +38,8 @@ export class FetchingManager {
     if (fetcher && platformKey !== "marginfi") {
       try {
         result = await fetcher.fetch(platform, asset, collateral);
-      } catch (err) {
-        console.warn(
-          `[FetchingManager] Fetcher failed for ${platform}, falling back to DefiLlama...`,
-          err,
-        );
+      } catch {
+        // fall back to DefiLlama below
       }
     }
 

@@ -189,11 +189,8 @@ export class KaminoFetcher extends BaseTokenFetcher {
             utilization: parseFloat(utilization.toFixed(2)),
           };
         });
-    } catch (err) {
-      console.warn(
-        "[KaminoFetcher] Kamino history API failed, returning snapshot only",
-        err,
-      );
+    } catch {
+      // history unavailable; snapshot-only result below
     }
 
     const totalSupply = parseFloat(bestReserve.totalSupply || "0");

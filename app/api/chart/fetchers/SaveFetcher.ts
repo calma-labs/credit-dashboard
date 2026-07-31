@@ -99,11 +99,8 @@ export class SaveFetcher extends BaseTokenFetcher {
         apy: parseFloat((p.apy ?? 0).toFixed(2)),
         utilization: null,
       }));
-    } catch (err) {
-      console.warn(
-        `[SaveFetcher] Failed to fetch history for pool ${bestPool.pool}:`,
-        err,
-      );
+    } catch {
+      // history unavailable; snapshot-only result below
     }
 
     const snapshot: TokenSnapshot = {
