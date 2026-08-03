@@ -103,7 +103,7 @@ function CollateralBadge({ symbol }: { symbol: string }) {
             fontSize: 11.5, fontWeight: 600, color,
             fontFamily: "'Geist Mono', monospace",
         }}>
-            <AssetIcon name={norm} size={18} />
+            <AssetIcon name={norm} size={18} priority="low" />
             {norm}
         </span>
     );

@@ -4,7 +4,7 @@ import { useState, useMemo } from "react";
 import { type StandarizedMetric } from "./globalComponents/globalTypes";
 import ComparedTokens from "./globalComponents/comparedTokens";
 import { FilterSelect } from "@/components/ui/filter-select";
-import { getProtocolIconUrl, getChainIconUrl } from "./globalComponents/iconUtils";
+import { getProtocolIconUrl, getProtocolIconUrls, getChainIconUrl } from "./globalComponents/iconUtils";
 
 interface Stats {
     totalTVL: string;
@@ -237,6 +237,7 @@ export default function MainLayout({ tokens, lends, symbols, chains, collaterals
                                 color: PROTOCOL_COLORS[l.toLowerCase()] ?? '#556677',
                                 swatchShape: 'square' as const,
                                 icon: getProtocolIconUrl(l),
+                                iconUrls: getProtocolIconUrls(l),
                             })),
                         ]}
                     />
