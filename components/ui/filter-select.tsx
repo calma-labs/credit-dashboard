@@ -7,7 +7,7 @@ export interface SelectOption {
     label: string;
     color?: string;
     swatchShape?: "square" | "circle";
-    icon?: string;
+    icon?: string | null;
     iconUrls?: string[];
 }
 

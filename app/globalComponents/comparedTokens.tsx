@@ -13,25 +13,25 @@ type SortKey = 'symbol' | 'lending' | 'tvl' | 'supplyAPY' | 'borrowRate' | 'util
 type SortDir = 'asc' | 'desc';
 
 const PROTOCOL_COLORS: Record<string, string> = {
-    kamino:   '#38bdf8',
-    jupiter:  '#c084fc',
-    save:     '#4ade80',
-    solend:   '#4ade80',
-    morpho:   '#fbc808',
+    kamino: '#38bdf8',
+    jupiter: '#c084fc',
+    save: '#4ade80',
+    solend: '#4ade80',
+    morpho: '#fbc808',
     marginfi: '#fb923c',
 };
 
 const TOKEN_COLORS: Record<string, string> = {
-    USDC:  '#2775CA', USDT: '#26A17B',  DAI:  '#F5AC37',
-    SOL:   '#9945FF', ETH:  '#627EEA',  BTC:  '#F7931A',
-    WETH:  '#627EEA', WBTC: '#F09242',  CBBTC:'#F7931A',
-    PYUSD: '#043CC6', USDE: '#3B3B45',  JITOSOL:'#4FD6B8',
+    USDC: '#2775CA', USDT: '#26A17B', DAI: '#F5AC37',
+    SOL: '#9945FF', ETH: '#627EEA', BTC: '#F7931A',
+    WETH: '#627EEA', WBTC: '#F09242', CBBTC: '#F7931A',
+    PYUSD: '#043CC6', USDE: '#3B3B45', JITOSOL: '#4FD6B8',
 };
 
 const CHAIN_COLORS: Record<string, string> = {
-    Solana:   '#9945FF',
+    Solana: '#9945FF',
     Ethereum: '#627EEA',
-    Base:     '#0052FF',
+    Base: '#0052FF',
 };
 
 function normalizeSymbol(s: string): string {
@@ -63,14 +63,16 @@ interface HeaderCellProps {
     sortKey: SortKey;
     sortDir: SortDir;
     onSort: (k: SortKey) => void;
+    width?: string;
 }
 
-function HeaderCell({ label, sk, align = 'left', sortKey, sortDir, onSort }: HeaderCellProps) {
+function HeaderCell({ label, sk, align = 'left', sortKey, sortDir, onSort, width }: HeaderCellProps) {
     const active = sk !== undefined && sortKey === sk;
     return (
         <th
             onClick={sk ? () => onSort(sk) : undefined}
             style={{
+                width: width,
                 padding: '12px 16px', textAlign: align,
                 fontSize: 11, fontWeight: 600,
                 color: active ? '#EEF1F6' : '#6b7688',
@@ -110,9 +112,9 @@ function CollateralBadge({ symbol }: { symbol: string }) {
 }
 
 export default function ComparedTokens({ rows }: Props) {
-    const [selected, setSelected]   = useState<string | null>(null);
-    const [sortKey, setSortKey]     = useState<SortKey>('tvl');
-    const [sortDir, setSortDir]     = useState<SortDir>('desc');
+    const [selected, setSelected] = useState<string | null>(null);
+    const [sortKey, setSortKey] = useState<SortKey>('tvl');
+    const [sortDir, setSortDir] = useState<SortDir>('desc');
 
     function handleSort(key: SortKey) {
         if (sortKey === key) {
@@ -126,14 +128,13 @@ export default function ComparedTokens({ rows }: Props) {
     const sorted = useMemo(() => {
         const dir = sortDir === 'asc' ? 1 : -1;
         return [...rows].sort((a, b) => {
-            if (sortKey === 'symbol')  return normalizeSymbol(a.symbol).localeCompare(normalizeSymbol(b.symbol)) * dir;
+            if (sortKey === 'symbol') return normalizeSymbol(a.symbol).localeCompare(normalizeSymbol(b.symbol)) * dir;
             if (sortKey === 'lending') return a.lending.localeCompare(b.lending) * dir;
-            if (sortKey === 'lltv') {
-                const aVal = a.lltv ?? 0;
-                const bVal = b.lltv ?? 0;
-                return (aVal - bVal) * dir;
-            }
-            return ((a[sortKey] as number) - (b[sortKey] as number)) * dir;
+            const aVal = a[sortKey as keyof typeof a];
+            const bVal = b[sortKey as keyof typeof b];
+            const aNum = typeof aVal === 'number' ? aVal : 0;
+            const bNum = typeof bVal === 'number' ? bVal : 0;
+            return (aNum - bNum) * dir;
         });
     }, [rows, sortKey, sortDir]);
 
@@ -150,18 +151,31 @@ export default function ComparedTokens({ rows }: Props) {
                 overflow: 'hidden', overflowX: 'auto',
                 background: 'rgba(255,255,255,.008)',
             }}>
-                <table style={{ width: '100%', minWidth: 900, borderCollapse: 'collapse' }}>
+                <style>{`
+                    .compared-tokens-table td {
+                        white-space: nowrap;
+                        overflow: hidden;
+                        text-overflow: ellipsis;
+                        height: 64px;
+                    }
+                    .compared-tokens-table td > div,
+                    .compared-tokens-table td > span {
+                        overflow: hidden;
+                        text-overflow: ellipsis;
+                    }
+                `}</style>
+                <table className="compared-tokens-table" style={{ width: '100%', minWidth: 900, borderCollapse: 'collapse', tableLayout: 'fixed' }}>
                     <thead>
                         <tr>
-                            <HeaderCell label="Asset"       sk="symbol"      {...hProps} />
-                            <HeaderCell label="Collateral"                   {...hProps} />
-                            <HeaderCell label="Protocol"    sk="lending"     {...hProps} />
-                            <HeaderCell label="Chain"                        {...hProps} />
-                            <HeaderCell label="TVL"         sk="tvl"         align="right" {...hProps} />
-                            <HeaderCell label="Supply APY"  sk="supplyAPY"   align="right" {...hProps} />
-                            <HeaderCell label="Borrow APY"  sk="borrowRate"  align="right" {...hProps} />
-                            <HeaderCell label="LLTV"        sk="lltv"        align="right" {...hProps} />
-                            <HeaderCell label="Utilization" sk="utilization" {...hProps} />
+                            <HeaderCell width="18%" label="Asset" sk="symbol"      {...hProps} />
+                            <HeaderCell width="12%" label="Collateral"                   {...hProps} />
+                            <HeaderCell width="12%" label="Protocol" sk="lending"     {...hProps} />
+                            <HeaderCell width="10%" label="Chain"                        {...hProps} />
+                            <HeaderCell width="10%" label="TVL" sk="tvl" align="right" {...hProps} />
+                            <HeaderCell width="10%" label="Supply APY" sk="supplyAPY" align="right" {...hProps} />
+                            <HeaderCell width="10%" label="Borrow APY" sk="borrowRate" align="right" {...hProps} />
+                            <HeaderCell width="8%" label="LLTV" sk="lltv" align="right" {...hProps} />
+                            <HeaderCell width="10%" label="Utilization" sk="utilization" {...hProps} />
                         </tr>
                     </thead>
                     <tbody>
@@ -172,15 +186,15 @@ export default function ComparedTokens({ rows }: Props) {
                                 </td>
                             </tr>
                         ) : sorted.map((row, i) => {
-                            const sym       = normalizeSymbol(row.symbol);
-                            const tkColor   = TOKEN_COLORS[sym] ?? '#556677';
-                            const ptColor   = protoColor(row.lending);
-                            const uColor    = utilColor(row.utilization);
+                            const sym = normalizeSymbol(row.symbol);
+                            const tkColor = TOKEN_COLORS[sym] ?? '#556677';
+                            const ptColor = protoColor(row.lending);
+                            const uColor = utilColor(row.utilization);
                             const chainColor = CHAIN_COLORS[row.chain] ?? '#556677';
 
                             return (
                                 <tr
-                                    key={i}
+                                    key={`${sym}-${row.lending}-${row.market || 'default'}-${i}`}
                                     onClick={() => setSelected(sym)}
                                     style={{ borderBottom: '1px solid #10151f', cursor: 'pointer', transition: 'background .12s' }}
                                     onMouseEnter={e => (e.currentTarget.style.background = 'rgba(79,227,193,.055)')}
@@ -189,10 +203,10 @@ export default function ComparedTokens({ rows }: Props) {
                                     <td style={{ padding: '14px 16px', verticalAlign: 'middle' }}>
                                         <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
                                             <AssetIcon name={sym} size={28} />
-                                            <div style={{ lineHeight: 1.3 }}>
-                                                <div style={{ fontWeight: 600, fontSize: 13.5, letterSpacing: '-0.01em' }}>{sym}</div>
+                                            <div style={{ lineHeight: 1.3, minWidth: 0, flex: 1 }}>
+                                                <div style={{ fontWeight: 600, fontSize: 13.5, letterSpacing: '-0.01em', overflow: 'hidden', textOverflow: 'ellipsis' }}>{sym}</div>
                                                 {row.market && (
-                                                    <div style={{ fontSize: 11, color: '#5C6577', marginTop: 1 }}>{row.market}</div>
+                                                    <div style={{ fontSize: 11, color: '#5C6577', marginTop: 1, overflow: 'hidden', textOverflow: 'ellipsis' }}>{row.market}</div>
                                                 )}
                                             </div>
                                         </div>
@@ -208,7 +222,7 @@ export default function ComparedTokens({ rows }: Props) {
                                     <td style={{ padding: '14px 16px', verticalAlign: 'middle' }}>
                                         <span style={{ display: 'inline-flex', alignItems: 'center', gap: 8 }}>
                                             <ProtocolIcon name={row.lending} size={18} />
-                                            <span style={{ fontSize: 13, color: '#c7cdd8', fontWeight: 500 }}>{row.lending}</span>
+                                            <span style={{ fontSize: 13, color: '#c7cdd8', fontWeight: 500, textTransform: 'capitalize' }}>{row.lending}</span>
                                         </span>
                                     </td>
 

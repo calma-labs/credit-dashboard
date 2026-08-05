@@ -233,7 +233,7 @@ export default function MainLayout({ tokens, lends, symbols, chains, collaterals
                             { value: 'All', label: 'All protocols' },
                             ...lends.map(l => ({
                                 value: l,
-                                label: l,
+                                label: l.charAt(0).toUpperCase() + l.slice(1),
                                 color: PROTOCOL_COLORS[l.toLowerCase()] ?? '#556677',
                                 swatchShape: 'square' as const,
                                 icon: getProtocolIconUrl(l),
@@ -252,7 +252,7 @@ export default function MainLayout({ tokens, lends, symbols, chains, collaterals
                                 label: c,
                                 color: CHAIN_COLORS[c] ?? '#556677',
                                 swatchShape: 'circle' as const,
-                                icon: getChainIconUrl(c),
+                                icon: getChainIconUrl(c) ?? undefined,
                             })),
                         ]}
                     />
