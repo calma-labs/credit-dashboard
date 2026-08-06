@@ -25,7 +25,8 @@ export async function GET(request: NextRequest) {
     try {
         const searchParams = request.nextUrl.searchParams;
         const symbol = searchParams.get('symbol')?.toUpperCase() || 'USDC';
-        const protocol = searchParams.get('protocol')?.toLowerCase() || 'kamino';
+        const protocol =
+            searchParams.get('protocol')?.toLowerCase() || 'kamino';
         const collateral = searchParams.get('collateral') || undefined;
         const debug = searchParams.get('debug') === '1';
 
@@ -36,23 +37,34 @@ export async function GET(request: NextRequest) {
             }
 
             const targetSlugs = PROTOCOL_SLUGS[protocol] ?? [protocol];
-            const poolsRes = await fetch('https://yields.llama.fi/pools', { next: { revalidate: 300 } });
+            const poolsRes = await fetch('https://yields.llama.fi/pools', {
+                next: { revalidate: 300 },
+            });
 
             if (!poolsRes.ok) {
-                return NextResponse.json({ error: 'Failed to fetch pools' }, { status: 502 });
+                return NextResponse.json(
+                    { error: 'Failed to fetch pools' },
+                    { status: 502 },
+                );
             }
 
             const poolsJson = await poolsRes.json();
             const pools: DefiLlamaPoolRoute[] = poolsJson.data ?? [];
 
-            const allForProtocol = pools.filter(p => targetSlugs.includes(p.project) && p.chain === 'Solana');
+            const allForProtocol = pools.filter(
+                (p) => targetSlugs.includes(p.project) && p.chain === 'Solana',
+            );
             const tokenPools = targetSlugs
                 .flatMap((slug) =>
                     pools.filter((p) => {
-                        if (p.project !== slug || p.chain !== 'Solana') return false;
+                        if (p.project !== slug || p.chain !== 'Solana')
+                            return false;
                         const poolSymbol = (p.symbol || '').toUpperCase();
-                        return symbolMatches(poolSymbol, symbol) && (p.tvlUsd ?? 0) > MIN_TVL;
-                    })
+                        return (
+                            symbolMatches(poolSymbol, symbol) &&
+                            (p.tvlUsd ?? 0) > MIN_TVL
+                        );
+                    }),
                 )
                 .sort((a, b) => b.tvlUsd - a.tvlUsd);
 
@@ -73,14 +85,21 @@ export async function GET(request: NextRequest) {
             });
         }
 
-        const result = await FetchingManager.fetch(protocol, symbol, collateral);
+        const result = await FetchingManager.fetch(
+            protocol,
+            symbol,
+            collateral,
+        );
 
         if (!result || (result.history.length === 0 && !result.poolId)) {
-            return NextResponse.json({ history: [], poolId: null, source: null });
+            return NextResponse.json({
+                history: [],
+                poolId: null,
+                source: null,
+            });
         }
 
         return NextResponse.json(result);
-
     } catch (err) {
         console.error('[chart route]', err);
         return NextResponse.json({ error: String(err) }, { status: 500 });

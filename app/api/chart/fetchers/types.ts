@@ -12,6 +12,7 @@ export interface TokenSnapshot {
     borrowRate: number;
     utilization: number;
     protocolTotalActiveLoans?: number | null;
+    lltv?: number | null;
 }
 
 export interface TokenDataResult {
@@ -23,6 +24,10 @@ export interface TokenDataResult {
 }
 
 export interface ITokenFetcher {
-    fetch(platform: string, asset: string, collateral?: string): Promise<TokenDataResult | null>;
+    fetch(
+        platform: string,
+        asset: string,
+        collateral?: string,
+    ): Promise<TokenDataResult | null>;
     fetchMetrics(): Promise<StandarizedMetric[]>;
 }

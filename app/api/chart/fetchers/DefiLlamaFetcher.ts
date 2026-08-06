@@ -32,12 +32,15 @@ interface DefiLlamaChartEntry {
 }
 
 export class DefiLlamaFetcher extends BaseTokenFetcher {
-
     async fetchMetrics(): Promise<StandarizedMetric[]> {
         return [];
     }
 
-    async fetch(platform: string, asset: string, collateral?: string): Promise<TokenDataResult | null> {
+    async fetch(
+        platform: string,
+        asset: string,
+        collateral?: string,
+    ): Promise<TokenDataResult | null> {
         try {
             const targetSlugs = PROTOCOL_SLUGS[platform] ?? [platform];
 
@@ -46,7 +49,11 @@ export class DefiLlamaFetcher extends BaseTokenFetcher {
             });
 
             if (!poolsRes.ok) {
-                return this.handleError(new Error('Failed to fetch pools'), platform, asset);
+                return this.handleError(
+                    new Error('Failed to fetch pools'),
+                    platform,
+                    asset,
+                );
             }
 
             const poolsJson = await poolsRes.json();
@@ -55,10 +62,14 @@ export class DefiLlamaFetcher extends BaseTokenFetcher {
             const tokenPools = targetSlugs
                 .flatMap((slug) =>
                     pools.filter((p) => {
-                        if (p.project !== slug || p.chain !== 'Solana') return false;
+                        if (p.project !== slug || p.chain !== 'Solana')
+                            return false;
                         const poolSymbol = (p.symbol || '').toUpperCase();
-                        return symbolMatches(poolSymbol, asset) && (p.tvlUsd ?? 0) > MIN_TVL;
-                    })
+                        return (
+                            symbolMatches(poolSymbol, asset) &&
+                            (p.tvlUsd ?? 0) > MIN_TVL
+                        );
+                    }),
                 )
                 .sort((a, b) => (b.tvlUsd ?? 0) - (a.tvlUsd ?? 0));
 
@@ -70,11 +81,17 @@ export class DefiLlamaFetcher extends BaseTokenFetcher {
 
             const chartRes = await fetch(
                 `https://yields.llama.fi/chart/${tokenPool.pool}`,
-                { next: { revalidate: 300 } }
+                { next: { revalidate: 300 } },
             );
 
             if (!chartRes.ok) {
-                return this.handleError(new Error('Failed to fetch chart'), platform, asset, tokenPool.project, tokenPool.pool);
+                return this.handleError(
+                    new Error('Failed to fetch chart'),
+                    platform,
+                    asset,
+                    tokenPool.project,
+                    tokenPool.pool,
+                );
             }
 
             const chartJson = await chartRes.json();
@@ -84,11 +101,21 @@ export class DefiLlamaFetcher extends BaseTokenFetcher {
             }
 
             const history = chartJson.data
-                .filter((entry: DefiLlamaChartEntry) => entry.timestamp && entry.apyBase !== undefined)
+                .filter(
+                    (entry: DefiLlamaChartEntry) =>
+                        entry.timestamp && entry.apyBase !== undefined,
+                )
                 .map((entry: DefiLlamaChartEntry) => ({
                     date: entry.timestamp,
-                    apy: parseFloat(((entry.apyBase ?? 0) + (entry.apyReward ?? 0)).toFixed(2)),
-                    utilization: entry.utilization !== undefined ? parseFloat(entry.utilization.toFixed(2)) : null,
+                    apy: parseFloat(
+                        ((entry.apyBase ?? 0) + (entry.apyReward ?? 0)).toFixed(
+                            2,
+                        ),
+                    ),
+                    utilization:
+                        entry.utilization !== undefined
+                            ? parseFloat(entry.utilization.toFixed(2))
+                            : null,
                 }));
 
             return {
@@ -98,9 +125,18 @@ export class DefiLlamaFetcher extends BaseTokenFetcher {
                 matchedSymbol: tokenPool.symbol ?? asset,
                 snapshot: {
                     tvl: Math.round(tokenPool.tvlUsd ?? 0),
-                    supplyAPY: parseFloat(((tokenPool.apyBase ?? 0) + (tokenPool.apyReward ?? 0)).toFixed(2)),
-                    borrowRate: parseFloat((tokenPool.apyBaseBorrow ?? 0).toFixed(2)),
-                    utilization: parseFloat((tokenPool.utilization ?? 0).toFixed(2)),
+                    supplyAPY: parseFloat(
+                        (
+                            (tokenPool.apyBase ?? 0) +
+                            (tokenPool.apyReward ?? 0)
+                        ).toFixed(2),
+                    ),
+                    borrowRate: parseFloat(
+                        (tokenPool.apyBaseBorrow ?? 0).toFixed(2),
+                    ),
+                    utilization: parseFloat(
+                        (tokenPool.utilization ?? 0).toFixed(2),
+                    ),
                 },
             };
         } catch (error) {
