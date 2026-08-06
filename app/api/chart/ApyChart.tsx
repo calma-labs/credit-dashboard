@@ -1,6 +1,6 @@
 'use client';
 
-import { useMemo } from 'react';
+import { useState, useMemo } from 'react';
 import { LineChart, Line, XAxis, YAxis } from 'recharts';
 import { Card, CardHeader, CardTitle, CardContent } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
@@ -26,14 +26,22 @@ interface PlatformData {
 }
 
 interface Props {
-    title: string;
-    dataKey: 'apy' | 'utilization';
     datasets: PlatformData[];
     range: '7d' | '1m' | '1y' | 'all';
     onRangeChange: (range: '7d' | '1m' | '1y' | 'all') => void;
 }
 
-const RANGE_OPTIONS = ['7d', '1m', '1y', 'all'] as const;
+const RANGE_OPTIONS = [
+    ['7d', '7D'],
+    ['1m', '30D'],
+    ['1y', '1Y'],
+    ['all', 'All'],
+] as const;
+
+const METRIC_OPTIONS = [
+    ['apy', 'Supply APY'],
+    ['utilization', 'Util'],
+] as const;
 
 const chartConfig = {
     kamino: { label: 'Kamino', color: 'var(--protocol-kamino)' },
@@ -79,7 +87,8 @@ export const ApyChart = ({
                         });
                     }
                     const existing = timeMap.get(timeKey);
-                    existing[protocol] = p[dataKey];
+                    existing[protocol] =
+                        metric === 'apy' ? p.apy : p.utilization;
                 }
             });
         });
@@ -104,14 +113,12 @@ export const ApyChart = ({
 
     const ticks = useMemo(() => {
         if (!hasData) return [];
-
         const getKey = (date: Date) => {
             if (range === 'all') return String(date.getFullYear());
             if (range === '1y')
                 return `${date.getFullYear()}-${date.getMonth()}`;
             return `${date.getFullYear()}-${date.getMonth()}-${date.getDate()}`;
         };
-
         const seen = new Set<string>();
         const unique = chartData.filter((d) => {
             const key = getKey(d.rawDate);

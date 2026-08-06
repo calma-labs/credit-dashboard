@@ -40,3 +40,9 @@ next-env.d.ts
 
 #envs
 .env.local
+
+# prettier
+.prettiercache
+
+# editor
+.vscode/

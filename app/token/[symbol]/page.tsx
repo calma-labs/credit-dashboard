@@ -1,6 +1,7 @@
-import { kaminoStandarizedTokens } from '@/app/kaminolend/kamino_lend';
+import { KaminoFetcher } from '@/app/api/chart/fetchers/KaminoFetcher';
 import { standarizedJupLendToken } from '@/app/juplend/hooks/useJupLendData';
 import { fetchSaveData } from '@/app/save/saveData';
+import { morphoStandarizedTokens } from '@/app/morpho/morpho_lend';
 import { TokenDetailView } from '@/app/api/chart/TokenChartDialog';
 import { type StandarizedMetric } from '@/app/globalComponents/globalTypes';
 
@@ -36,16 +37,21 @@ export default async function TokenPage({
 }) {
     const { symbol } = await params;
     const upperSymbol = symbol.toUpperCase();
+    const kaminoFetcher = new KaminoFetcher();
 
-    const [KAMINO_DATA, JUPLEND_DATA, SAVE_DATA] = await Promise.all([
-        kaminoStandarizedTokens(),
-        standarizedJupLendToken(),
-        fetchSaveData(),
-    ]);
+    const [KAMINO_DATA, JUPLEND_DATA, SAVE_DATA, MORPHO_DATA] =
+        await Promise.all([
+            kaminoFetcher.fetchMetrics(),
+            standarizedJupLendToken(),
+            fetchSaveData(),
+            morphoStandarizedTokens(),
+        ]);
 
     const kaminoToken = findBestMatch(KAMINO_DATA, upperSymbol);
+    // ...
     const jupToken = findBestMatch(JUPLEND_DATA, upperSymbol);
     const saveToken = findBestMatch(SAVE_DATA, upperSymbol);
+    const morphoToken = findBestMatch(MORPHO_DATA, upperSymbol);
 
     const snapshots: PlatformSnapshot[] = [
         kaminoToken ? { protocol: 'kamino', ...kaminoToken } : null,

@@ -1,6 +1,9 @@
 import { NextRequest, NextResponse } from 'next/server';
+import { fetchMorphoDebug } from '@/app/morpho/fetchMorphoHistory';
+import { FetchingManager } from './fetchers/FetchingManager';
+import { symbolMatches } from './fetchers/utils';
 
-const MIN_TVL = 10_000;
+const MIN_TVL = 1_000;
 
 const PROTOCOL_SLUGS: Record<string, string[]> = {
     save: ['save', 'solend'],
@@ -9,12 +12,13 @@ const PROTOCOL_SLUGS: Record<string, string[]> = {
     marginfi: ['marginfi'],
 };
 
-function symbolMatches(poolSymbol: string, target: string): boolean {
-    const normalized = poolSymbol
-        .replace(/\s*\(.*?\)/g, '')
-        .replace(/-[A-Z0-9]+$/, '')
-        .trim();
-    return normalized === target || normalized === `W${target}`;
+interface DefiLlamaPoolRoute {
+    pool: string;
+    project: string;
+    chain: string;
+    symbol?: string;
+    poolMeta?: string;
+    tvlUsd: number;
 }
 
 export async function GET(request: NextRequest) {
@@ -56,9 +60,43 @@ export async function GET(request: NextRequest) {
             .sort((a, b) => b.tvlUsd - a.tvlUsd);
 
         if (debug) {
+            if (protocol === 'morpho') {
+                const result = await fetchMorphoDebug();
+                return NextResponse.json(result);
+            }
+
+            const targetSlugs = PROTOCOL_SLUGS[protocol] ?? [protocol];
+            const poolsRes = await fetch('https://yields.llama.fi/pools', {
+                next: { revalidate: 300 },
+            });
+
+            if (!poolsRes.ok) {
+                return NextResponse.json(
+                    { error: 'Failed to fetch pools' },
+                    { status: 502 },
+                );
+            }
+
+            const poolsJson = await poolsRes.json();
+            const pools: DefiLlamaPoolRoute[] = poolsJson.data ?? [];
+
             const allForProtocol = pools.filter(
                 (p) => targetSlugs.includes(p.project) && p.chain === 'Solana',
             );
+            const tokenPools = targetSlugs
+                .flatMap((slug) =>
+                    pools.filter((p) => {
+                        if (p.project !== slug || p.chain !== 'Solana')
+                            return false;
+                        const poolSymbol = (p.symbol || '').toUpperCase();
+                        return (
+                            symbolMatches(poolSymbol, symbol) &&
+                            (p.tvlUsd ?? 0) > MIN_TVL
+                        );
+                    }),
+                )
+                .sort((a, b) => b.tvlUsd - a.tvlUsd);
+
             return NextResponse.json({
                 allPools: allForProtocol.map((p) => ({
                     pool: p.pool,
@@ -103,9 +141,8 @@ export async function GET(request: NextRequest) {
         if (!chartJson.data?.length) {
             return NextResponse.json({
                 history: [],
-                poolId: tokenPool.pool,
-                source: tokenPool.project,
-                matchedSymbol: tokenPool.symbol,
+                poolId: null,
+                source: null,
             });
         }
 

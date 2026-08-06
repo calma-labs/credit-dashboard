@@ -2,6 +2,8 @@ import { QueryClient } from '@tanstack/react-query';
 import { type StandarizedMetric } from '@/app/globalComponents/globalTypes';
 
 const queryClient = new QueryClient();
+const SAVE_API = 'https://api.solend.fi';
+const MIN_TVL_USD = 100_000;
 
 async function fetchMarketConfigs(): Promise<any[]> {
     const res = await fetch(

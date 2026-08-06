@@ -45,6 +45,10 @@ export interface JupLendData {
     error: string | null;
 }
 
+const LIQUIDITY_PROGRAM = new PublicKey(
+    'jupeiUmn818Jg1ekPURTpr4mFo29p46vygyykFJ3wZC',
+);
+
 function tokenReservePDA(mint: PublicKey): PublicKey {
     const enc = new TextEncoder();
     const [pda] = PublicKey.findProgramAddressSync(

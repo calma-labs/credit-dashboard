@@ -21,6 +21,8 @@ interface PlatformSnapshot {
     supplyAPY: number;
     borrowRate: number;
     utilization: number;
+    chain: string;
+    lltv?: number | null;
 }
 
 interface TokenDetailProps {
@@ -30,8 +32,93 @@ interface TokenDetailProps {
 
 const PROTOCOLS = ['kamino', 'save', 'jupiter'];
 
-const getProtocolColor = (protocol: string) =>
-    `var(--protocol-${protocol}, var(--protocol-default))`;
+const PROTOCOL_COLORS: Record<string, string> = {
+    kamino: '#38bdf8',
+    jupiter: '#c084fc',
+    save: '#4ade80',
+    morpho: '#fbc808',
+    marginfi: '#fb923c',
+};
+
+const CHAIN_COLORS: Record<string, string> = {
+    Solana: '#9945FF',
+    Ethereum: '#627EEA',
+    Base: '#0052FF',
+};
+
+function formatTVL(tvl: number): string {
+    if (tvl >= 1_000_000_000) return `$${(tvl / 1_000_000_000).toFixed(1)}B`;
+    if (tvl >= 1_000_000) return `$${(tvl / 1_000_000).toFixed(1)}M`;
+    if (tvl >= 1_000) return `$${(tvl / 1_000).toFixed(1)}K`;
+    return `$${tvl}`;
+}
+
+function StatCard({
+    label,
+    value,
+    color,
+}: {
+    label: string;
+    value: string;
+    color?: string;
+}) {
+    return (
+        <div
+            style={{
+                border: '1px solid #161d29',
+                borderRadius: 12,
+                padding: '12px 14px',
+                background: 'rgba(255,255,255,.012)',
+            }}
+        >
+            <div
+                style={{
+                    fontSize: 11,
+                    color: '#8B96A9',
+                    marginBottom: 6,
+                    fontWeight: 500,
+                }}
+            >
+                {label}
+            </div>
+            <div
+                style={{
+                    fontFamily: "'Geist Mono', monospace",
+                    fontSize: 18,
+                    fontWeight: 700,
+                    color: color ?? '#EEF1F6',
+                }}
+            >
+                {value}
+            </div>
+        </div>
+    );
+}
+
+function ChainCell({ chain }: { chain: string }) {
+    return (
+        <span
+            style={{
+                display: 'inline-flex',
+                alignItems: 'center',
+                gap: 7,
+                fontSize: 12.5,
+                color: '#8B96A9',
+            }}
+        >
+            <span
+                style={{
+                    width: 7,
+                    height: 7,
+                    borderRadius: '50%',
+                    background: CHAIN_COLORS[chain] ?? '#556',
+                    flex: 'none',
+                }}
+            />
+            {chain}
+        </span>
+    );
+}
 
 export function TokenDetailView({ symbol, snapshots }: TokenDetailProps) {
     const router = useRouter();
@@ -40,6 +127,7 @@ export function TokenDetailView({ symbol, snapshots }: TokenDetailProps) {
 
     const [datasets, setDatasets] = useState<any[]>([]);
     const [loading, setLoading] = useState(true);
+    const [activeLoans, setActiveLoans] = useState<Record<string, number>>({});
 
     const rangeParam = searchParams.get('range') as '7d' | '1m' | '1y' | 'all';
     const currentRange = ['7d', '1m', '1y', 'all'].includes(rangeParam)
@@ -63,6 +151,14 @@ export function TokenDetailView({ symbol, snapshots }: TokenDetailProps) {
                         `/api/chart?symbol=${symbol}&protocol=${protocol}`,
                     );
                     const data = await res.json();
+
+                    if (data.snapshot?.protocolTotalActiveLoans) {
+                        setActiveLoans((prev) => ({
+                            ...prev,
+                            [protocol]: data.snapshot.protocolTotalActiveLoans,
+                        }));
+                    }
+
                     return { protocol, history: data.history || [] };
                 } catch {
                     return { protocol, history: [] };
@@ -78,6 +174,17 @@ export function TokenDetailView({ symbol, snapshots }: TokenDetailProps) {
             cancelled = true;
         };
     }, [symbol]);
+
+    const bestSupplyAPY =
+        snapshots.length > 0
+            ? Math.max(...snapshots.map((s) => s.supplyAPY))
+            : null;
+    const totalTVL = snapshots.reduce((sum, s) => sum + s.tvl, 0);
+    const avgUtil =
+        snapshots.length > 0
+            ? snapshots.reduce((sum, s) => sum + s.utilization, 0) /
+              snapshots.length
+            : null;
 
     return (
         <div className='w-full min-h-screen bg-dash-bg text-white font-sans'>

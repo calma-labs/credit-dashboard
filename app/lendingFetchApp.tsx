@@ -10,7 +10,6 @@ const lendings = [
     fetchSaveData,
 ];
 
-//safe fetch
 export async function safeFetch(): Promise<StandarizedMetric[][]> {
     //mapping every token as <[][]>
     const results = await Promise.allSettled(lendings.map((f) => f()));
@@ -23,11 +22,11 @@ export async function safeFetch(): Promise<StandarizedMetric[][]> {
     });
 }
 
-//every tokens that are stored on each lendings, <StandarizedMetric[][]>
-const allResults = await safeFetch();
-const sortedResults = allResults.flat().sort((a, b) => b.tvl - a.tvl); //sorting by tvl, the highest first
+async function getSortedResults(): Promise<StandarizedMetric[]> {
+    const allResults = await safeFetch();
+    return allResults.flat().sort((a, b) => b.tvl - a.tvl);
+}
 
-//all choosen lendings
 export async function getLends(): Promise<string[]> {
     //mapping lendings
     const mint = sortedResults.map((t) => {
@@ -38,7 +37,6 @@ export async function getLends(): Promise<string[]> {
     return [...new Set(mint)];
 }
 
-//every token
 export async function getMints(): Promise<string[]> {
     //mapping symbols
 
@@ -51,7 +49,6 @@ export async function getMints(): Promise<string[]> {
     return [...new Set(mint)];
 }
 
-//this function is returning standarized tokens from each lending as one list
 export async function getStandarizedTokensList(): Promise<StandarizedMetric[]> {
     //flatting [][]
     const tokensList: StandarizedMetric[] = sortedResults;
