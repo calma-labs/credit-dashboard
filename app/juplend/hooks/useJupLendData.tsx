@@ -1,168 +1,171 @@
-import { PublicKey } from "@solana/web3.js";
-import { type StandarizedMetric } from "@/app/globalComponents/globalTypes";
+import { PublicKey } from '@solana/web3.js';
+import { type StandarizedMetric } from '@/app/globalComponents/globalTypes';
 
 export const RPC_URL = `https://mainnet.helius-rpc.com/?api-key=${process.env.NEXT_PUBLIC_HELIUS_API_KEY}`;
-const API_BASE = "https://lite-api.jup.ag/lend/v1";
+const API_BASE = 'https://lite-api.jup.ag/lend/v1';
 const LIQUIDITY_PROGRAM = new PublicKey(
-  "jupeiUmn818Jg1ekPURTpr4mFo29p46vygyykFJ3wZC",
+    'jupeiUmn818Jg1ekPURTpr4mFo29p46vygyykFJ3wZC',
 );
 
 async function getErr(error: unknown): Promise<unknown> {
-  return error;
+    return error;
 }
 
 export let new_error = false;
 
 interface ApiToken {
-  id: number;
-  address: string;
-  symbol: string;
-  decimals: number;
-  assetAddress: string;
-  asset: { symbol: string; price: string; logoUrl?: string };
-  totalAssets: string;
-  supplyRate: string;
-  rewardsRate: string;
-  totalRate: string;
+    id: number;
+    address: string;
+    symbol: string;
+    decimals: number;
+    assetAddress: string;
+    asset: { symbol: string; price: string; logoUrl?: string };
+    totalAssets: string;
+    supplyRate: string;
+    rewardsRate: string;
+    totalRate: string;
 }
 
 export interface TokenData {
-  symbol: string;
-  mint: string;
-  decimals: number;
-  apr: number;
-  supplyRate: number;
-  rewardsRate: number;
-  borrowRate: number;
-  utilization: number;
-  tvlUsd: number;
-  totalAssets: number;
+    symbol: string;
+    mint: string;
+    decimals: number;
+    apr: number;
+    supplyRate: number;
+    rewardsRate: number;
+    borrowRate: number;
+    utilization: number;
+    tvlUsd: number;
+    totalAssets: number;
 }
 
 export interface JupLendData {
-  tokens: TokenData[];
-  loading: boolean;
-  error: string | null;
+    tokens: TokenData[];
+    loading: boolean;
+    error: string | null;
 }
 
 function tokenReservePDA(mint: PublicKey): PublicKey {
-  const enc = new TextEncoder();
-  const [pda] = PublicKey.findProgramAddressSync(
-    [enc.encode("reserve"), mint.toBytes()],
-    LIQUIDITY_PROGRAM,
-  );
-  return pda;
+    const enc = new TextEncoder();
+    const [pda] = PublicKey.findProgramAddressSync(
+        [enc.encode('reserve'), mint.toBytes()],
+        LIQUIDITY_PROGRAM,
+    );
+    return pda;
 }
 
 async function fetchTokenReserve(
-  mint: PublicKey,
+    mint: PublicKey,
 ): Promise<{ borrowRate: number; utilization: number } | null> {
-  try {
-    const pda = tokenReservePDA(mint);
-    const body = JSON.stringify({
-      jsonrpc: "2.0",
-      id: 1,
-      method: "getAccountInfo",
-      params: [pda.toString(), { encoding: "base64" }],
-    });
+    try {
+        const pda = tokenReservePDA(mint);
+        const body = JSON.stringify({
+            jsonrpc: '2.0',
+            id: 1,
+            method: 'getAccountInfo',
+            params: [pda.toString(), { encoding: 'base64' }],
+        });
 
-    const res = await fetch(RPC_URL, {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body,
-    });
+        const res = await fetch(RPC_URL, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body,
+        });
 
-    if (!res.ok) {
-      new_error = true;
-      return null;
+        if (!res.ok) {
+            new_error = true;
+            return null;
+        }
+
+        const json = await res.json();
+        const b64 = json?.result?.value?.data?.[0];
+        if (!b64) {
+            new_error = true;
+            return null;
+        }
+
+        const bytes = Uint8Array.from(atob(b64), (c) => c.charCodeAt(0));
+        if (bytes.length < 78) {
+            new_error = true;
+            return null;
+        }
+
+        const view = new DataView(bytes.buffer);
+
+        const borrowRate = view.getUint16(72, true) / 100;
+        const utilization = view.getUint16(76, true) / 100;
+
+        return { borrowRate, utilization };
+    } catch (e) {
+        new_error = true;
+        return null;
     }
-
-    const json = await res.json();
-    const b64 = json?.result?.value?.data?.[0];
-    if (!b64) {
-      new_error = true;
-      return null;
-    }
-
-    const bytes = Uint8Array.from(atob(b64), (c) => c.charCodeAt(0));
-    if (bytes.length < 78) {
-      new_error = true;
-      return null;
-    }
-
-    const view = new DataView(bytes.buffer);
-
-    const borrowRate = view.getUint16(72, true) / 100;
-    const utilization = view.getUint16(76, true) / 100;
-
-    return { borrowRate, utilization };
-  } catch (e) {
-    new_error = true;
-    return null;
-  }
 }
 
 export async function useJupLendData(): Promise<JupLendData> {
-  try {
-    const res = await fetch(`${API_BASE}/earn/tokens`, {
-      cache: "no-store",
-    });
-    if (!res.ok) throw new Error(`API error: ${res.status}`);
-    const apiTokens: ApiToken[] = await res.json();
+    try {
+        const res = await fetch(`${API_BASE}/earn/tokens`, {
+            cache: 'no-store',
+        });
+        if (!res.ok) throw new Error(`API error: ${res.status}`);
+        const apiTokens: ApiToken[] = await res.json();
 
-    const tokens: TokenData[] = await Promise.all(
-      apiTokens.map(async (t) => {
-        const mint = new PublicKey(t.assetAddress);
-        const reserve = await fetchTokenReserve(mint);
+        const tokens: TokenData[] = await Promise.all(
+            apiTokens.map(async (t) => {
+                const mint = new PublicKey(t.assetAddress);
+                const reserve = await fetchTokenReserve(mint);
 
-        const price = parseFloat(t.asset.price) || 0;
-        const totalAssets = Number(t.totalAssets) / Math.pow(10, t.decimals);
+                const price = parseFloat(t.asset.price) || 0;
+                const totalAssets =
+                    Number(t.totalAssets) / Math.pow(10, t.decimals);
+
+                return {
+                    symbol: t.asset.symbol,
+                    mint: t.assetAddress,
+                    decimals: t.decimals,
+                    apr: Number(t.totalRate) / 10000,
+                    supplyRate: Number(t.supplyRate) / 100,
+                    rewardsRate: Number(t.rewardsRate) / 100,
+                    borrowRate: reserve?.borrowRate ?? 0,
+                    utilization: reserve?.utilization ?? 0,
+                    tvlUsd: totalAssets * price,
+                    totalAssets,
+                };
+            }),
+        );
 
         return {
-          symbol: t.asset.symbol,
-          mint: t.assetAddress,
-          decimals: t.decimals,
-          apr: Number(t.totalRate) / 10000,
-          supplyRate: Number(t.supplyRate) / 100,
-          rewardsRate: Number(t.rewardsRate) / 100,
-          borrowRate: reserve?.borrowRate ?? 0,
-          utilization: reserve?.utilization ?? 0,
-          tvlUsd: totalAssets * price,
-          totalAssets,
+            tokens: tokens.filter((t) => t.totalAssets > 0),
+            loading: false,
+            error: null,
         };
-      }),
-    );
-
-    return {
-      tokens: tokens.filter((t) => t.totalAssets > 0),
-      loading: false,
-      error: null,
-    };
-  } catch (e) {
-    return {
-      tokens: [],
-      loading: false,
-      error: e instanceof Error ? e.message : "Błąd pobierania danych",
-    };
-  }
+    } catch (e) {
+        return {
+            tokens: [],
+            loading: false,
+            error: e instanceof Error ? e.message : 'Błąd pobierania danych',
+        };
+    }
 }
 
 export async function standarizedJupLendToken(): Promise<StandarizedMetric[]> {
-  const JUPLEND_DATA = await useJupLendData();
+    const JUPLEND_DATA = await useJupLendData();
 
-  return JUPLEND_DATA.tokens.map((t) => {
-    const apy = Math.pow(1 + t.apr / 365, 365) - 1;
+    return JUPLEND_DATA.tokens.map((t) => {
+        const apy = Math.pow(1 + t.apr / 365, 365) - 1;
 
-    return {
-      symbol: t.symbol.toUpperCase(),
-      mintAddress: t.mint,
-      tvl: Number(t.tvlUsd),
-      supplyAPY: Number((apy * 100).toFixed(2)),
-      utilization: Number(t.utilization.toFixed(2)),
-      borrowRate: Number(t.borrowRate.toFixed(2)),
-      lending: "juplend",
-      market: "juplend",
-      borrowAPY: Number(((Math.exp(t.borrowRate / 100) - 1) * 100).toFixed(2)),
-    };
-  });
+        return {
+            symbol: t.symbol.toUpperCase(),
+            mintAddress: t.mint,
+            tvl: Number(t.tvlUsd),
+            supplyAPY: Number((apy * 100).toFixed(2)),
+            utilization: Number(t.utilization.toFixed(2)),
+            borrowRate: Number(t.borrowRate.toFixed(2)),
+            lending: 'juplend',
+            market: 'juplend',
+            borrowAPY: Number(
+                ((Math.exp(t.borrowRate / 100) - 1) * 100).toFixed(2),
+            ),
+        };
+    });
 }

@@ -7,24 +7,33 @@ import { type StandarizedMetric } from '@/app/globalComponents/globalTypes';
 export const dynamic = 'force-dynamic';
 
 export const metadata = {
-  title: 'Credit dashboard',
+    title: 'Credit dashboard',
 };
 
 type PlatformSnapshot = StandarizedMetric & { protocol: string };
 
 function normalizeSymbol(symbol: string): string {
-    return symbol
-        .toUpperCase()
-        .replace(/^W(?=[A-Z])/, '');
+    return symbol.toUpperCase().replace(/^W(?=[A-Z])/, '');
 }
 
-function findBestMatch(tokens: StandarizedMetric[], target: string): StandarizedMetric | undefined {
-    const matches = tokens.filter(t => normalizeSymbol(t.symbol) === normalizeSymbol(target));
+function findBestMatch(
+    tokens: StandarizedMetric[],
+    target: string,
+): StandarizedMetric | undefined {
+    const matches = tokens.filter(
+        (t) => normalizeSymbol(t.symbol) === normalizeSymbol(target),
+    );
     if (matches.length === 0) return undefined;
-    return matches.reduce((best, current) => (current.tvl > best.tvl ? current : best));
+    return matches.reduce((best, current) =>
+        current.tvl > best.tvl ? current : best,
+    );
 }
 
-export default async function TokenPage({ params }: { params: Promise<{ symbol: string }> }) {
+export default async function TokenPage({
+    params,
+}: {
+    params: Promise<{ symbol: string }>;
+}) {
     const { symbol } = await params;
     const upperSymbol = symbol.toUpperCase();
 
@@ -40,8 +49,8 @@ export default async function TokenPage({ params }: { params: Promise<{ symbol: 
 
     const snapshots: PlatformSnapshot[] = [
         kaminoToken ? { protocol: 'kamino', ...kaminoToken } : null,
-        jupToken    ? { protocol: 'jupiter', ...jupToken }   : null,
-        saveToken   ? { protocol: 'save', ...saveToken }     : null,
+        jupToken ? { protocol: 'jupiter', ...jupToken } : null,
+        saveToken ? { protocol: 'save', ...saveToken } : null,
     ].filter((s): s is PlatformSnapshot => s !== null);
 
     return <TokenDetailView symbol={upperSymbol} snapshots={snapshots} />;
