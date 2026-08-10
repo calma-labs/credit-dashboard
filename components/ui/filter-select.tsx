@@ -1,6 +1,6 @@
-"use client";
+'use client';
 
-import { useState, useRef, useEffect } from "react";
+import { useState, useRef, useEffect } from 'react';
 
 export interface SelectOption {
     value: string;
@@ -23,14 +23,17 @@ export function FilterSelect({ value, onChange, options }: FilterSelectProps) {
 
     useEffect(() => {
         const onMouse = (e: MouseEvent) => {
-            if (ref.current && !ref.current.contains(e.target as Node)) setOpen(false);
+            if (ref.current && !ref.current.contains(e.target as Node))
+                setOpen(false);
         };
-        const onKey = (e: KeyboardEvent) => { if (e.key === "Escape") setOpen(false); };
-        document.addEventListener("mousedown", onMouse);
-        document.addEventListener("keydown", onKey);
+        const onKey = (e: KeyboardEvent) => {
+            if (e.key === 'Escape') setOpen(false);
+        };
+        document.addEventListener('mousedown', onMouse);
+        document.addEventListener('keydown', onKey);
         return () => {
-            document.removeEventListener("mousedown", onMouse);
-            document.removeEventListener("keydown", onKey);
+            document.removeEventListener('mousedown', onMouse);
+            document.removeEventListener('keydown', onKey);
         };
     }, []);
 
@@ -68,7 +71,10 @@ export function FilterSelect({ value, onChange, options }: FilterSelectProps) {
                                 key={opt.value}
                                 opt={opt}
                                 active={active}
-                                onSelect={() => { onChange(opt.value); setOpen(false); }}
+                                onSelect={() => {
+                                    onChange(opt.value);
+                                    setOpen(false);
+                                }}
                             />
                         );
                     })}

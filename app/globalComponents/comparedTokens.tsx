@@ -1,4 +1,4 @@
-"use client";
+'use client';
 
 import { useState, useMemo } from "react";
 import { StandarizedMetric } from "./globalTypes";
@@ -9,7 +9,8 @@ interface Props {
     rows: StandarizedMetric[];
 }
 
-type SortKey = 'symbol' | 'lending' | 'tvl' | 'supplyAPY' | 'borrowRate' | 'utilization' | 'lltv';
+type SortKey =
+    'symbol' | 'lending' | 'tvl' | 'supplyAPY' | 'borrowRate' | 'utilization' | 'lltv';
 type SortDir = 'asc' | 'desc';
 
 const PROTOCOL_COLORS: Record<string, string> = {
@@ -53,7 +54,10 @@ function formatTVL(tvl: number): string {
 
 function protoColor(name: string): string {
     const key = name.toLowerCase();
-    return Object.entries(PROTOCOL_COLORS).find(([k]) => key.includes(k))?.[1] ?? '#556677';
+    return (
+        Object.entries(PROTOCOL_COLORS).find(([k]) => key.includes(k))?.[1] ??
+        '#556677'
+    );
 }
 
 interface HeaderCellProps {
@@ -77,15 +81,33 @@ function HeaderCell({ label, sk, align = 'left', sortKey, sortDir, onSort, width
                 fontSize: 11, fontWeight: 600,
                 color: active ? '#EEF1F6' : '#6b7688',
                 fontFamily: "'Geist Mono', monospace",
-                letterSpacing: '.04em', textTransform: 'uppercase',
-                cursor: sk ? 'pointer' : 'default', userSelect: 'none',
-                whiteSpace: 'nowrap', borderBottom: '1px solid #161d29',
+                letterSpacing: '.04em',
+                textTransform: 'uppercase',
+                cursor: sk ? 'pointer' : 'default',
+                userSelect: 'none',
+                whiteSpace: 'nowrap',
+                borderBottom: '1px solid #161d29',
             }}
         >
-            <span style={{ display: 'inline-flex', alignItems: 'center', gap: 5, justifyContent: align === 'right' ? 'flex-end' : 'flex-start', width: '100%' }}>
+            <span
+                style={{
+                    display: 'inline-flex',
+                    alignItems: 'center',
+                    gap: 5,
+                    justifyContent:
+                        align === 'right' ? 'flex-end' : 'flex-start',
+                    width: '100%',
+                }}
+            >
                 {label}
                 {sk && (
-                    <span style={{ fontSize: 9, opacity: active ? 1 : 0.3, color: active ? '#4FE3C1' : '#6b7688' }}>
+                    <span
+                        style={{
+                            fontSize: 9,
+                            opacity: active ? 1 : 0.3,
+                            color: active ? '#4FE3C1' : '#6b7688',
+                        }}
+                    >
                         {active ? (sortDir === 'asc' ? '▲' : '▼') : '▼'}
                     </span>
                 )}
@@ -118,7 +140,7 @@ export default function ComparedTokens({ rows }: Props) {
 
     function handleSort(key: SortKey) {
         if (sortKey === key) {
-            setSortDir(d => d === 'asc' ? 'desc' : 'asc');
+            setSortDir((d) => (d === 'asc' ? 'desc' : 'asc'));
         } else {
             setSortKey(key);
             setSortDir(key === 'symbol' || key === 'lending' ? 'asc' : 'desc');
@@ -143,7 +165,10 @@ export default function ComparedTokens({ rows }: Props) {
     return (
         <>
             {selected && (
-                <TokenDrawer symbol={selected} onClose={() => setSelected(null)} />
+                <TokenDrawer
+                    symbol={selected}
+                    onClose={() => setSelected(null)}
+                />
             )}
 
             <div style={{
@@ -181,11 +206,19 @@ export default function ComparedTokens({ rows }: Props) {
                     <tbody>
                         {sorted.length === 0 ? (
                             <tr>
-                                <td colSpan={9} style={{ padding: '56px 16px', textAlign: 'center', color: '#5C6577', fontSize: 14 }}>
+                                <td
+                                    colSpan={9}
+                                    style={{
+                                        padding: '56px 16px',
+                                        textAlign: 'center',
+                                        color: '#5C6577',
+                                        fontSize: 14,
+                                    }}
+                                >
                                     No markets match your filters.
                                 </td>
                             </tr>
-                        ) : sorted.map((row, i) => {
+                        ) : (sorted.map((row, i) => {
                             const sym = normalizeSymbol(row.symbol);
                             const tkColor = TOKEN_COLORS[sym] ?? '#556677';
                             const ptColor = protoColor(row.lending);
@@ -261,7 +294,8 @@ export default function ComparedTokens({ rows }: Props) {
                                     </td>
                                 </tr>
                             );
-                        })}
+                        })
+                        )}
                     </tbody>
                 </table>
             </div>

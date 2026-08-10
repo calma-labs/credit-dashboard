@@ -25,26 +25,35 @@ export class FetchingManager {
         return fetcher;
     }
 
-    static async fetch(platform: string, asset: string, collateral?: string): Promise<TokenDataResult | null> {
+    static async fetch(
+        platform: string,
+        asset: string,
+        collateral?: string,
+    ): Promise<TokenDataResult | null> {
         const platformKey = platform.toLowerCase();
         const fetcher = this.fetchers[platformKey];
-        
+
         let result: TokenDataResult | null = null;
 
         if (fetcher && platformKey !== 'marginfi') {
             try {
                 result = await fetcher.fetch(platform, asset, collateral);
-            } catch (err) {
-                console.warn(`[FetchingManager] Fetcher failed for ${platform}, falling back to DefiLlama...`, err);
+            } catch {
+                // fall back to DefiLlama below
             }
         }
 
         if (!result) {
-            result = await this.fallbackFetcher.fetch(platform, asset, collateral);
+            result = await this.fallbackFetcher.fetch(
+                platform,
+                asset,
+                collateral,
+            );
         }
 
         if (result && result.snapshot) {
-            const totalActiveLoans = await fetchProtocolTotalActiveLoansFromDefiLlama(platform);
+            const totalActiveLoans =
+                await fetchProtocolTotalActiveLoansFromDefiLlama(platform);
             result.snapshot.protocolTotalActiveLoans = totalActiveLoans;
         }
 
@@ -52,12 +61,14 @@ export class FetchingManager {
     }
 
     static getAllFetchers(): ITokenFetcher[] {
-        return [
+        const fetchers = [
             this.fetchers['kamino'],
             this.fetchers['jupiter'],
             this.fetchers['save'],
             this.fetchers['morpho'],
             this.fetchers['marginfi'],
         ];
+
+        return fetchers;
     }
 }

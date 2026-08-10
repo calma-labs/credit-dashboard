@@ -365,14 +365,17 @@ export function AssetIcon({
 
     fetchAssetImage(name).then((image) => {
       if (cancelled) return;
+      const hasHeuristic = heuristics.length > 0;
       const list = [
         staticIcon,
         image,
-        fallbackLlamaPng,
-        fallbackLlamaJpg,
-        fallbackLlamaRawPng,
-        fallbackLlamaRawJpg,
         ...heuristics,
+        ...(hasHeuristic ? [] : [
+          fallbackLlamaPng,
+          fallbackLlamaJpg,
+          fallbackLlamaRawPng,
+          fallbackLlamaRawJpg,
+        ]),
       ].filter((u): u is string => Boolean(u));
       setUrls(Array.from(new Set(list)));
       setLoading(false);
