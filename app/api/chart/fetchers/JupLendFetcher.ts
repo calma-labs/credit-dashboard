@@ -4,6 +4,7 @@ import { type StandarizedMetric } from '../../../globalComponents/globalTypes';
 import { standarizedJupLendToken } from '../../../juplend/hooks/useJupLendData';
 
 export class JupLendFetcher extends BaseTokenFetcher {
+
     async fetchMetrics(): Promise<StandarizedMetric[]> {
         try {
             return await standarizedJupLendToken();
@@ -13,11 +14,7 @@ export class JupLendFetcher extends BaseTokenFetcher {
         }
     }
 
-    async fetch(
-        platform: string,
-        asset: string,
-        collateral?: string,
-    ): Promise<TokenDataResult | null> {
+    async fetch(platform: string, asset: string, collateral?: string): Promise<TokenDataResult | null> {
         throw new Error('JupLend has no native history API');
     }
 }

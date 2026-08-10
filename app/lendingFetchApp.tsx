@@ -1,63 +1,58 @@
-import {
-    type ComparedMetric,
-    StandarizedMetric,
-} from './globalComponents/globalTypes';
+import { type ComparedMetric, StandarizedMetric } from "./globalComponents/globalTypes";
 import { FetchingManager } from './api/chart/fetchers/FetchingManager';
 
 function normalizeSymbol(symbol: string): string {
-    return symbol.toUpperCase();
+  return symbol.toUpperCase();
 }
 
 export async function safeFetch(): Promise<StandarizedMetric[][]> {
-    const fetchers = FetchingManager.getAllFetchers();
-    const results = await Promise.allSettled(
-        fetchers.map((f) => f.fetchMetrics()),
-    );
+  const fetchers = FetchingManager.getAllFetchers();
+  const results = await Promise.allSettled(fetchers.map((f) => f.fetchMetrics()));
 
-    return results.map((result, i) => {
-        if (result.status === 'fulfilled') {
-            return result.value;
-        }
-        console.error(`[safeFetch] lending #${i} failed:`, result.reason);
-        return [];
-    });
+  return results.map((result, i) => {
+    if (result.status === "fulfilled") {
+      return result.value;
+    }
+    console.error(`[safeFetch] lending #${i} failed:`, result.reason);
+    return [];
+  });
 }
 
 async function getSortedResults(): Promise<StandarizedMetric[]> {
-    const allResults = await safeFetch();
-    return allResults.flat().sort((a, b) => b.tvl - a.tvl);
+  const allResults = await safeFetch();
+  return allResults.flat().sort((a, b) => b.tvl - a.tvl);
 }
 
 export async function getLends(): Promise<string[]> {
-    const sortedResults = await getSortedResults();
+  const sortedResults = await getSortedResults();
 
-    const mint = sortedResults.map((t) => {
-        return t.lending;
-    });
+  const mint = sortedResults.map((t) => {
+    return t.lending;
+  });
 
-    return [...new Set(mint)];
+  return [...new Set(mint)];
 }
 
 export async function getMints(): Promise<string[]> {
-    const sortedResults = await getSortedResults();
+  const sortedResults = await getSortedResults();
 
-    const mint = sortedResults.map((t) => {
-        return t.mintAddress;
-    });
+  const mint = sortedResults.map((t) => {
+    return t.mintAddress;
+  });
 
-    return [...new Set(mint)];
+  return [...new Set(mint)];
 }
 
 export async function getSymbols(): Promise<string[]> {
-    const sortedResults = await getSortedResults();
+  const sortedResults = await getSortedResults();
 
-    const symbols = sortedResults.map((t) => normalizeSymbol(t.symbol));
+  const symbols = sortedResults.map((t) => normalizeSymbol(t.symbol));
 
-    return [...new Set(symbols)];
+  return [...new Set(symbols)];
 }
 
 export async function getStandarizedTokensList(): Promise<StandarizedMetric[]> {
-    const sortedResults = await getSortedResults();
+  const sortedResults = await getSortedResults();
 
-    return sortedResults;
+  return sortedResults;
 }

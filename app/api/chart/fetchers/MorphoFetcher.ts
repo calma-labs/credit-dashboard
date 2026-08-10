@@ -23,10 +23,7 @@ export class MorphoFetcher extends BaseTokenFetcher {
         }
     }
 
-    private async fetchMorphoMarkets(): Promise<{
-        res: Response;
-        json: MorphoMarketsResponse;
-    }> {
+    private async fetchMorphoMarkets(): Promise<{ res: Response; json: MorphoMarketsResponse }> {
         const query = `
             query {
                 markets(
@@ -58,60 +55,30 @@ export class MorphoFetcher extends BaseTokenFetcher {
         return { res, json };
     }
 
-    private buildSnapshot(
-        state: MorphoMarketDetailState | null | undefined,
-        lltv?: string | null,
-    ) {
+    private buildSnapshot(state: MorphoMarketDetailState | null | undefined) {
         if (!state) return null;
 
         return {
-            tvl:
-                state.supplyAssetsUsd !== null &&
-                state.supplyAssetsUsd !== undefined
-                    ? Math.round(state.supplyAssetsUsd)
-                    : 0,
-            supplyAPY:
-                state.supplyApy !== null && state.supplyApy !== undefined
-                    ? parseFloat((state.supplyApy * 100).toFixed(2))
-                    : 0,
-            borrowRate:
-                state.borrowApy !== null && state.borrowApy !== undefined
-                    ? parseFloat((state.borrowApy * 100).toFixed(2))
-                    : 0,
-            utilization:
-                state.utilization !== null && state.utilization !== undefined
-                    ? parseFloat((state.utilization * 100).toFixed(2))
-                    : 0,
-            lltv: lltv ? parseFloat(lltv) * 100 : null,
+            tvl: state.supplyAssetsUsd !== null && state.supplyAssetsUsd !== undefined ? Math.round(state.supplyAssetsUsd) : 0,
+            supplyAPY: state.supplyApy !== null && state.supplyApy !== undefined ? parseFloat((state.supplyApy * 100).toFixed(2)) : 0,
+            borrowRate: state.borrowApy !== null && state.borrowApy !== undefined ? parseFloat((state.borrowApy * 100).toFixed(2)) : 0,
+            utilization: state.utilization !== null && state.utilization !== undefined ? parseFloat((state.utilization * 100).toFixed(2)) : 0,
         };
     }
 
-    async fetch(
-        platform: string,
-        asset: string,
-        collateral?: string,
-    ): Promise<TokenDataResult | null> {
+    async fetch(platform: string, asset: string, collateral?: string): Promise<TokenDataResult | null> {
         try {
-            const { res: marketsRes, json: marketsJson } =
-                await this.fetchMorphoMarkets();
+            const { res: marketsRes, json: marketsJson } = await this.fetchMorphoMarkets();
 
             if (!marketsRes.ok) {
-                return this.handleError(
-                    new Error('Failed to fetch morpho markets'),
-                    platform,
-                    asset,
-                );
+                return this.handleError(new Error('Failed to fetch morpho markets'), platform, asset);
             }
 
-            const markets: MorphoMarketSummary[] =
-                marketsJson.data?.markets?.items ?? [];
+            const markets: MorphoMarketSummary[] = marketsJson.data?.markets?.items ?? [];
 
             const candidates = markets.filter((m) => {
                 const marketSymbol = m.loanAsset.symbol.toUpperCase();
-                return (
-                    (marketSymbol === asset || marketSymbol === `W${asset}`) &&
-                    m.state.supplyAssetsUsd > MIN_TVL
-                );
+                return (marketSymbol === asset || marketSymbol === `W${asset}`) && m.state.supplyAssetsUsd > MIN_TVL;
             });
 
             if (candidates.length === 0) {
@@ -119,7 +86,7 @@ export class MorphoFetcher extends BaseTokenFetcher {
             }
 
             const best = candidates.reduce((a, b) =>
-                b.state.supplyAssetsUsd > a.state.supplyAssetsUsd ? b : a,
+                b.state.supplyAssetsUsd > a.state.supplyAssetsUsd ? b : a
             );
 
             const now = Math.floor(Date.now() / 1000);
@@ -162,20 +129,13 @@ export class MorphoFetcher extends BaseTokenFetcher {
             });
 
             if (!historyRes.ok) {
-                return this.handleError(
-                    new Error('Failed to fetch morpho history'),
-                    platform,
-                    asset,
-                    'morpho',
-                    best.marketId,
-                );
+                return this.handleError(new Error('Failed to fetch morpho history'), platform, asset, 'morpho', best.marketId);
             }
 
             const historyJson: MorphoHistoryResponse = await historyRes.json();
             const marketData = historyJson.data?.marketById;
 
-            const points: TimeseriesPoint[] =
-                marketData?.historicalState?.supplyApy ?? [];
+            const points: TimeseriesPoint[] = marketData?.historicalState?.supplyApy ?? [];
 
             const history = points.map((p) => ({
                 date: new Date(p.x * 1000).toISOString(),
@@ -188,7 +148,7 @@ export class MorphoFetcher extends BaseTokenFetcher {
                 poolId: best.marketId,
                 source: 'morpho',
                 matchedSymbol: asset,
-                snapshot: this.buildSnapshot(marketData?.state, best.lltv),
+                snapshot: this.buildSnapshot(marketData?.state),
             };
         } catch (error) {
             return this.handleError(error, platform, asset);
