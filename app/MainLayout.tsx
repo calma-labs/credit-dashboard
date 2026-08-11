@@ -171,23 +171,18 @@ export default function MainLayout({
                             gap: 8,
                         }}
                     >
-                        <div
+                        <img
+                            src='/beaver-finance.png'
+                            alt='Beaver Finance'
+                            width={34}
+                            height={34}
                             style={{
-                                width: 26,
-                                height: 26,
-                                borderRadius: 7,
-                                background: `linear-gradient(135deg,${AC},#2f8f7c)`,
-                                display: 'flex',
-                                alignItems: 'center',
-                                justifyContent: 'center',
-                                fontWeight: 800,
-                                color: '#04140f',
-                                fontSize: 13,
-                                boxShadow: `0 4px 12px rgba(79,227,193,.25)`,
+                                width: 34,
+                                height: 34,
+                                objectFit: 'contain',
+                                display: 'block',
                             }}
-                        >
-                            ◆
-                        </div>
+                        />
                         <div style={{ lineHeight: 1 }}>
                             <div
                                 style={{
