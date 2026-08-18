@@ -1,4 +1,5 @@
 import { NextRequest, NextResponse } from "next/server";
+import { sanitizeImageUrl } from "@/app/icons/iconConstants";
 
 const DEFILLAMA_PROTOCOLS_URL = "https://api.llama.fi/protocols";
 
@@ -27,9 +28,10 @@ async function loadProtocolIndex(): Promise<Map<string, string>> {
       .then((protocols) => {
         const index = new Map<string, string>();
         for (const p of protocols) {
-          if (!p.logo) continue;
-          if (p.slug) index.set(p.slug.toLowerCase(), p.logo);
-          if (p.name) index.set(p.name.toLowerCase(), p.logo);
+          const safeLogo = sanitizeImageUrl(p.logo);
+          if (!safeLogo) continue;
+          if (p.slug) index.set(p.slug.toLowerCase(), safeLogo);
+          if (p.name) index.set(p.name.toLowerCase(), safeLogo);
         }
         return index;
       })
