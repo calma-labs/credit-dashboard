@@ -3,13 +3,20 @@
 import { useState, useMemo } from 'react';
 import { StandarizedMetric } from './globalTypes';
 import TokenDrawer from './TokenDrawer';
+import { ProtocolIcon, ChainIcon, AssetIcon } from './iconUtils';
 
 interface Props {
     rows: StandarizedMetric[];
 }
 
 type SortKey =
-    'symbol' | 'lending' | 'tvl' | 'supplyAPY' | 'borrowRate' | 'utilization';
+    | 'symbol'
+    | 'lending'
+    | 'tvl'
+    | 'supplyAPY'
+    | 'borrowRate'
+    | 'utilization'
+    | 'lltv';
 type SortDir = 'asc' | 'desc';
 
 const PROTOCOL_COLORS: Record<string, string> = {
@@ -74,6 +81,7 @@ interface HeaderCellProps {
     sortKey: SortKey;
     sortDir: SortDir;
     onSort: (k: SortKey) => void;
+    width?: string;
 }
 
 function HeaderCell({
@@ -83,12 +91,14 @@ function HeaderCell({
     sortKey,
     sortDir,
     onSort,
+    width,
 }: HeaderCellProps) {
     const active = sk !== undefined && sortKey === sk;
     return (
         <th
             onClick={sk ? () => onSort(sk) : undefined}
             style={{
+                width: width,
                 padding: '12px 16px',
                 textAlign: align,
                 fontSize: 11,
@@ -138,17 +148,18 @@ function CollateralBadge({ symbol }: { symbol: string }) {
             style={{
                 display: 'inline-flex',
                 alignItems: 'center',
-                gap: 5,
+                gap: 6,
                 background: `${color}18`,
                 border: `1px solid ${color}44`,
-                borderRadius: 6,
-                padding: '2px 7px',
+                borderRadius: 12,
+                padding: '2px 8px 2px 2px',
                 fontSize: 11.5,
                 fontWeight: 600,
                 color,
                 fontFamily: "'Geist Mono', monospace",
             }}
         >
+            <AssetIcon name={norm} size={18} priority='low' />
             {norm}
         </span>
     );
@@ -179,7 +190,11 @@ export default function ComparedTokens({ rows }: Props) {
                 );
             if (sortKey === 'lending')
                 return a.lending.localeCompare(b.lending) * dir;
-            return ((a[sortKey] as number) - (b[sortKey] as number)) * dir;
+            const aVal = a[sortKey as keyof typeof a];
+            const bVal = b[sortKey as keyof typeof b];
+            const aNum = typeof aVal === 'number' ? aVal : 0;
+            const bNum = typeof bVal === 'number' ? bVal : 0;
+            return (aNum - bNum) * dir;
         });
     }, [rows, sortKey, sortDir]);
 
@@ -203,47 +218,78 @@ export default function ComparedTokens({ rows }: Props) {
                     background: 'rgba(255,255,255,.008)',
                 }}
             >
+                <style>{`
+                    .compared-tokens-table td {
+                        white-space: nowrap;
+                        overflow: hidden;
+                        text-overflow: ellipsis;
+                        height: 64px;
+                    }
+                    .compared-tokens-table td > div,
+                    .compared-tokens-table td > span {
+                        overflow: hidden;
+                        text-overflow: ellipsis;
+                    }
+                `}</style>
                 <table
+                    className='compared-tokens-table'
                     style={{
                         width: '100%',
                         minWidth: 900,
                         borderCollapse: 'collapse',
+                        tableLayout: 'fixed',
                     }}
                 >
                     <thead>
                         <tr>
-                            <HeaderCell label='Asset' sk='symbol' {...hProps} />
-                            <HeaderCell label='Collateral' {...hProps} />
                             <HeaderCell
+                                width='18%'
+                                label='Asset'
+                                sk='symbol'
+                                {...hProps}
+                            />
+                            <HeaderCell
+                                width='12%'
+                                label='Collateral'
+                                {...hProps}
+                            />
+                            <HeaderCell
+                                width='12%'
                                 label='Protocol'
                                 sk='lending'
                                 {...hProps}
                             />
-                            <HeaderCell label='Chain' {...hProps} />
+                            <HeaderCell width='10%' label='Chain' {...hProps} />
                             <HeaderCell
+                                width='10%'
                                 label='TVL'
                                 sk='tvl'
                                 align='right'
                                 {...hProps}
                             />
                             <HeaderCell
+                                width='10%'
                                 label='Supply APY'
                                 sk='supplyAPY'
                                 align='right'
                                 {...hProps}
                             />
                             <HeaderCell
+                                width='10%'
                                 label='Borrow APY'
                                 sk='borrowRate'
                                 align='right'
                                 {...hProps}
                             />
                             <HeaderCell
-                                label='Max LTV'
+                                width='8%'
+                                label='LLTV'
+                                sk='lltv'
                                 align='right'
                                 {...hProps}
                             />
                             <HeaderCell
+                                width='10%'
                                 label='Utilization'
                                 sk='utilization'
                                 {...hProps}
@@ -276,7 +322,7 @@ export default function ComparedTokens({ rows }: Props) {
 
                                 return (
                                     <tr
-                                        key={i}
+                                        key={`${sym}-${row.lending}-${row.market || 'default'}-${i}`}
                                         onClick={() => setSelected(sym)}
                                         style={{
                                             borderBottom: '1px solid #10151f',
@@ -305,30 +351,16 @@ export default function ComparedTokens({ rows }: Props) {
                                                     gap: 10,
                                                 }}
                                             >
-                                                <span
-                                                    style={{
-                                                        width: 28,
-                                                        height: 28,
-                                                        borderRadius: '50%',
-                                                        background: tkColor,
-                                                        flex: 'none',
-                                                        display: 'inline-flex',
-                                                        alignItems: 'center',
-                                                        justifyContent:
-                                                            'center',
-                                                        fontSize: 11,
-                                                        fontWeight: 700,
-                                                        color: '#fff',
-                                                        fontFamily:
-                                                            "'Geist Mono', monospace",
-                                                        boxShadow:
-                                                            '0 1px 4px rgba(0,0,0,.4)',
-                                                    }}
-                                                >
-                                                    {sym[0]}
-                                                </span>
+                                                <AssetIcon
+                                                    name={sym}
+                                                    size={28}
+                                                />
                                                 <div
-                                                    style={{ lineHeight: 1.3 }}
+                                                    style={{
+                                                        lineHeight: 1.3,
+                                                        minWidth: 0,
+                                                        flex: 1,
+                                                    }}
                                                 >
                                                     <div
                                                         style={{
@@ -336,6 +368,9 @@ export default function ComparedTokens({ rows }: Props) {
                                                             fontSize: 13.5,
                                                             letterSpacing:
                                                                 '-0.01em',
+                                                            overflow: 'hidden',
+                                                            textOverflow:
+                                                                'ellipsis',
                                                         }}
                                                     >
                                                         {sym}
@@ -346,6 +381,10 @@ export default function ComparedTokens({ rows }: Props) {
                                                                 fontSize: 11,
                                                                 color: '#5C6577',
                                                                 marginTop: 1,
+                                                                overflow:
+                                                                    'hidden',
+                                                                textOverflow:
+                                                                    'ellipsis',
                                                             }}
                                                         >
                                                             {row.market}
@@ -361,13 +400,9 @@ export default function ComparedTokens({ rows }: Props) {
                                                 verticalAlign: 'middle',
                                             }}
                                         >
-                                            {row.collateral ||
-                                            row.lending === 'kamino' ? (
+                                            {row.collateral ? (
                                                 <CollateralBadge
-                                                    symbol={
-                                                        row.collateral ||
-                                                        row.symbol
-                                                    }
+                                                    symbol={row.collateral}
                                                 />
                                             ) : (
                                                 <span
@@ -394,29 +429,17 @@ export default function ComparedTokens({ rows }: Props) {
                                                     gap: 8,
                                                 }}
                                             >
-                                                <span
-                                                    style={{
-                                                        width: 18,
-                                                        height: 18,
-                                                        borderRadius: 5,
-                                                        background: ptColor,
-                                                        flex: 'none',
-                                                        display: 'inline-flex',
-                                                        alignItems: 'center',
-                                                        justifyContent:
-                                                            'center',
-                                                        fontSize: 10,
-                                                        fontWeight: 800,
-                                                        color: '#08120c',
-                                                    }}
-                                                >
-                                                    {row.lending[0].toUpperCase()}
-                                                </span>
+                                                <ProtocolIcon
+                                                    name={row.lending}
+                                                    size={18}
+                                                />
                                                 <span
                                                     style={{
                                                         fontSize: 13,
                                                         color: '#c7cdd8',
                                                         fontWeight: 500,
+                                                        textTransform:
+                                                            'capitalize',
                                                     }}
                                                 >
                                                     {row.lending}
@@ -439,14 +462,9 @@ export default function ComparedTokens({ rows }: Props) {
                                                     color: '#8B96A9',
                                                 }}
                                             >
-                                                <span
-                                                    style={{
-                                                        width: 7,
-                                                        height: 7,
-                                                        borderRadius: '50%',
-                                                        flex: 'none',
-                                                        background: chainColor,
-                                                    }}
+                                                <ChainIcon
+                                                    name={row.chain}
+                                                    size={14}
                                                 />
                                                 {row.chain}
                                             </span>
@@ -507,8 +525,8 @@ export default function ComparedTokens({ rows }: Props) {
                                                 color: '#8B96A9',
                                             }}
                                         >
-                                            {row.maxLTV != null ? (
-                                                `${row.maxLTV}%`
+                                            {row.lltv != null ? (
+                                                `${row.lltv}%`
                                             ) : (
                                                 <span
                                                     style={{ color: '#3a4251' }}

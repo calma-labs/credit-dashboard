@@ -2,6 +2,7 @@
 
 import { useState, useEffect } from 'react';
 import { ApyChart } from '@/app/api/chart/ApyChart';
+import { ProtocolIcon, ChainIcon } from './iconUtils';
 
 const PROTOCOLS = ['kamino', 'save', 'jupiter', 'morpho'];
 const AC = '#4FE3C1';
@@ -351,15 +352,10 @@ export default function TokenDrawer({ symbol, onClose }: TokenDrawerProps) {
                                             >
                                                 <td className='p-3 align-middle'>
                                                     <span className='inline-flex items-center gap-2'>
-                                                        <span
-                                                            className='w-2 h-2 rounded-sm flex-none'
-                                                            style={{
-                                                                background:
-                                                                    PROTOCOL_COLORS[
-                                                                        s
-                                                                            .protocol
-                                                                    ] ?? '#556',
-                                                            }}
+                                                        <ProtocolIcon
+                                                            name={s.protocol}
+                                                            size={16}
+                                                            className='w-4 h-4 rounded-sm flex-none'
                                                         />
                                                         <span className='font-semibold text-[13px] capitalize text-dash-text'>
                                                             {s.protocol}
@@ -368,14 +364,10 @@ export default function TokenDrawer({ symbol, onClose }: TokenDrawerProps) {
                                                 </td>
                                                 <td className='p-3 align-middle'>
                                                     <span className='inline-flex items-center gap-1.5 text-xs text-dash-header'>
-                                                        <span
-                                                            className='w-1.5 h-1.5 rounded-full flex-none'
-                                                            style={{
-                                                                background:
-                                                                    CHAIN_COLORS[
-                                                                        s.chain
-                                                                    ] ?? '#556',
-                                                            }}
+                                                        <ChainIcon
+                                                            name={s.chain}
+                                                            size={14}
+                                                            className='w-3.5 h-3.5 rounded-full flex-none'
                                                         />
                                                         {s.chain}
                                                     </span>

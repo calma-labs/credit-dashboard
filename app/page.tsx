@@ -1,8 +1,4 @@
-import {
-    getLends,
-    getSymbols,
-    getStandarizedTokensList,
-} from './lendingFetchApp';
+import { getAllData } from './lendingFetchApp';
 import { type StandarizedMetric } from './globalComponents/globalTypes';
 import MainLayout from './MainLayout';
 import './globalStyles/cardStyle.css';
@@ -26,11 +22,7 @@ function formatTVL(n: number): string {
 }
 
 export default async function App() {
-    const [lends, tokenSymbols, tokensList] = await Promise.all([
-        getLends(),
-        getSymbols(),
-        getStandarizedTokensList(),
-    ]);
+    const { tokensList, lends, symbols: tokenSymbols } = await getAllData();
 
     const chains = [...new Set(tokensList.map((t) => t.chain).filter(Boolean))];
     const collaterals = [

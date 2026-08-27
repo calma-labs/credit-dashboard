@@ -1,7 +1,4 @@
-import {
-    type ComparedMetric,
-    StandarizedMetric,
-} from './globalComponents/globalTypes';
+import { StandarizedMetric } from './globalComponents/globalTypes';
 import { FetchingManager } from './api/chart/fetchers/FetchingManager';
 
 function normalizeSymbol(symbol: string): string {
@@ -26,6 +23,21 @@ export async function safeFetch(): Promise<StandarizedMetric[][]> {
 async function getSortedResults(): Promise<StandarizedMetric[]> {
     const allResults = await safeFetch();
     return allResults.flat().sort((a, b) => b.tvl - a.tvl);
+}
+
+export async function getAllData(): Promise<{
+    tokensList: StandarizedMetric[];
+    lends: string[];
+    symbols: string[];
+}> {
+    const tokensList = await getSortedResults();
+
+    const lends = [...new Set(tokensList.map((t) => t.lending))];
+    const symbols = [
+        ...new Set(tokensList.map((t) => normalizeSymbol(t.symbol))),
+    ];
+
+    return { tokensList, lends, symbols };
 }
 
 export async function getLends(): Promise<string[]> {

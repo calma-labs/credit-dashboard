@@ -4,6 +4,11 @@ import { useState, useMemo } from 'react';
 import { type StandarizedMetric } from './globalComponents/globalTypes';
 import ComparedTokens from './globalComponents/comparedTokens';
 import { FilterSelect } from '@/components/ui/filter-select';
+import {
+    getProtocolIconUrl,
+    getProtocolIconUrls,
+    getChainIconUrl,
+} from './globalComponents/iconUtils';
 
 interface Stats {
     totalTVL: string;
@@ -446,11 +451,13 @@ export default function MainLayout({
                             { value: 'All', label: 'All protocols' },
                             ...lends.map((l) => ({
                                 value: l,
-                                label: l,
+                                label: l.charAt(0).toUpperCase() + l.slice(1),
                                 color:
                                     PROTOCOL_COLORS[l.toLowerCase()] ??
                                     '#556677',
                                 swatchShape: 'square' as const,
+                                icon: getProtocolIconUrl(l),
+                                iconUrls: getProtocolIconUrls(l),
                             })),
                         ]}
                     />
@@ -465,6 +472,7 @@ export default function MainLayout({
                                 label: c,
                                 color: CHAIN_COLORS[c] ?? '#556677',
                                 swatchShape: 'circle' as const,
+                                icon: getChainIconUrl(c) ?? undefined,
                             })),
                         ]}
                     />
