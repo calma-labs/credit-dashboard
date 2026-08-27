@@ -1,10 +1,14 @@
 'use client';
 
-import { useState, useMemo } from "react";
-import { type StandarizedMetric } from "./globalComponents/globalTypes";
-import ComparedTokens from "./globalComponents/comparedTokens";
-import { FilterSelect } from "@/components/ui/filter-select";
-import { getProtocolIconUrl, getProtocolIconUrls, getChainIconUrl } from "./globalComponents/iconUtils";
+import { useState, useMemo } from 'react';
+import { type StandarizedMetric } from './globalComponents/globalTypes';
+import ComparedTokens from './globalComponents/comparedTokens';
+import { FilterSelect } from '@/components/ui/filter-select';
+import {
+    getProtocolIconUrl,
+    getProtocolIconUrls,
+    getChainIconUrl,
+} from './globalComponents/iconUtils';
 
 interface Stats {
     totalTVL: string;
@@ -453,7 +457,9 @@ export default function MainLayout({
                             ...lends.map((l) => ({
                                 value: l,
                                 label: l.charAt(0).toUpperCase() + l.slice(1),
-                                color: PROTOCOL_COLORS[l.toLowerCase()] ?? '#556677',
+                                color:
+                                    PROTOCOL_COLORS[l.toLowerCase()] ??
+                                    '#556677',
                                 swatchShape: 'square' as const,
                                 icon: getProtocolIconUrl(l),
                                 iconUrls: getProtocolIconUrls(l),

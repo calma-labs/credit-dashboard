@@ -1,16 +1,22 @@
 'use client';
 
-import { useState, useMemo } from "react";
-import { StandarizedMetric } from "./globalTypes";
-import TokenDrawer from "./TokenDrawer";
-import { ProtocolIcon, ChainIcon, AssetIcon } from "./iconUtils";
+import { useState, useMemo } from 'react';
+import { StandarizedMetric } from './globalTypes';
+import TokenDrawer from './TokenDrawer';
+import { ProtocolIcon, ChainIcon, AssetIcon } from './iconUtils';
 
 interface Props {
     rows: StandarizedMetric[];
 }
 
 type SortKey =
-    'symbol' | 'lending' | 'tvl' | 'supplyAPY' | 'borrowRate' | 'utilization' | 'lltv';
+    | 'symbol'
+    | 'lending'
+    | 'tvl'
+    | 'supplyAPY'
+    | 'borrowRate'
+    | 'utilization'
+    | 'lltv';
 type SortDir = 'asc' | 'desc';
 
 const PROTOCOL_COLORS: Record<string, string> = {
@@ -23,10 +29,18 @@ const PROTOCOL_COLORS: Record<string, string> = {
 };
 
 const TOKEN_COLORS: Record<string, string> = {
-    USDC: '#2775CA', USDT: '#26A17B', DAI: '#F5AC37',
-    SOL: '#9945FF', ETH: '#627EEA', BTC: '#F7931A',
-    WETH: '#627EEA', WBTC: '#F09242', CBBTC: '#F7931A',
-    PYUSD: '#043CC6', USDE: '#3B3B45', JITOSOL: '#4FD6B8',
+    USDC: '#2775CA',
+    USDT: '#26A17B',
+    DAI: '#F5AC37',
+    SOL: '#9945FF',
+    ETH: '#627EEA',
+    BTC: '#F7931A',
+    WETH: '#627EEA',
+    WBTC: '#F09242',
+    CBBTC: '#F7931A',
+    PYUSD: '#043CC6',
+    USDE: '#3B3B45',
+    JITOSOL: '#4FD6B8',
 };
 
 const CHAIN_COLORS: Record<string, string> = {
@@ -70,15 +84,25 @@ interface HeaderCellProps {
     width?: string;
 }
 
-function HeaderCell({ label, sk, align = 'left', sortKey, sortDir, onSort, width }: HeaderCellProps) {
+function HeaderCell({
+    label,
+    sk,
+    align = 'left',
+    sortKey,
+    sortDir,
+    onSort,
+    width,
+}: HeaderCellProps) {
     const active = sk !== undefined && sortKey === sk;
     return (
         <th
             onClick={sk ? () => onSort(sk) : undefined}
             style={{
                 width: width,
-                padding: '12px 16px', textAlign: align,
-                fontSize: 11, fontWeight: 600,
+                padding: '12px 16px',
+                textAlign: align,
+                fontSize: 11,
+                fontWeight: 600,
                 color: active ? '#EEF1F6' : '#6b7688',
                 fontFamily: "'Geist Mono', monospace",
                 letterSpacing: '.04em',
@@ -120,14 +144,22 @@ function CollateralBadge({ symbol }: { symbol: string }) {
     const norm = normalizeSymbol(symbol);
     const color = TOKEN_COLORS[norm] ?? '#556677';
     return (
-        <span style={{
-            display: 'inline-flex', alignItems: 'center', gap: 6,
-            background: `${color}18`, border: `1px solid ${color}44`,
-            borderRadius: 12, padding: '2px 8px 2px 2px',
-            fontSize: 11.5, fontWeight: 600, color,
-            fontFamily: "'Geist Mono', monospace",
-        }}>
-            <AssetIcon name={norm} size={18} priority="low" />
+        <span
+            style={{
+                display: 'inline-flex',
+                alignItems: 'center',
+                gap: 6,
+                background: `${color}18`,
+                border: `1px solid ${color}44`,
+                borderRadius: 12,
+                padding: '2px 8px 2px 2px',
+                fontSize: 11.5,
+                fontWeight: 600,
+                color,
+                fontFamily: "'Geist Mono', monospace",
+            }}
+        >
+            <AssetIcon name={norm} size={18} priority='low' />
             {norm}
         </span>
     );
@@ -150,8 +182,14 @@ export default function ComparedTokens({ rows }: Props) {
     const sorted = useMemo(() => {
         const dir = sortDir === 'asc' ? 1 : -1;
         return [...rows].sort((a, b) => {
-            if (sortKey === 'symbol') return normalizeSymbol(a.symbol).localeCompare(normalizeSymbol(b.symbol)) * dir;
-            if (sortKey === 'lending') return a.lending.localeCompare(b.lending) * dir;
+            if (sortKey === 'symbol')
+                return (
+                    normalizeSymbol(a.symbol).localeCompare(
+                        normalizeSymbol(b.symbol),
+                    ) * dir
+                );
+            if (sortKey === 'lending')
+                return a.lending.localeCompare(b.lending) * dir;
             const aVal = a[sortKey as keyof typeof a];
             const bVal = b[sortKey as keyof typeof b];
             const aNum = typeof aVal === 'number' ? aVal : 0;
@@ -171,11 +209,15 @@ export default function ComparedTokens({ rows }: Props) {
                 />
             )}
 
-            <div style={{
-                border: '1px solid #161d29', borderRadius: 16,
-                overflow: 'hidden', overflowX: 'auto',
-                background: 'rgba(255,255,255,.008)',
-            }}>
+            <div
+                style={{
+                    border: '1px solid #161d29',
+                    borderRadius: 16,
+                    overflow: 'hidden',
+                    overflowX: 'auto',
+                    background: 'rgba(255,255,255,.008)',
+                }}
+            >
                 <style>{`
                     .compared-tokens-table td {
                         white-space: nowrap;
@@ -189,18 +231,69 @@ export default function ComparedTokens({ rows }: Props) {
                         text-overflow: ellipsis;
                     }
                 `}</style>
-                <table className="compared-tokens-table" style={{ width: '100%', minWidth: 900, borderCollapse: 'collapse', tableLayout: 'fixed' }}>
+                <table
+                    className='compared-tokens-table'
+                    style={{
+                        width: '100%',
+                        minWidth: 900,
+                        borderCollapse: 'collapse',
+                        tableLayout: 'fixed',
+                    }}
+                >
                     <thead>
                         <tr>
-                            <HeaderCell width="18%" label="Asset" sk="symbol"      {...hProps} />
-                            <HeaderCell width="12%" label="Collateral"                   {...hProps} />
-                            <HeaderCell width="12%" label="Protocol" sk="lending"     {...hProps} />
-                            <HeaderCell width="10%" label="Chain"                        {...hProps} />
-                            <HeaderCell width="10%" label="TVL" sk="tvl" align="right" {...hProps} />
-                            <HeaderCell width="10%" label="Supply APY" sk="supplyAPY" align="right" {...hProps} />
-                            <HeaderCell width="10%" label="Borrow APY" sk="borrowRate" align="right" {...hProps} />
-                            <HeaderCell width="8%" label="LLTV" sk="lltv" align="right" {...hProps} />
-                            <HeaderCell width="10%" label="Utilization" sk="utilization" {...hProps} />
+                            <HeaderCell
+                                width='18%'
+                                label='Asset'
+                                sk='symbol'
+                                {...hProps}
+                            />
+                            <HeaderCell
+                                width='12%'
+                                label='Collateral'
+                                {...hProps}
+                            />
+                            <HeaderCell
+                                width='12%'
+                                label='Protocol'
+                                sk='lending'
+                                {...hProps}
+                            />
+                            <HeaderCell width='10%' label='Chain' {...hProps} />
+                            <HeaderCell
+                                width='10%'
+                                label='TVL'
+                                sk='tvl'
+                                align='right'
+                                {...hProps}
+                            />
+                            <HeaderCell
+                                width='10%'
+                                label='Supply APY'
+                                sk='supplyAPY'
+                                align='right'
+                                {...hProps}
+                            />
+                            <HeaderCell
+                                width='10%'
+                                label='Borrow APY'
+                                sk='borrowRate'
+                                align='right'
+                                {...hProps}
+                            />
+                            <HeaderCell
+                                width='8%'
+                                label='LLTV'
+                                sk='lltv'
+                                align='right'
+                                {...hProps}
+                            />
+                            <HeaderCell
+                                width='10%'
+                                label='Utilization'
+                                sk='utilization'
+                                {...hProps}
+                            />
                         </tr>
                     </thead>
                     <tbody>
@@ -218,83 +311,278 @@ export default function ComparedTokens({ rows }: Props) {
                                     No markets match your filters.
                                 </td>
                             </tr>
-                        ) : (sorted.map((row, i) => {
-                            const sym = normalizeSymbol(row.symbol);
-                            const tkColor = TOKEN_COLORS[sym] ?? '#556677';
-                            const ptColor = protoColor(row.lending);
-                            const uColor = utilColor(row.utilization);
-                            const chainColor = CHAIN_COLORS[row.chain] ?? '#556677';
+                        ) : (
+                            sorted.map((row, i) => {
+                                const sym = normalizeSymbol(row.symbol);
+                                const tkColor = TOKEN_COLORS[sym] ?? '#556677';
+                                const ptColor = protoColor(row.lending);
+                                const uColor = utilColor(row.utilization);
+                                const chainColor =
+                                    CHAIN_COLORS[row.chain] ?? '#556677';
 
-                            return (
-                                <tr
-                                    key={`${sym}-${row.lending}-${row.market || 'default'}-${i}`}
-                                    onClick={() => setSelected(sym)}
-                                    style={{ borderBottom: '1px solid #10151f', cursor: 'pointer', transition: 'background .12s' }}
-                                    onMouseEnter={e => (e.currentTarget.style.background = 'rgba(79,227,193,.055)')}
-                                    onMouseLeave={e => (e.currentTarget.style.background = 'transparent')}
-                                >
-                                    <td style={{ padding: '14px 16px', verticalAlign: 'middle' }}>
-                                        <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
-                                            <AssetIcon name={sym} size={28} />
-                                            <div style={{ lineHeight: 1.3, minWidth: 0, flex: 1 }}>
-                                                <div style={{ fontWeight: 600, fontSize: 13.5, letterSpacing: '-0.01em', overflow: 'hidden', textOverflow: 'ellipsis' }}>{sym}</div>
-                                                {row.market && (
-                                                    <div style={{ fontSize: 11, color: '#5C6577', marginTop: 1, overflow: 'hidden', textOverflow: 'ellipsis' }}>{row.market}</div>
-                                                )}
-                                            </div>
-                                        </div>
-                                    </td>
-
-                                    <td style={{ padding: '14px 16px', verticalAlign: 'middle' }}>
-                                        {row.collateral
-                                            ? <CollateralBadge symbol={row.collateral} />
-                                            : <span style={{ color: '#3a4251', fontSize: 12 }}>—</span>
+                                return (
+                                    <tr
+                                        key={`${sym}-${row.lending}-${row.market || 'default'}-${i}`}
+                                        onClick={() => setSelected(sym)}
+                                        style={{
+                                            borderBottom: '1px solid #10151f',
+                                            cursor: 'pointer',
+                                            transition: 'background .12s',
+                                        }}
+                                        onMouseEnter={(e) =>
+                                            (e.currentTarget.style.background =
+                                                'rgba(79,227,193,.055)')
                                         }
-                                    </td>
-
-                                    <td style={{ padding: '14px 16px', verticalAlign: 'middle' }}>
-                                        <span style={{ display: 'inline-flex', alignItems: 'center', gap: 8 }}>
-                                            <ProtocolIcon name={row.lending} size={18} />
-                                            <span style={{ fontSize: 13, color: '#c7cdd8', fontWeight: 500, textTransform: 'capitalize' }}>{row.lending}</span>
-                                        </span>
-                                    </td>
-
-                                    <td style={{ padding: '14px 16px', verticalAlign: 'middle' }}>
-                                        <span style={{ display: 'inline-flex', alignItems: 'center', gap: 7, fontSize: 12.5, color: '#8B96A9' }}>
-                                            <ChainIcon name={row.chain} size={14} />
-                                            {row.chain}
-                                        </span>
-                                    </td>
-
-                                    <td style={{ padding: '14px 16px', verticalAlign: 'middle', textAlign: 'right', fontFamily: "'Geist Mono', monospace", fontSize: 13.5, fontWeight: 600 }}>
-                                        {formatTVL(row.tvl)}
-                                    </td>
-
-                                    <td style={{ padding: '14px 16px', verticalAlign: 'middle', textAlign: 'right', fontFamily: "'Geist Mono', monospace", fontSize: 13.5, fontWeight: 600, color: '#4FE3C1' }}>
-                                        {row.supplyAPY}%
-                                    </td>
-
-                                    <td style={{ padding: '14px 16px', verticalAlign: 'middle', textAlign: 'right', fontFamily: "'Geist Mono', monospace", fontSize: 13.5, fontWeight: 500, color: '#F0854A' }}>
-                                        {row.borrowRate}%
-                                    </td>
-
-                                    <td style={{ padding: '14px 16px', verticalAlign: 'middle', textAlign: 'right', fontFamily: "'Geist Mono', monospace", fontSize: 13, color: '#8B96A9' }}>
-                                        {row.lltv != null ? `${row.lltv}%` : <span style={{ color: '#3a4251' }}>—</span>}
-                                    </td>
-
-                                    <td style={{ padding: '14px 16px', verticalAlign: 'middle' }}>
-                                        <div style={{ display: 'flex', alignItems: 'center', gap: 9 }}>
-                                            <div style={{ width: 58, height: 5, borderRadius: 4, background: '#1d2635', overflow: 'hidden', flex: 'none' }}>
-                                                <div style={{ width: `${Math.min(row.utilization, 100)}%`, height: '100%', background: uColor, borderRadius: 4 }} />
+                                        onMouseLeave={(e) =>
+                                            (e.currentTarget.style.background =
+                                                'transparent')
+                                        }
+                                    >
+                                        <td
+                                            style={{
+                                                padding: '14px 16px',
+                                                verticalAlign: 'middle',
+                                            }}
+                                        >
+                                            <div
+                                                style={{
+                                                    display: 'flex',
+                                                    alignItems: 'center',
+                                                    gap: 10,
+                                                }}
+                                            >
+                                                <AssetIcon
+                                                    name={sym}
+                                                    size={28}
+                                                />
+                                                <div
+                                                    style={{
+                                                        lineHeight: 1.3,
+                                                        minWidth: 0,
+                                                        flex: 1,
+                                                    }}
+                                                >
+                                                    <div
+                                                        style={{
+                                                            fontWeight: 600,
+                                                            fontSize: 13.5,
+                                                            letterSpacing:
+                                                                '-0.01em',
+                                                            overflow: 'hidden',
+                                                            textOverflow:
+                                                                'ellipsis',
+                                                        }}
+                                                    >
+                                                        {sym}
+                                                    </div>
+                                                    {row.market && (
+                                                        <div
+                                                            style={{
+                                                                fontSize: 11,
+                                                                color: '#5C6577',
+                                                                marginTop: 1,
+                                                                overflow:
+                                                                    'hidden',
+                                                                textOverflow:
+                                                                    'ellipsis',
+                                                            }}
+                                                        >
+                                                            {row.market}
+                                                        </div>
+                                                    )}
+                                                </div>
                                             </div>
-                                            <span style={{ fontFamily: "'Geist Mono', monospace", fontSize: 12.5, color: '#c7cdd8' }}>
-                                                {row.utilization}%
+                                        </td>
+
+                                        <td
+                                            style={{
+                                                padding: '14px 16px',
+                                                verticalAlign: 'middle',
+                                            }}
+                                        >
+                                            {row.collateral ? (
+                                                <CollateralBadge
+                                                    symbol={row.collateral}
+                                                />
+                                            ) : (
+                                                <span
+                                                    style={{
+                                                        color: '#3a4251',
+                                                        fontSize: 12,
+                                                    }}
+                                                >
+                                                    —
+                                                </span>
+                                            )}
+                                        </td>
+
+                                        <td
+                                            style={{
+                                                padding: '14px 16px',
+                                                verticalAlign: 'middle',
+                                            }}
+                                        >
+                                            <span
+                                                style={{
+                                                    display: 'inline-flex',
+                                                    alignItems: 'center',
+                                                    gap: 8,
+                                                }}
+                                            >
+                                                <ProtocolIcon
+                                                    name={row.lending}
+                                                    size={18}
+                                                />
+                                                <span
+                                                    style={{
+                                                        fontSize: 13,
+                                                        color: '#c7cdd8',
+                                                        fontWeight: 500,
+                                                        textTransform:
+                                                            'capitalize',
+                                                    }}
+                                                >
+                                                    {row.lending}
+                                                </span>
                                             </span>
-                                        </div>
-                                    </td>
-                                </tr>
-                            );
-                        })
+                                        </td>
+
+                                        <td
+                                            style={{
+                                                padding: '14px 16px',
+                                                verticalAlign: 'middle',
+                                            }}
+                                        >
+                                            <span
+                                                style={{
+                                                    display: 'inline-flex',
+                                                    alignItems: 'center',
+                                                    gap: 7,
+                                                    fontSize: 12.5,
+                                                    color: '#8B96A9',
+                                                }}
+                                            >
+                                                <ChainIcon
+                                                    name={row.chain}
+                                                    size={14}
+                                                />
+                                                {row.chain}
+                                            </span>
+                                        </td>
+
+                                        <td
+                                            style={{
+                                                padding: '14px 16px',
+                                                verticalAlign: 'middle',
+                                                textAlign: 'right',
+                                                fontFamily:
+                                                    "'Geist Mono', monospace",
+                                                fontSize: 13.5,
+                                                fontWeight: 600,
+                                            }}
+                                        >
+                                            {formatTVL(row.tvl)}
+                                        </td>
+
+                                        <td
+                                            style={{
+                                                padding: '14px 16px',
+                                                verticalAlign: 'middle',
+                                                textAlign: 'right',
+                                                fontFamily:
+                                                    "'Geist Mono', monospace",
+                                                fontSize: 13.5,
+                                                fontWeight: 600,
+                                                color: '#4FE3C1',
+                                            }}
+                                        >
+                                            {row.supplyAPY}%
+                                        </td>
+
+                                        <td
+                                            style={{
+                                                padding: '14px 16px',
+                                                verticalAlign: 'middle',
+                                                textAlign: 'right',
+                                                fontFamily:
+                                                    "'Geist Mono', monospace",
+                                                fontSize: 13.5,
+                                                fontWeight: 500,
+                                                color: '#F0854A',
+                                            }}
+                                        >
+                                            {row.borrowRate}%
+                                        </td>
+
+                                        <td
+                                            style={{
+                                                padding: '14px 16px',
+                                                verticalAlign: 'middle',
+                                                textAlign: 'right',
+                                                fontFamily:
+                                                    "'Geist Mono', monospace",
+                                                fontSize: 13,
+                                                color: '#8B96A9',
+                                            }}
+                                        >
+                                            {row.lltv != null ? (
+                                                `${row.lltv}%`
+                                            ) : (
+                                                <span
+                                                    style={{ color: '#3a4251' }}
+                                                >
+                                                    —
+                                                </span>
+                                            )}
+                                        </td>
+
+                                        <td
+                                            style={{
+                                                padding: '14px 16px',
+                                                verticalAlign: 'middle',
+                                            }}
+                                        >
+                                            <div
+                                                style={{
+                                                    display: 'flex',
+                                                    alignItems: 'center',
+                                                    gap: 9,
+                                                }}
+                                            >
+                                                <div
+                                                    style={{
+                                                        width: 58,
+                                                        height: 5,
+                                                        borderRadius: 4,
+                                                        background: '#1d2635',
+                                                        overflow: 'hidden',
+                                                        flex: 'none',
+                                                    }}
+                                                >
+                                                    <div
+                                                        style={{
+                                                            width: `${Math.min(row.utilization, 100)}%`,
+                                                            height: '100%',
+                                                            background: uColor,
+                                                            borderRadius: 4,
+                                                        }}
+                                                    />
+                                                </div>
+                                                <span
+                                                    style={{
+                                                        fontFamily:
+                                                            "'Geist Mono', monospace",
+                                                        fontSize: 12.5,
+                                                        color: '#c7cdd8',
+                                                    }}
+                                                >
+                                                    {row.utilization}%
+                                                </span>
+                                            </div>
+                                        </td>
+                                    </tr>
+                                );
+                            })
                         )}
                     </tbody>
                 </table>

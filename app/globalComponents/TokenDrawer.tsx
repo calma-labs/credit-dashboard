@@ -350,17 +350,25 @@ export default function TokenDrawer({ symbol, onClose }: TokenDrawerProps) {
                                                 key={s.protocol}
                                                 className='border-b border-[#10151f] transition-colors hover:bg-[#4fe3c1]/[0.055]'
                                             >
-                                                <td className="p-3 align-middle">
-                                                    <span className="inline-flex items-center gap-2">
-                                                        <ProtocolIcon name={s.protocol} size={16} className="w-4 h-4 rounded-sm flex-none" />
-                                                        <span className="font-semibold text-[13px] capitalize text-dash-text">
+                                                <td className='p-3 align-middle'>
+                                                    <span className='inline-flex items-center gap-2'>
+                                                        <ProtocolIcon
+                                                            name={s.protocol}
+                                                            size={16}
+                                                            className='w-4 h-4 rounded-sm flex-none'
+                                                        />
+                                                        <span className='font-semibold text-[13px] capitalize text-dash-text'>
                                                             {s.protocol}
                                                         </span>
                                                     </span>
                                                 </td>
-                                                <td className="p-3 align-middle">
-                                                    <span className="inline-flex items-center gap-1.5 text-xs text-dash-header">
-                                                        <ChainIcon name={s.chain} size={14} className="w-3.5 h-3.5 rounded-full flex-none" />
+                                                <td className='p-3 align-middle'>
+                                                    <span className='inline-flex items-center gap-1.5 text-xs text-dash-header'>
+                                                        <ChainIcon
+                                                            name={s.chain}
+                                                            size={14}
+                                                            className='w-3.5 h-3.5 rounded-full flex-none'
+                                                        />
                                                         {s.chain}
                                                     </span>
                                                 </td>
